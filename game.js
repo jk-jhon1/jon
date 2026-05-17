@@ -76,9 +76,15 @@ const camera = {
     }
 };
 
-const teclado = {};
-window.addEventListener('keydown', e => { if(gameState === "EXPLORANDO") teclado[e.key.toLowerCase()] = true; });
-window.addEventListener('keyup', e => teclado[e.key.toLowerCase()] = false);
+// CORREÇÃO 1: Alterado de const para let para permitir limpeza de dados
+let teclado = {};
+
+window.addEventListener('keydown', e => { 
+    if(gameState === "EXPLORANDO") teclado[e.key.toLowerCase()] = true; 
+});
+window.addEventListener('keyup', e => {
+    teclado[e.key.toLowerCase()] = false;
+});
 
 function podeMoverPara(novoX, novoY) {
     let cEsquerda = Math.floor(novoX / TILE_SIZE);
@@ -96,7 +102,6 @@ function podeMoverPara(novoX, novoY) {
 
 // --- SISTEMA DE ENCONTRO ALEATÓRIO ---
 function checarEncontroMonstro(tile) {
-    // Só encontra monstros na Grama Brava (Grama Comum), não na Estrada
     if (tile === TILE_GRAMA) {
         if (Math.random() < 0.01) { // 1% de chance por frame de movimento
             iniciarBatalha();
@@ -107,11 +112,15 @@ function checarEncontroMonstro(tile) {
 // --- FUNÇÕES DE BATALHA (LÓGICA POR TURNO) ---
 function iniciarBatalha() {
     gameState = "BATALHA";
-    teclado = {}; // Limpa comandos de andar
+    
+    // CORREÇÃO 2: Forma segura de limpar o objeto sem reatribuir constante
+    for (let chave in teclado) {
+        delete teclado[chave];
+    }
     
     // Escolhe um monstro aleatório da lista
     let modelo = monstrosDisponiveis[Math.floor(Math.random() * monstrosDisponiveis.length)];
-    inimigoAtual = { ...modelo }; // Copia profunda do objeto do monstro
+    inimigoAtual = { ...modelo }; 
 
     // Exibe a tela de batalha e popula os dados na tela
     document.getElementById("battle-screen").classList.remove("hidden");
@@ -122,13 +131,11 @@ function iniciarBatalha() {
 }
 
 function atualizarUiBatalha() {
-    // Atualiza a barra de vida do jogador no HUD geral e na batalha
     let pctPlayer = (player.hp / player.hpMax) * 100;
     document.getElementById("hp-bar").style.width = pctPlayer + "%";
     document.getElementById("battle-player-hp").style.width = pctPlayer + "%";
     document.getElementById("lbl-player-hp").innerText = player.hp;
 
-    // Atualiza barra de vida do monstro
     let pctMonster = (inimigoAtual.hp / inimigoAtual.hpMax) * 100;
     document.getElementById("battle-monster-hp").style.width = pctMonster + "%";
     document.getElementById("lbl-monster-hp").innerText = inimigoAtual.hp;
@@ -138,8 +145,7 @@ function atualizarUiBatalha() {
 function atacar() {
     if (gameState !== "BATALHA" || inimigoAtual.hp <= 0) return;
 
-    // Turno do Jogador
-    let danoJogador = Math.floor(player.ataque * (0.8 + Math.random() * 0.4)); // Dano com variação
+    let danoJogador = Math.floor(player.ataque * (0.8 + Math.random() * 0.4)); 
     inimigoAtual.hp = Math.max(0, inimigoAtual.hp - danoJogador);
     document.getElementById("battle-log").innerText = `Você atacou o ${inimigoAtual.nome} e causou ${danoJogador} de dano!`;
     atualizarUiBatalha();
@@ -147,7 +153,6 @@ function atacar() {
     if (inimigoAtual.hp <= 0) {
         vitoriaBatalha();
     } else {
-        // Bloqueia botões temporariamente e passa para o turno do monstro
         desativarBotoesBatalha(true);
         setTimeout(turnoDoInimigo, 1200);
     }
@@ -200,8 +205,8 @@ function vitoriaBatalha() {
 
 function derrotaBatalha() {
     document.getElementById("battle-log").innerText = `💀 Você foi nocauteado... Teleportando de volta para a segurança.`;
-    player.hp = player.hpMax; // Restaura a vida
-    player.x = 7 * TILE_SIZE; // Retorna ao ponto inicial
+    player.hp = player.hpMax; 
+    player.x = 7 * TILE_SIZE; 
     player.y = 15 * TILE_SIZE;
     setTimeout(encerrarBatalha, 2000);
 }
@@ -246,7 +251,6 @@ function update() {
 
     document.getElementById("txt-local").innerText = localTexto;
 
-    // Se o jogador estiver andando, roda o dado para ver se acha monstro
     if (andou) {
         checarEncontroMonstro(tileAtual);
     }
