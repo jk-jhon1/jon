@@ -1,106 +1,132 @@
-// --- CONFIGURAÇÃO DO MUNDO (Antigo Mapa.java e Localizacao.java) ---
-const mapaLargura = 5;
-const mapaAltura = 5;
+// --- CONFIGURAÇÃO BÁSICA ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const logPanel = document.getElementById('log-panel');
 
-// Criando o mapa 5x5 dinamicamente
-let mapa = [];
-for (let x = 0; x < mapaLargura; x++) {
-    mapa[x] = [];
-    for (let y = 0; y < mapaAltura; y++) {
-        mapa[x][y] = {
-            nome: "Planície Selvagem",
-            descricao: "Grama alta se move com o vento.",
-            inimigo: "Nenhum"
-        };
-    }
-}
+// Tamanho de cada "quadrado" (tile) no mundo
+const TILE_SIZE = 32; 
 
-// Inserindo pontos de interesse específicos
-mapa[1][1] = { nome: "Vila Inicial", descricao: "Uma vila pacífica com tavernas e mercadores.", inimigo: "Nenhum" };
-mapa[2][3] = { nome: "Caverna Sombria", descricao: "Um lugar escuro. Você ouve rugidos lá de dentro.", inimigo: "Goblin" };
-mapa[0][4] = { nome: "Castelo Abandonado", descricao: "Ruínas antigas guardadas por magia negra.", inimigo: "Esqueleto" };
+// --- MAPA E MUNDO (Representação Simplificada) ---
+// Em um jogo real, usaríamos uma matriz (grid) e imagens de tileset.
+// Aqui vamos desenhar formas simples para representar os locais da imagem.
 
-// --- ESTADO DO JOGADOR (Antigo Player.java) ---
-let player = {
-    nome: "Herói",
-    hp: 100,
-    hpMax: 100,
-    x: 1, // Começa na Vila Inicial
-    y: 1
+const locais = [
+    { nome: "Vila Inicial", x: 600, y: 300, w: 150, h: 150, cor: "#8b4513", perigo: false },
+    { nome: "Caverna Sombria", x: 50, y: 400, w: 200, h: 150, cor: "#222", perigo: true },
+    { nome: "Castelo Abandonado", x: 300, y: 50, w: 200, h: 120, cor: "#555", perigo: true }
+];
+
+// --- ESTADO DO JOGADOR ---
+const player = {
+    x: canvas.width / 2, // Começa no centro
+    y: canvas.height / 2,
+    size: 20,
+    speed: 4,
+    color: "#00aaff", // Azul do herói
+    localAtual: "Planície Selvagem"
 };
 
-// --- FUNÇÕES DO JOGO ---
+// Gerenciamento de Teclas Pressionadas
+const keys = {
+    w: false, a: false, s: false, d: false
+};
 
-// Atualiza a tela do HTML com as informações atuais do jogo
-function atualizarTela() {
-    document.getElementById("player-name").innerText = player.nome;
-    document.getElementById("player-hp").innerText = player.hp;
-    document.getElementById("player-pos").innerText = `${player.x}, ${player.y}`;
-
-    let localAtual = mapa[player.x][player.y];
-    document.getElementById("local-nome").innerText = localAtual.nome;
-    document.getElementById("local-desc").innerText = localAtual.descricao;
-
-    let aviso = document.getElementById("aviso-perigo");
-    if (localAtual.inimigo !== "Nenhum") {
-        aviso.innerText = `⚠️ CUIDADO: Há um ${localAtual.inimigo} nesta área!`;
-    } else {
-        aviso.innerText = "";
-    }
-}
-
-// Adiciona mensagens no painel de eventos inferior
-function adicionarLog(mensagem) {
-    let logBox = document.getElementById("log-box");
-    logBox.innerHTML += `<div>${mensagem}</div>`;
-    logBox.scrollTop = logBox.scrollHeight; // Rola automaticamente para baixo
-}
-
-// Movimenta o jogador pelo mapa
-function mover(direcao) {
-    switch (direcao) {
-        case "w": if (player.y > 0) player.y--; break; // Cima
-        case "s": if (player.y < mapaAltura - 1) player.y++; break; // Baixo
-        case "a": if (player.x > 0) player.x--; break; // Esquerda
-        case "d": if (player.x < mapaLargura - 1) player.x++; break; // Direita
-    }
-
-    atualizarTela();
-    verificarEventos();
-}
-
-// Verifica se há inimigos ou eventos na nova posição
-function verificarEventos() {
-    let localAtual = mapa[player.x][player.y];
-
-    if (localAtual.inimigo !== "Nenhum") {
-        adicionarLog(`⚔️ Você foi atacado por um ${localAtual.inimigo}! (-15 HP)`);
-        player.hp -= 15;
-
-        if (player.hp <= 0) {
-            adicionarLog("💀 Você morreu! Retornando salvo para a Vila Inicial...");
-            player.hp = player.hpMax;
-            player.x = 1;
-            player.y = 1;
-            atualizarTela();
-        }
-    } else {
-        adicionarLog(`Você caminhou até: ${localAtual.nome}`);
-    }
-}
-
-// Captura as teclas do teclado físico do PC (W, A, S, D)
-window.addEventListener("keydown", function(event) {
-    const tecla = event.key.toLowerCase();
-    if (["w", "a", "s", "d"].includes(tecla)) {
-        mover(tecla);
+// --- ENTRADAS DO TECLADO ---
+window.addEventListener('keydown', e => {
+    if (keys.hasOwnProperty(e.key.toLowerCase())) {
+        keys[e.key.toLowerCase()] = true;
     }
 });
 
-// Inicializa o jogo ao abrir a página
-window.onload = function() {
-    let nomeDigitado = prompt("Digite o nome do seu herói:", "Guerreiro");
-    if (nomeDigitado) player.nome = nomeDigitado;
-    atualizarTela();
-    adicionarLog("O mundo aberto espera por você! Use as teclas W, A, S, D ou os botões.");
-};
+window.addEventListener('keyup', e => {
+    if (keys.hasOwnProperty(e.key.toLowerCase())) {
+        keys[e.key.toLowerCase()] = false;
+    }
+});
+
+// --- LÓGICA DO JOGO (ATUALIZAÇÃO) ---
+function update() {
+    let movendo = false;
+
+    // Movimentação do Jogador
+    if (keys.w && player.y > 0) { player.y -= player.speed; movendo = true; }
+    if (keys.s && player.y < canvas.height - player.size) { player.y += player.speed; movendo = true; }
+    if (keys.a && player.x > 0) { player.x -= player.speed; movendo = true; }
+    if (keys.d && player.x < canvas.width - player.size) { player.x += player.speed; movendo = true; }
+
+    // Verificação de Colisão/Localização
+    let localEncontrado = "Planície Selvagem";
+    let estaEmPerigo = false;
+
+    for (let local of locais) {
+        if (player.x < local.x + local.w &&
+            player.x + player.size > local.x &&
+            player.y < local.y + local.h &&
+            player.y + player.size > local.y) {
+            localEncontrado = local.nome;
+            estaEmPerigo = local.perigo;
+            break;
+        }
+    }
+
+    // Atualiza a UI se o local mudar
+    if (localEncontrado !== player.localAtual) {
+        player.localAtual = localEncontrado;
+        logPanel.innerText = `Você entrou em: ${localEncontrado}`;
+        if (estaEmPerigo) {
+            logPanel.style.color = "#ff4444"; // Vermelho para perigo
+            logPanel.innerText += " (⚠️ CUIDADO: Monstros!)";
+        } else {
+            logPanel.style.color = "white";
+        }
+    }
+}
+
+// --- DESENHO DO JOGO (RENDERIZAÇÃO) ---
+function draw() {
+    // 1. Limpar o Canvas (Grama de fundo)
+    ctx.fillStyle = "#35a035"; // Verde grama
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 2. Desenhar a Grid (Opcional, ajuda na noção de espaço)
+    ctx.strokeStyle = "rgba(0,0,0,0.1)";
+    for (let x = 0; x < canvas.width; x += TILE_SIZE) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += TILE_SIZE) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+
+    // 3. Desenhar Locais de Interesse
+    locais.forEach(local => {
+        ctx.fillStyle = local.cor;
+        ctx.fillRect(local.x, local.y, local.w, local.h);
+        
+        // Texto do Local
+        ctx.fillStyle = "white";
+        ctx.font = "14px Courier New";
+        ctx.fillText(local.nome, local.x + 5, local.y + 20);
+    });
+
+    // 4. Desenhar o Jogador
+    ctx.fillStyle = player.color;
+    // Desenha como um círculo para destacar da grade
+    ctx.beginPath();
+    ctx.arc(player.x + player.size/2, player.y + player.size/2, player.size/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Contorno do jogador
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+}
+
+// --- LOOP PRINCIPAL ---
+function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop); // Chama o próximo quadro
+}
+
+// Iniciar o jogo
+gameLoop();
