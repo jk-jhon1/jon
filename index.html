@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG 2D Top-Down - Engine</title>
+    <title>RPG 2D - Mundo Aberto Avançado</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="ui-container">
-        <div class="ui-panel" id="hp-panel">HP: 100/100</div>
-        <div class="ui-panel" id="log-panel">Use WASD para mover.</div>
+    <div id="game-ui">
+        <div class="hud-box">
+            <span id="txt-nome">Herói</span>
+            <div class="barra-vida"><div id="hp-bar" style="width: 100%;"></div></div>
+        </div>
+        <div class="hud-box" id="txt-local">Planície Selvagem</div>
     </div>
 
-    <!-- O 'quadro' onde o jogo será desenhado -->
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
     <script src="game.js"></script>
 </body>
