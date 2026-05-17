@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG 2D - Mundo Aberto Avançado</title>
+    <title>RPG 2D - Sistema de Batalha por Turno</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <!-- UI do Modo Exploração -->
     <div id="game-ui">
         <div class="hud-box">
             <span id="txt-nome">Herói</span>
@@ -16,7 +17,32 @@
         <div class="hud-box" id="txt-local">Planície Selvagem</div>
     </div>
 
+    <!-- Tela de Jogo (Canvas) -->
     <canvas id="gameCanvas"></canvas>
+
+    <!-- UI Oculta do Sistema de Batalha por Turno -->
+    <div id="battle-screen" class="hidden">
+        <h2>⚔️ INIMIGO APARECEU! ⚔️</h2>
+        <div class="battle-container">
+            <div class="battle-unit">
+                <h3>Herói</h3>
+                <div class="barra-vida"><div id="battle-player-hp" style="width: 100%;"></div></div>
+                <p><span id="lbl-player-hp">100</span>/100 HP</p>
+            </div>
+            <div class="battle-vs">VS</div>
+            <div class="battle-unit">
+                <h3 id="monster-name">Orc</h3>
+                <div class="barra-vida"><div id="battle-monster-hp" style="width: 100%;"></div></div>
+                <p><span id="lbl-monster-hp">50</span>/50 HP</p>
+            </div>
+        </div>
+        <div id="battle-log">O que você vai fazer?</div>
+        <div class="battle-actions">
+            <button onclick="atacar()">Atacar ⚔️</button>
+            <button onclick="curar()">Curar 🧪</button>
+            <button onclick="fugir()">Fugir 🏃</button>
+        </div>
+    </div>
 
     <script src="game.js"></script>
 </body>
