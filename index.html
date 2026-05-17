@@ -1,1 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG de Mundo Aberto</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
+    <div id="game-container">
+        <h1>⚔️ RPG Mundo Aberto ⚔️</h1>
+        
+        <!-- Status do Jogador -->
+        <div id="status-panel">
+            <p><strong>Herói:</strong> <span id="player-name">Guerreiro</span></p>
+            <p><strong>HP:</strong> <span id="player-hp">100</span>/100</p>
+            <p><strong>Posição:</strong> (<span id="player-pos">1, 1</span>)</p>
+        </div>
+
+        <!-- Tela do Jogo / Descrição do Mundo -->
+        <div id="console-box">
+            <h3 id="local-nome">Carregando mapa...</h3>
+            <p id="local-desc">Aguardando início do jogo.</p>
+            <div id="aviso-perigo"></div>
+        </div>
+
+        <!-- Logs de Combate e Ações -->
+        <div id="log-box"></div>
+
+        <!-- Controles Virtuais -->
+        <div id="controls">
+            <button onclick="mover('w')">▲ Cima (W)</button>
+            <div class="row">
+                <button onclick="mover('a')">◀ Esq (A)</button>
+                <button onclick="mover('s')">▼ Baixo (S)</button>
+                <button onclick="mover('d')">Dir (D) ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Importando a lógica do jogo -->
+    <script src="game.js"></script>
+</body>
+</html>
