@@ -1,65 +1,47 @@
 // --- 1. CONFIGURAÇÃO DO CENÁRIO 3D (DARK FANTASY) ---
 const scene = new THREE.Scene();
-
-// NÉVOA: O segredo do clima Dark Fantasy (esconde o horizonte na escuridão)
 scene.background = new THREE.Color(0x020205); 
-scene.fog = new THREE.FogExp2(0x020205, 0.04); // Névoa densa preta/roxa ativa
+scene.fog = new THREE.FogExp2(0x020205, 0.04); 
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// ILUMINAÇÃO SOMBRIA
-// Luz ambiente quase nula para dar o clima de masmorra/subterrâneo
 const ambientLight = new THREE.AmbientLight(0x111122, 0.3); 
 scene.add(ambientLight);
 
-// Luz Direcional simulando uma lua sangrenta ou energia oculta
 const moonLight = new THREE.DirectionalLight(0x442266, 1.2);
 moonLight.position.set(20, 40, 20);
 scene.add(moonLight);
 
-// Luzes de Ponto (Tochas de Fogo/Lava e Portais Mágicos)
 const portalLight = new THREE.PointLight(0x00ffff, 3, 30);
 portalLight.position.set(0, 4, 0);
 scene.add(portalLight);
 
-// --- 2. CRIAÇÃO DE UM MAPA GIGANTE (150x150) ---
-// Chão de Pedra Escura
+// --- 2. MAPA GIGANTE ---
 const floorGeo = new THREE.PlaneGeometry(150, 150);
-const floorMat = new THREE.MeshStandardMaterial({ 
-    color: 0x0a0a0f, 
-    roughness: 0.9, 
-    metalness: 0.1 
-});
+const floorMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0f, roughness: 0.9, metalness: 0.1 });
 const floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
 
-// Elementos de Cenário Espalhados (Pilares Góticos e Poças de Magma)
-const pilares = [];
-const pilarGeo = new THREE.CylinderGeometry(0.8, 1.2, 8, 5); // Pilares sextavados/góticos
+const pilarGeo = new THREE.CylinderGeometry(0.8, 1.2, 8, 5); 
 const pilarMat = new THREE.MeshStandardMaterial({ color: 0x15151c, roughness: 1.0 });
 
 const lavaGeo = new THREE.BoxGeometry(6, 0.1, 6);
 const lavaMat = new THREE.MeshStandardMaterial({ color: 0xff2200, emissive: 0x991100, roughness: 0.5 });
 
-// Geração procedural do mapa para preencher o espaço gigante
 for (let i = 0; i < 45; i++) {
-    // Evita colocar obstáculos muito colados no centro (onde o jogador nasce)
     let x = (Math.random() - 0.5) * 130;
     let z = (Math.random() - 0.5) * 130;
     if (Math.abs(x) < 8 && Math.abs(z) < 8) continue; 
 
     if (Math.random() > 0.4) {
-        // Spawna Pilar Gótico
         const pilar = new THREE.Mesh(pilarGeo, pilarMat);
         pilar.position.set(x, 4, z);
         scene.add(pilar);
-        pilares.push(pilar);
     } else {
-        // Spawna Poça de Magma Incandescente com luz própria
         const lava = new THREE.Mesh(lavaGeo, lavaMat);
         lava.position.set(x, 0.05, z);
         scene.add(lava);
@@ -70,12 +52,11 @@ for (let i = 0; i < 45; i++) {
     }
 }
 
-// --- 3. MODELO DO JOGADOR (Cavaleiro Alado Set +15) ---
+// --- 3. MODELO DO JOGADOR ---
 const playerGroup = new THREE.Group();
-const armorMat = new THREE.MeshStandardMaterial({ color: 0x0055ff, metalness: 0.95, roughness: 0.05 }); // Armadura azul espelhada
+const armorMat = new THREE.MeshStandardMaterial({ color: 0x0055ff, metalness: 0.95, roughness: 0.05 }); 
 const trimMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.9, roughness: 0.1 });
 
-// Peitoral e Ombreiras
 const torso = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.8, 1), armorMat);
 torso.position.y = 1.4;
 playerGroup.add(torso);
@@ -87,12 +68,10 @@ playerGroup.add(shoulderL);
 const shoulderR = shoulderL.clone(); shoulderR.position.x = 1; shoulderR.rotation.z = -Math.PI / 3;
 playerGroup.add(shoulderR);
 
-// Elmo Fechado
 const helmet = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), armorMat);
 helmet.position.y = 2.6;
 playerGroup.add(helmet);
 
-// Asas de Plasma (Brilho intenso azul)
 const wingMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.6 });
 const wingL = new THREE.Mesh(new THREE.ConeGeometry(0.3, 4, 4), wingMat);
 wingL.position.set(-1.4, 2.4, -0.5);
@@ -101,7 +80,6 @@ playerGroup.add(wingL);
 const wingR = wingL.clone(); wingR.position.x = 1.4; wingR.rotation.z = -Math.PI / 2.5;
 playerGroup.add(wingR);
 
-// Espada Gigante Iluminada nas costas
 const sword = new THREE.Mesh(new THREE.BoxGeometry(0.2, 3.5, 0.6), trimMat);
 sword.position.set(0.7, 1.8, 0.6);
 sword.rotation.z = -Math.PI / 5;
@@ -110,17 +88,60 @@ playerGroup.add(sword);
 scene.add(playerGroup);
 playerGroup.position.set(0, 0, 0);
 
-// --- 4. MODELO DO MONSTRO (Lorde Demônio de Mu Origin) ---
+// --- NOVA CÂMERA (ESTILO MINECRAFT / TERCEIRA PESSOA DINÂMICA) ---
+// Criamos um pivô (pescoço) para a câmera girar para cima e para baixo
+const cameraPivot = new THREE.Group();
+cameraPivot.position.set(0, 3, 0); // Altura da cabeça/ombros do jogador
+playerGroup.add(cameraPivot); // A câmera agora é parte do corpo do jogador
+
+cameraPivot.add(camera);
+camera.position.set(0, 3, 12); // Posição fixa atrás do jogador
+camera.lookAt(0, 0, 0); // Olha sempre para frente em relação ao corpo
+
+// --- SISTEMA DE MOUSE (POINTER LOCK) ---
+let mouseTravado = false;
+const uiTravarMouse = document.getElementById("travar-mouse-ui");
+
+uiTravarMouse.addEventListener("click", () => {
+    document.body.requestPointerLock();
+});
+
+document.addEventListener("pointerlockchange", () => {
+    if (document.pointerLockElement === document.body) {
+        mouseTravado = true;
+        uiTravarMouse.classList.add("hidden");
+    } else {
+        mouseTravado = false;
+        if(gameState === "EXPLORANDO") uiTravarMouse.classList.remove("hidden");
+    }
+});
+
+// Ler o movimento do mouse para girar o jogador e a câmera
+document.addEventListener("mousemove", (e) => {
+    if (!mouseTravado || gameState !== "EXPLORANDO") return;
+
+    const sensibilidade = 0.003;
+
+    // Gira o CORPO inteiro do jogador para Esquerda/Direita (Eixo Y)
+    playerGroup.rotation.y -= e.movementX * sensibilidade;
+
+    // Gira apenas a CÂMERA (Pivô) para Cima/Baixo (Eixo X)
+    cameraPivot.rotation.x -= e.movementY * sensibilidade;
+    
+    // Limite para a câmera não dar uma cambalhota por cima do herói
+    cameraPivot.rotation.x = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, cameraPivot.rotation.x));
+});
+
+
+// --- 4. MODELO DO MONSTRO ---
 const enemyGroup = new THREE.Group();
 const demonMat = new THREE.MeshStandardMaterial({ color: 0x110c0c, roughness: 0.9 });
 const magmaMat = new THREE.MeshStandardMaterial({ color: 0xff1100, emissive: 0xff0000, roughness: 0.3 });
 
-// Corpo Robusto
 const demonTorso = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 0.8, 3, 6), demonMat);
 demonTorso.position.y = 2;
 enemyGroup.add(demonTorso);
 
-// Cabeça e Chifres Gigantes
 const demonHead = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), demonMat);
 demonHead.position.y = 3.8;
 enemyGroup.add(demonHead);
@@ -132,7 +153,6 @@ enemyGroup.add(hornL);
 const hornR = hornL.clone(); hornR.position.x = 0.8; hornR.rotation.z = Math.PI / 5;
 enemyGroup.add(hornR);
 
-// Asas de Vampiro Gigantescas (Estilo Asas de Demônio de Mu)
 const dWingMat = new THREE.MeshStandardMaterial({ color: 0x0a0505, roughness: 1.0 });
 const dWingL = new THREE.Mesh(new THREE.BoxGeometry(4.5, 2, 0.15), dWingMat);
 dWingL.position.set(-3, 3, -0.6);
@@ -142,12 +162,7 @@ const dWingR = dWingL.clone(); dWingR.position.x = 3; dWingR.rotation.y = -Math.
 enemyGroup.add(dWingR);
 
 scene.add(enemyGroup);
-// Inicializa o Boss um pouco distante do ponto inicial
 enemyGroup.position.set(15, 0, -25);
-
-// Câmera posicionada em terceira pessoa gótica (mais inclinada de cima)
-camera.position.set(0, 11, 15);
-camera.lookAt(playerGroup.position);
 
 // --- 5. SISTEMA DE JOGO E COMBATE ---
 let gameState = "EXPLORANDO";
@@ -167,12 +182,14 @@ function testarEncontroBatalha() {
 
 function iniciarCombate() {
     gameState = "BATALHA";
-    vilao = {
-        nome: "Barrog, o Destruidor",
-        hp: 180, hpMax: 180,
-        ataque: 18,
-        defendendo: false
-    };
+    
+    // Libera o mouse do jogador para ele poder clicar nos botões de ataque!
+    if (document.pointerLockElement) {
+        document.exitPointerLock();
+    }
+    uiTravarMouse.classList.add("hidden");
+
+    vilao = { nome: "Barrog, o Destruidor", hp: 180, hpMax: 180, ataque: 18, defendendo: false };
 
     document.getElementById("lbl-monster-name").innerText = vilao.nome;
     document.getElementById("battle-log").innerText = `⚠️ ENCONTRO CHEFE: ${vilao.nome} interceptou você na névoa!`;
@@ -201,8 +218,7 @@ function comandar(acao) {
         if (vilao.defendendo) { dano = Math.floor(dano / 2); vilao.defendendo = false; }
         vilao.hp = Math.max(0, vilao.hp - dano);
         log.innerText = `Você usou a fúria das lâminas! Desferiu ${dano} de dano bento.`;
-    } 
-    else if (acao === 'ataque_pesado') {
+    } else if (acao === 'ataque_pesado') {
         if (Math.random() > 0.45) {
             let dano = 40 + Math.floor(Math.random() * 15);
             if (vilao.defendendo) { dano = Math.floor(dano / 2); vilao.defendendo = false; }
@@ -211,12 +227,10 @@ function comandar(acao) {
         } else {
             log.innerText = `❌ O ataque falhou! O Boss repeliu sua espada.`;
         }
-    } 
-    else if (acao === 'defender') {
+    } else if (acao === 'defender') {
         heroi.defendendo = true;
         log.innerText = `Você conjurou a Barreira de Lorencia (-50% de dano).`;
-    } 
-    else if (acao === 'curar') {
+    } else if (acao === 'curar') {
         if (heroi.potcoes > 0) {
             heroi.hp = Math.min(heroi.hpMax, heroi.hp + 50);
             heroi.potcoes--;
@@ -270,6 +284,7 @@ function finalizarCombate() {
     document.getElementById("battle-screen").classList.add("hidden");
     scene.remove(enemyGroup);
     gameState = "EXPLORANDO";
+    uiTravarMouse.classList.remove("hidden"); // Pede pro jogador trancar o mouse de novo
 }
 
 // --- 6. ENGINE LOOP ---
@@ -278,29 +293,27 @@ function animate() {
     requestAnimationFrame(animate);
     tempo += 0.05;
 
-    if (gameState === "EXPLORANDO") {
-        // Movimentação livre pelo mapa gigante de 150x150
-        if (teclado['w'] || teclado['arrowup']) playerGroup.position.z -= 0.2;
-        if (teclado['s'] || teclado['arrowdown']) playerGroup.position.z += 0.2;
-        if (teclado['a'] || teclado['arrowleft']) playerGroup.position.x -= 0.2;
-        if (teclado['d'] || teclado['arrowright']) playerGroup.position.x += 0.2;
+    if (gameState === "EXPLORANDO" && mouseTravado) {
+        const velocidade = 0.25;
 
-        // Limites invisíveis do mapa para o jogador não cair no vazio infinito
+        // O jogador agora se move de forma relativa à direção que ele está olhando!
+        // Z Negativo (-velocidade) significa "frente" em Three.js
+        if (teclado['w'] || teclado['arrowup']) playerGroup.translateZ(-velocidade);
+        if (teclado['s'] || teclado['arrowdown']) playerGroup.translateZ(velocidade);
+        if (teclado['a'] || teclado['arrowleft']) playerGroup.translateX(-velocidade);
+        if (teclado['d'] || teclado['arrowright']) playerGroup.translateX(velocidade);
+
+        // Travando o jogador dentro dos limites do mapa
         playerGroup.position.x = Math.max(-70, Math.min(70, playerGroup.position.x));
         playerGroup.position.z = Math.max(-70, Math.min(70, playerGroup.position.z));
 
-        // Câmera gótica suave perseguindo o Herói
-        camera.position.x = playerGroup.position.x;
-        camera.position.z = playerGroup.position.z + 14;
-        camera.lookAt(playerGroup.position);
-
-        // Respirações e asas batendo em sincronia macabra
+        // Animação das asas respirando
         wingL.rotation.y = Math.sin(tempo) * 0.25;
         wingR.rotation.y = -Math.sin(tempo) * 0.25;
 
         dWingL.rotation.z = Math.sin(tempo) * 0.12;
         dWingR.rotation.z = -Math.sin(tempo) * 0.12;
-        enemyGroup.position.y = 0.5 + Math.sin(tempo * 0.4) * 0.4; // O Boss levita lentamente
+        enemyGroup.position.y = 0.5 + Math.sin(tempo * 0.4) * 0.4; 
 
         testarEncontroBatalha();
     }
