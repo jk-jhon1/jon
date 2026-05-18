@@ -3,57 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG 3D - Sistema de Combate Avançado</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Importando a biblioteca 3D Three.js -->
+    <title>Gothic Dark Fantasy RPG</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Importando o Three.js corretamente via CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <!-- HUD de Exploração -->
-    <div id="exploracao-ui">
-        <div class="hud-card">📍 Local: Arena dos Desafios (Use WASD para andar)</div>
-        <!-- Instrução para travar o mouse -->
-    <div id="travar-mouse-ui" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ffcc00; font-weight: bold; background: rgba(0,0,0,0.8); padding: 15px; border: 1px solid #ffcc00; text-align: center; cursor: pointer; z-index: 20;">
-        Clique aqui para travar o mouse e girar a câmera!<br><span style="font-size: 0.8em; color: #fff;">(Pressione ESC para soltar)</span>
+    <!-- UI de Exploração (Instrução do Mouse) -->
+    <div id="travar-mouse-ui">
+        Clique aqui para ativar a câmera e mover!
+        <br><span style="font-size: 13px; color: #888;">(Use W, A, S, D para andar e ESC para soltar)</span>
     </div>
-    
-    <!-- Tela de Batalha Avançada (Escondida no início) -->
+
+    <!-- Tela de Turno / Combate (Escondida por padrão) -->
     <div id="battle-screen" class="hidden">
-        <h2>⚔️ COMBATE TÁTICO 3D ⚔️</h2>
-        
-        <div class="battle-grid">
-            <!-- Jogador -->
-            <div class="char-status">
-                <h3>🧙‍♂️ Herói</h3>
-                <div class="life-bar"><div id="bar-player-hp" style="width: 100%;"></div></div>
-                <p>HP: <span id="lbl-player-hp">100</span>/100</p>
-                <p id="lbl-player-state" class="state-txt"></p>
+        <div class="battle-container">
+            <h2>⚔️ COMBATE SANGRENTO ⚔️</h2>
+            <hr class="divisor">
+            
+            <div class="battle-flex">
+                <!-- Painel do Herói -->
+                <div class="fighter-box player-box">
+                    <h3>🛡️ Cavaleiro Alado</h3>
+                    <div class="hp-container">
+                        <div id="bar-player-hp" class="hp-bar player-hp"></div>
+                    </div>
+                    <p>HP: <span id="lbl-player-hp">100</span> / 100</p>
+                    <span id="lbl-player-state" class="state-badge"></span>
+                </div>
+
+                <div class="vs">VS</div>
+
+                <!-- Painel do Monstro -->
+                <div class="fighter-box monster-box">
+                    <h3 id="lbl-monster-name">Barrog, o Destruidor</h3>
+                    <div class="hp-container">
+                        <div id="bar-monster-hp" class="hp-bar monster-hp"></div>
+                    </div>
+                    <p>HP: <span id="lbl-monster-hp">180</span> / 180</p>
+                    <span id="lbl-monster-state" class="state-badge"></span>
+                </div>
             </div>
 
-            <div class="vs-sign">VS</div>
+            <!-- Histórico da Batalha -->
+            <div id="battle-log">A escuridão aguarda suas ordens...</div>
 
-            <!-- Inimigo -->
-            <div class="char-status">
-                <h3 id="lbl-monster-name">Monstro</h3>
-                <div class="life-bar"><div id="bar-monster-hp" style="width: 100%;"></div></div>
-                <p>HP: <span id="lbl-monster-hp">120</span>/120</p>
-                <p id="lbl-monster-state" class="state-txt"></p>
+            <!-- Botões de Ação -->
+            <div class="battle-actions">
+                <button onclick="comandar('ataque_leve')">🗡️ Lâminas Rápidas</button>
+                <button onclick="comandar('ataque_pesado')">💥 Impacto Supremo</button>
+                <button onclick="comandar('defender')">🛡️ Barreira Escura</button>
+                <button onclick="comandar('curar')">🧪 Elixir Divino (<span id="lbl-potions">3</span>)</button>
             </div>
-        </div>
-
-        <!-- Histórico de Combate -->
-        <div id="battle-log">Um guardião corrompido avançou contra você!</div>
-
-        <!-- Painel de Ações Avançado -->
-        <div class="battle-actions">
-            <button onclick="comandar('ataque_leve')">⚔️ Atac. Leve (100% Acerto)</button>
-            <button onclick="comandar('ataque_pesado')">🔨 Atac. Pesado (50% Chance)</button>
-            <button onclick="comandar('defender')">🛡️ Defender (-50% Dano)</button>
-            <button onclick="comandar('curar')">🧪 Poção (<span id="lbl-potions">3</span> rest.)</button>
         </div>
     </div>
 
-    <script src="game.js"></script>
+    <!-- O Script do Jogo -->
+    <script src="js/game.js"></script>
 </body>
 </html>
