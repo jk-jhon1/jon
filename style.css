@@ -1,108 +1,191 @@
-body, html {
+/* --- ESTILO GERAL DO JOGO --- */
+* {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
+    user-select: none;
+}
+
+body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #050505;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #010103;
+    font-family: 'Cinzel', 'Georgia', serif;
 }
 
-#exploracao-ui {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 5;
-    pointer-events: none;
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
 }
 
-.hud-card {
-    background: rgba(0, 0, 0, 0.8);
-    color: #00ffcc;
-    padding: 15px;
-    border-radius: 5px;
-    border: 1px solid #00ffcc;
-    font-weight: bold;
-}
-
-.hidden { display: none !important; }
-
-/* Janela de Combate */
-#battle-screen {
+/* --- INTERFACE DE BLOQUEIO DE MOUSE --- */
+#travar-mouse-ui {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 650px;
-    background: rgba(10, 10, 15, 0.95);
-    border: 3px solid #ffcc00;
-    border-radius: 12px;
-    padding: 25px;
-    color: white;
-    box-shadow: 0 0 40px rgba(0,0,0,0.8);
+    color: #ffaa00;
+    font-weight: bold;
+    font-size: 18px;
+    background: rgba(5, 5, 10, 0.85);
+    padding: 20px 40px;
+    border: 2px solid #442266;
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
     z-index: 10;
+    transition: all 0.3s ease;
+}
+#travar-mouse-ui:hover {
+    background: rgba(15, 10, 25, 0.95);
+    border-color: #ffaa00;
+    color: #fff;
 }
 
-h2 { text-align: center; color: #ffcc00; margin-top: 0; }
+/* --- TELA DE COMBATE (DARK FANTASY) --- */
+#battle-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+}
 
-.battle-grid {
+.battle-container {
+    background: linear-gradient(135deg, #0d0d13 0%, #050508 100%);
+    border: 2px solid #331111;
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.15);
+    width: 90%;
+    max-width: 750px;
+    padding: 30px;
+    border-radius: 6px;
+    text-align: center;
+    color: #e0e0e0;
+}
+
+h2 {
+    color: #ff3333;
+    letter-spacing: 2px;
+    font-size: 24px;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+.divisor {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #ff3333, transparent);
+    margin: 15px 0 25px 0;
+}
+
+.battle-flex {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 20px 0;
+    margin-bottom: 25px;
 }
 
-.char-status { width: 40%; text-align: center; }
+.fighter-box {
+    width: 42%;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 15px;
+    border: 1px solid #222;
+    border-radius: 4px;
+}
 
-.life-bar {
+.vs {
+    font-size: 22px;
+    font-weight: bold;
+    color: #555;
+    text-shadow: 0 0 5px #000;
+}
+
+/* --- BARRAS DE VIDA (HP) --- */
+.hp-container {
+    background-color: #221111;
     width: 100%;
-    height: 15px;
-    background: #333;
-    border-radius: 8px;
+    height: 16px;
+    border-radius: 3px;
+    margin: 10px 0;
     overflow: hidden;
     border: 1px solid #000;
 }
 
-#bar-player-hp { height: 100%; background: #22c55e; transition: width 0.3s; }
-#bar-monster-hp { height: 100%; background: #a855f7; transition: width 0.3s; }
-
-.vs-sign { font-size: 1.8rem; font-weight: bold; color: #ef4444; }
-.state-txt { font-size: 0.85rem; color: #ffaa00; height: 15px; margin: 5px 0; }
-
-#battle-log {
-    background: #050508;
-    border: 1px solid #222;
-    padding: 15px;
-    height: 60px;
-    border-radius: 6px;
-    color: #e2e8f0;
-    font-size: 0.95rem;
-    margin-bottom: 20px;
-    overflow-y: auto;
+.hp-bar {
+    height: 100%;
+    width: 100%;
+    transition: width 0.4s ease-out;
 }
 
+.player-hp {
+    background: linear-gradient(to right, #0044ff, #00aaff);
+    box-shadow: 0 0 8px rgba(0, 170, 255, 0.5);
+}
+
+.monster-hp {
+    background: linear-gradient(to right, #990000, #ff2222);
+    box-shadow: 0 0 8px rgba(255, 34, 34, 0.5);
+}
+
+.state-badge {
+    display: inline-block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #ffaa00;
+}
+
+/* --- LOG DE DIÁLOGOS/AÇÕES --- */
+#battle-log {
+    background: #020203;
+    border-left: 3px solid #ffaa00;
+    padding: 15px;
+    text-align: left;
+    min-height: 55px;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 25px;
+    color: #ccc;
+}
+
+/* --- BOTÕES DE AÇÃO --- */
 .battle-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
 }
 
-button {
-    background: #1e1e2f;
-    color: white;
-    border: 1px solid #444;
+.battle-actions button {
+    background: #12121c;
+    border: 1px solid #3c3c5c;
+    color: #b0b0d0;
     padding: 12px;
-    font-size: 0.95rem;
+    font-size: 14px;
     font-weight: bold;
     cursor: pointer;
-    border-radius: 6px;
-    transition: 0.2s;
+    border-radius: 3px;
+    transition: all 0.2s ease;
 }
 
-button:hover:not(:disabled) {
-    background: #ffcc00;
-    color: black;
-    border-color: #ffcc00;
+.battle-actions button:hover:not(:disabled) {
+    background: #1c1c30;
+    border-color: #ffaa00;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(255, 170, 0, 0.2);
 }
 
-button:disabled { opacity: 0.4; cursor: not-allowed; }
+.battle-actions button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* --- CLASSE UTILITÁRIA PARA ESCONDER ELEMENTOS --- */
+.hidden {
+    display: none !important;
+}
