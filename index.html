@@ -3,44 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG 2D - Sistema de Batalha por Turno</title>
+    <title>RPG 3D - Sistema de Combate Avançado</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Importando a biblioteca 3D Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <!-- UI do Modo Exploração -->
-    <div id="game-ui">
-        <div class="hud-box">
-            <span id="txt-nome">Herói</span>
-            <div class="barra-vida"><div id="hp-bar" style="width: 100%;"></div></div>
-        </div>
-        <div class="hud-box" id="txt-local">Planície Selvagem</div>
+    <!-- HUD de Exploração -->
+    <div id="exploracao-ui">
+        <div class="hud-card">📍 Local: Arena dos Desafios (Use WASD para andar)</div>
     </div>
 
-    <!-- Tela de Jogo (Canvas) -->
-    <canvas id="gameCanvas"></canvas>
-
-    <!-- UI Oculta do Sistema de Batalha por Turno -->
+    <!-- Tela de Batalha Avançada (Escondida no início) -->
     <div id="battle-screen" class="hidden">
-        <h2>⚔️ INIMIGO APARECEU! ⚔️</h2>
-        <div class="battle-container">
-            <div class="battle-unit">
-                <h3>Herói</h3>
-                <div class="barra-vida"><div id="battle-player-hp" style="width: 100%;"></div></div>
-                <p><span id="lbl-player-hp">100</span>/100 HP</p>
+        <h2>⚔️ COMBATE TÁTICO 3D ⚔️</h2>
+        
+        <div class="battle-grid">
+            <!-- Jogador -->
+            <div class="char-status">
+                <h3>🧙‍♂️ Herói</h3>
+                <div class="life-bar"><div id="bar-player-hp" style="width: 100%;"></div></div>
+                <p>HP: <span id="lbl-player-hp">100</span>/100</p>
+                <p id="lbl-player-state" class="state-txt"></p>
             </div>
-            <div class="battle-vs">VS</div>
-            <div class="battle-unit">
-                <h3 id="monster-name">Orc</h3>
-                <div class="barra-vida"><div id="battle-monster-hp" style="width: 100%;"></div></div>
-                <p><span id="lbl-monster-hp">50</span>/50 HP</p>
+
+            <div class="vs-sign">VS</div>
+
+            <!-- Inimigo -->
+            <div class="char-status">
+                <h3 id="lbl-monster-name">Monstro</h3>
+                <div class="life-bar"><div id="bar-monster-hp" style="width: 100%;"></div></div>
+                <p>HP: <span id="lbl-monster-hp">120</span>/120</p>
+                <p id="lbl-monster-state" class="state-txt"></p>
             </div>
         </div>
-        <div id="battle-log">O que você vai fazer?</div>
+
+        <!-- Histórico de Combate -->
+        <div id="battle-log">Um guardião corrompido avançou contra você!</div>
+
+        <!-- Painel de Ações Avançado -->
         <div class="battle-actions">
-            <button onclick="atacar()">Atacar ⚔️</button>
-            <button onclick="curar()">Curar 🧪</button>
-            <button onclick="fugir()">Fugir 🏃</button>
+            <button onclick="comandar('ataque_leve')">⚔️ Atac. Leve (100% Acerto)</button>
+            <button onclick="comandar('ataque_pesado')">🔨 Atac. Pesado (50% Chance)</button>
+            <button onclick="comandar('defender')">🛡️ Defender (-50% Dano)</button>
+            <button onclick="comandar('curar')">🧪 Poção (<span id="lbl-potions">3</span> rest.)</button>
         </div>
     </div>
 
