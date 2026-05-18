@@ -1,126 +1,108 @@
-html, body {
+body, html {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
-    background-color: #111;
-    font-family: 'Courier New', Courier, monospace;
     overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background-color: #050505;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-#game-ui {
+#exploracao-ui {
     position: absolute;
     top: 20px;
     left: 20px;
-    right: 20px;
-    display: flex;
-    justify-content: space-between;
+    z-index: 5;
     pointer-events: none;
-    z-index: 10;
 }
 
-.hud-box {
-    background: rgba(0, 0, 0, 0.85);
-    color: #fff;
-    padding: 12px 20px;
-    border: 2px solid #ffcc00;
-    border-radius: 4px;
+.hud-card {
+    background: rgba(0, 0, 0, 0.8);
+    color: #00ffcc;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #00ffcc;
     font-weight: bold;
 }
 
-.barra-vida {
-    width: 150px;
-    height: 12px;
-    background-color: #444;
-    border: 1px solid #000;
-    margin-top: 5px;
-    border-radius: 3px;
-    overflow: hidden;
-}
+.hidden { display: none !important; }
 
-#hp-bar, #battle-player-hp, #battle-monster-hp {
-    height: 100%;
-    background-color: #ef4444;
-    transition: width 0.3s ease;
-}
-
-#battle-monster-hp {
-    background-color: #a855f7; /* Roxo para o monstro */
-}
-
-#gameCanvas {
-    background-color: #000;
-    image-rendering: pixelated;
-}
-
-/* --- ESTILOS DA TELA DE BATALHA --- */
-.hidden {
-    display: none !important;
-}
-
+/* Janela de Combate */
 #battle-screen {
     position: absolute;
-    width: 500px;
-    background: rgba(15, 15, 15, 0.95);
-    border: 4px solid #ffcc00;
-    border-radius: 8px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 650px;
+    background: rgba(10, 10, 15, 0.95);
+    border: 3px solid #ffcc00;
+    border-radius: 12px;
     padding: 25px;
     color: white;
-    text-align: center;
-    box-shadow: 0 0 30px rgba(0,0,0,1);
-    z-index: 20;
+    box-shadow: 0 0 40px rgba(0,0,0,0.8);
+    z-index: 10;
 }
 
-.battle-container {
+h2 { text-align: center; color: #ffcc00; margin-top: 0; }
+
+.battle-grid {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
     margin: 20px 0;
 }
 
-.battle-unit {
-    width: 150px;
+.char-status { width: 40%; text-align: center; }
+
+.life-bar {
+    width: 100%;
+    height: 15px;
+    background: #333;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #000;
 }
 
-.battle-vs {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #ff3333;
-}
+#bar-player-hp { height: 100%; background: #22c55e; transition: width 0.3s; }
+#bar-monster-hp { height: 100%; background: #a855f7; transition: width 0.3s; }
+
+.vs-sign { font-size: 1.8rem; font-weight: bold; color: #ef4444; }
+.state-txt { font-size: 0.85rem; color: #ffaa00; height: 15px; margin: 5px 0; }
 
 #battle-log {
-    background: #000;
+    background: #050508;
+    border: 1px solid #222;
     padding: 15px;
-    border: 1px solid #333;
-    min-height: 50px;
+    height: 60px;
+    border-radius: 6px;
+    color: #e2e8f0;
+    font-size: 0.95rem;
     margin-bottom: 20px;
-    font-size: 0.9rem;
-    color: #00ff66;
+    overflow-y: auto;
 }
 
 .battle-actions {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
 }
 
 button {
-    background-color: #222;
+    background: #1e1e2f;
     color: white;
-    border: 2px solid #555;
-    padding: 10px 20px;
-    font-family: inherit;
-    cursor: pointer;
+    border: 1px solid #444;
+    padding: 12px;
+    font-size: 0.95rem;
     font-weight: bold;
-    border-radius: 4px;
+    cursor: pointer;
+    border-radius: 6px;
     transition: 0.2s;
 }
 
-button:hover {
-    background-color: #ffcc00;
+button:hover:not(:disabled) {
+    background: #ffcc00;
     color: black;
     border-color: #ffcc00;
 }
+
+button:disabled { opacity: 0.4; cursor: not-allowed; }
