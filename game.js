@@ -1,25 +1,23 @@
 // --- 1. CONFIGURAÇÃO DO CENÁRIO 3D REALISTA ---
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x010103); 
-scene.fog = new THREE.FogExp2(0x010103, 0.035); // Névoa densa realista
+scene.fog = new THREE.FogExp2(0x010103, 0.035); 
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-// Ativando sombras de alta qualidade no motor de renderização
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Sombras suaves
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
 document.body.appendChild(renderer.domElement);
 
 const ambientLight = new THREE.AmbientLight(0x111122, 0.2); 
 scene.add(ambientLight);
 
-// Luz da "Lua" que gera as sombras principais
 const moonLight = new THREE.DirectionalLight(0x442277, 1.5);
 moonLight.position.set(30, 50, 30);
 moonLight.castShadow = true;
-moonLight.shadow.mapSize.width = 2048; // Resolução da sombra
+moonLight.shadow.mapSize.width = 2048; 
 moonLight.shadow.mapSize.height = 2048;
 moonLight.shadow.camera.near = 0.5;
 moonLight.shadow.camera.far = 150;
@@ -27,7 +25,7 @@ moonLight.shadow.camera.left = -60;
 moonLight.shadow.camera.right = 60;
 moonLight.shadow.camera.top = 60;
 moonLight.shadow.camera.bottom = -60;
-moonLight.shadow.bias = -0.001; // Evita falhas gráficas na sombra
+moonLight.shadow.bias = -0.001; 
 scene.add(moonLight);
 
 const portalLight = new THREE.PointLight(0x00aaff, 2, 40);
@@ -35,13 +33,10 @@ portalLight.position.set(0, 5, 0);
 scene.add(portalLight);
 
 // --- 2. MAPA COM RELEVO ROCHOSO ---
-// Usamos mais segmentos (100x100) para poder amassar o chão
 const floorGeo = new THREE.PlaneGeometry(150, 150, 100, 100);
 const posAtributo = floorGeo.attributes.position;
-// Deformando os vértices para criar pedras e buracos
 for (let i = 0; i < posAtributo.count; i++) {
     let z = posAtributo.getZ(i);
-    // Cria ondas irregulares simulando terreno natural
     z += Math.random() * 0.4;
     posAtributo.setZ(i, z);
 }
@@ -51,14 +46,13 @@ const floorMat = new THREE.MeshStandardMaterial({
     color: 0x0a0a0e, 
     roughness: 0.8, 
     metalness: 0.2,
-    flatShading: true // Dá um aspecto rochoso/facetado realista
+    flatShading: true 
 });
 const floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
-floor.receiveShadow = true; // Chão recebe sombras
+floor.receiveShadow = true; 
 scene.add(floor);
 
-// Obstáculos e Lava
 const pilarGeo = new THREE.CylinderGeometry(0.6, 1.5, 12, 6); 
 const pilarMat = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 0.9, flatShading: true });
 const lavaGeo = new THREE.BoxGeometry(7, 0.5, 7);
@@ -86,12 +80,12 @@ for (let i = 0; i < 40; i++) {
     }
 }
 
-// --- SISTEMA DE PARTÍCULAS (Cinzas Vulcânicas no ar) ---
+// --- SISTEMA DE PARTÍCULAS (Cinzas) ---
 const particlesGeo = new THREE.BufferGeometry();
 const particlesCount = 800;
 const posArray = new Float32Array(particlesCount * 3);
 for(let i = 0; i < particlesCount * 3; i++) {
-    posArray[i] = (Math.random() - 0.5) * 100; // Espalha num raio de 100
+    posArray[i] = (Math.random() - 0.5) * 100; 
 }
 particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
 const particlesMat = new THREE.PointsMaterial({
@@ -99,24 +93,21 @@ const particlesMat = new THREE.PointsMaterial({
     color: 0xff7700,
     transparent: true,
     opacity: 0.6,
-    blending: THREE.AdditiveBlending // Faz brilhar como fogo
+    blending: THREE.AdditiveBlending 
 });
 const particulas = new THREE.Points(particlesGeo, particlesMat);
 scene.add(particulas);
 
-
-// --- 3. MODELO DO JOGADOR MAIS PROPORCIONAL E DETALHADO ---
+// --- 3. MODELO DO JOGADOR ---
 const playerGroup = new THREE.Group();
 const armorMat = new THREE.MeshStandardMaterial({ color: 0x112244, metalness: 0.8, roughness: 0.3 }); 
 const goldMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, metalness: 1.0, roughness: 0.2 });
 
-// Tronco mais modelado
 const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.5, 1.6, 8), armorMat);
 torso.position.y = 1.6;
 torso.castShadow = true;
 playerGroup.add(torso);
 
-// Ombreiras Góticas
 const shoulderL = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), goldMat);
 shoulderL.position.set(-0.8, 2.2, 0);
 shoulderL.castShadow = true;
@@ -124,16 +115,14 @@ playerGroup.add(shoulderL);
 const shoulderR = shoulderL.clone(); shoulderR.position.x = 0.8;
 playerGroup.add(shoulderR);
 
-// Elmo com viseira brilhante
 const helmet = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.7, 8), armorMat);
 helmet.position.y = 2.8;
 helmet.castShadow = true;
 playerGroup.add(helmet);
 const visor = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.15, 0.4), new THREE.MeshBasicMaterial({color: 0x00ffff}));
-visor.position.set(0, 2.85, -0.2); // Rosto para frente (Z negativo)
+visor.position.set(0, 2.85, -0.2); 
 playerGroup.add(visor);
 
-// Asas de energia mais complexas
 const wingMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.5 });
 const wingL = new THREE.Mesh(new THREE.ConeGeometry(0.4, 4, 3), wingMat);
 wingL.position.set(-1.0, 2.5, 0.5);
@@ -142,7 +131,6 @@ playerGroup.add(wingL);
 const wingR = wingL.clone(); wingR.position.x = 1.0; wingR.rotation.z = -Math.PI / 3;
 playerGroup.add(wingR);
 
-// Espada Larga e Realista
 const swordGroup = new THREE.Group();
 const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.6), goldMat);
 const guard = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.1), goldMat);
@@ -151,27 +139,28 @@ const blade = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.5, 0.05), new THREE.Me
 blade.position.y = 1.6;
 swordGroup.add(grip, guard, blade);
 swordGroup.position.set(0.6, 1.2, -0.5);
-swordGroup.rotation.x = Math.PI / 2; // Apontando para frente
+swordGroup.rotation.x = Math.PI / 2; 
 swordGroup.castShadow = true;
 playerGroup.add(swordGroup);
 
 scene.add(playerGroup);
 playerGroup.position.set(0, 0, 0);
 
-// --- NOVA CÂMERA (ESTILO MINECRAFT / TERCEIRA PESSOA DINÂMICA) ---
+// --- NAVEGAÇÃO DA CÂMERA (PIVÔ) ---
 const cameraPivot = new THREE.Group();
 cameraPivot.position.set(0, 3, 0); 
 playerGroup.add(cameraPivot); 
-
 cameraPivot.add(camera);
 camera.position.set(0, 2, 8); 
 camera.lookAt(0, 0, 0); 
 
-// --- SISTEMA DE MOUSE (POINTER LOCK) ---
+// --- CONTROLE DE MOUSE (POINTER LOCK) ---
 let mouseTravado = false;
 const uiTravarMouse = document.getElementById("travar-mouse-ui");
 
-uiTravarMouse.addEventListener("click", () => { document.body.requestPointerLock(); });
+uiTravarMouse.addEventListener("click", () => { 
+    if(gameState === "EXPLORANDO") document.body.requestPointerLock(); 
+});
 
 document.addEventListener("pointerlockchange", () => {
     if (document.pointerLockElement === document.body) {
@@ -198,7 +187,7 @@ const magmaMat = new THREE.MeshStandardMaterial({ color: 0xff1100, emissive: 0x8
 
 const demonTorso = new THREE.Mesh(new THREE.SphereGeometry(1.5, 12, 12), demonMat);
 demonTorso.position.y = 2.5;
-demonTorso.scale.set(1, 1.2, 0.8); // Achata e estica pra parecer um peitoral musculoso
+demonTorso.scale.set(1, 1.2, 0.8); 
 demonTorso.castShadow = true;
 enemyGroup.add(demonTorso);
 
@@ -215,7 +204,6 @@ enemyGroup.add(hornL);
 const hornR = hornL.clone(); hornR.position.x = 0.6; hornR.rotation.z = Math.PI / 4;
 enemyGroup.add(hornR);
 
-// Olhos brilhantes do monstro
 const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.1), new THREE.MeshBasicMaterial({color: 0xff0000}));
 eyeL.position.set(-0.3, 4.6, -0.7);
 enemyGroup.add(eyeL);
@@ -225,7 +213,7 @@ enemyGroup.add(eyeR);
 scene.add(enemyGroup);
 enemyGroup.position.set(15, 0, -25);
 
-// --- 5. SISTEMA DE JOGO E COMBATE ---
+// --- 5. LÓGICA DO JOGO E EVENTOS ---
 let gameState = "EXPLORANDO";
 const heroi = { hp: 100, hpMax: 100, potcoes: 3, defendendo: false };
 let vilao = null;
@@ -243,12 +231,13 @@ function testarEncontroBatalha() {
 
 function iniciarCombate() {
     gameState = "BATALHA";
+    mouseTravado = false;
     if (document.pointerLockElement) document.exitPointerLock();
     uiTravarMouse.classList.add("hidden");
 
     vilao = { nome: "Barrog, o Destruidor", hp: 180, hpMax: 180, ataque: 18, defendendo: false };
     document.getElementById("lbl-monster-name").innerText = vilao.nome;
-    document.getElementById("battle-log").innerText = `⚠️ ENCONTRO CHEFE: ${vilao.nome} interceptou você na névoa!`;
+    document.getElementById("battle-log").innerText = `⚠️ CHEFE INTERCEPTADO: O Lorde Demônio bloqueia o seu caminho!`;
     document.getElementById("battle-screen").classList.remove("hidden");
     atualizarPainelDados();
 }
@@ -256,15 +245,17 @@ function iniciarCombate() {
 function atualizarPainelDados() {
     document.getElementById("lbl-player-hp").innerText = heroi.hp;
     document.getElementById("bar-player-hp").style.width = `${(heroi.hp / heroi.hpMax) * 100}%`;
-    document.getElementById("lbl-player-state").innerText = heroi.defendendo ? "🛡️ Escudo de Almas Ativo" : "";
+    document.getElementById("lbl-player-state").innerText = heroi.defendendo ? "🛡️ Barreira Ativa (-50%)" : "";
 
-    document.getElementById("lbl-monster-hp").innerText = vilao.hp;
+    // Corrigido seletores de ID que antes puxavam IDs duplicados
+    document.querySelectorAll("#lbl-monster-hp")[0].innerText = vilao.hp;
     document.getElementById("bar-monster-hp").style.width = `${(vilao.hp / vilao.hpMax) * 100}%`;
-    document.getElementById("lbl-monster-state").innerText = vilao.defendendo ? "🛡️ Chefe em Carapaça de Ferro" : "";
+    document.getElementById("lbl-monster-state").innerText = vilao.defendendo ? "🛡️ Boss Protegido" : "";
     document.getElementById("lbl-potions").innerText = heroi.potcoes;
 }
 
-function comandar(acao) {
+// Vinculando funções globais para os botões do HTML funcionarem sem erros
+window.comandar = function(acao) {
     if (gameState !== "BATALHA") return;
     let log = document.getElementById("battle-log");
     heroi.defendendo = false;
@@ -273,33 +264,33 @@ function comandar(acao) {
         let dano = 15 + Math.floor(Math.random() * 8);
         if (vilao.defendendo) { dano = Math.floor(dano / 2); vilao.defendendo = false; }
         vilao.hp = Math.max(0, vilao.hp - dano);
-        log.innerText = `Você cravou a espada! Desferiu ${dano} de dano.`;
+        log.innerText = `Você desferiu um golpe preciso! Tirou ${dano} de HP do Boss.`;
     } else if (acao === 'ataque_pesado') {
-        if (Math.random() > 0.45) {
+        if (Math.random() > 0.40) {
             let dano = 40 + Math.floor(Math.random() * 15);
             if (vilao.defendendo) { dano = Math.floor(dano / 2); vilao.defendendo = false; }
             vilao.hp = Math.max(0, vilao.hp - dano);
-            log.innerText = `💥 IMPACTO SUPREMO! Você causou um rombo de ${dano} de dano!`;
+            log.innerText = `💥 IMPACTO CRÍTICO! Sua espada causou ${dano} de dano massivo!`;
         } else {
-            log.innerText = `❌ O ataque falhou! O Boss repeliu sua espada.`;
+            log.innerText = `❌ Você errou a investida! O Boss se esquivou.`;
         }
     } else if (acao === 'defender') {
         heroi.defendendo = true;
-        log.innerText = `Você conjurou a Barreira Mágica (-50% de dano).`;
+        log.innerText = `Você levantou seu escudo mágico para mitigar o próximo dano.`;
     } else if (acao === 'curar') {
         if (heroi.potcoes > 0) {
             heroi.hp = Math.min(heroi.hpMax, heroi.hp + 50);
             heroi.potcoes--;
-            log.innerText = `🧪 Poção Divina restaurou 50 pontos de Vida!`;
+            log.innerText = `🧪 O Elixir restaurou 50 pontos da sua Vida!`;
         } else {
-            log.innerText = `Acabaram as poções!`; return;
+            log.innerText = `Você não tem mais frascos de Elixir!`; return;
         }
     }
 
     atualizarPainelDados();
 
     if (vilao.hp <= 0) {
-        log.innerText = `🎉 GLÓRIA! Você baniu ${vilao.nome} de volta para o abismo!`;
+        log.innerText = `🎉 VITÓRIA! Você baniu o monstro para os confins do abismo!`;
         setTimeout(finalizarCombate, 2500);
         return;
     }
@@ -312,20 +303,20 @@ function turnoDoMonstro() {
     if (gameState !== "BATALHA") return;
     let log = document.getElementById("battle-log");
 
-    if (vilao.hp < 60 && Math.random() < 0.35) {
+    if (vilao.hp < 70 && Math.random() < 0.35) {
         vilao.defendendo = true;
-        log.innerText = `O demônio enrijece seus músculos incandecentes.`;
+        log.innerText = `O Boss entra em postura defensiva rochosa.`;
     } else {
         let dano = Math.floor(vilao.ataque * (0.8 + Math.random() * 0.5));
         if (heroi.defendendo) { dano = Math.floor(dano / 2); heroi.defendendo = false; }
         heroi.hp = Math.max(0, heroi.hp - dano);
-        log.innerText = `🔥 CEIFADOR DO INFERNO! O ataque rasgou ${dano} do seu HP!`;
+        log.innerText = `🔥 GOLPE DO CAOS! O demônio contra-atacou causando ${dano} de dano!`;
     }
 
     atualizarPainelDados();
 
     if (heroi.hp <= 0) {
-        log.innerText = `💀 Sua alma foi consumida pela escuridão...`;
+        log.innerText = `💀 Você pereceu perante as chamas góticas... Reiniciando.`;
         setTimeout(() => location.reload(), 3000);
     } else {
         controlarBotoes(false);
@@ -340,51 +331,53 @@ function finalizarCombate() {
     document.getElementById("battle-screen").classList.add("hidden");
     scene.remove(enemyGroup);
     gameState = "EXPLORANDO";
+    controlarBotoes(false);
     uiTravarMouse.classList.remove("hidden");
 }
 
-// --- 6. ENGINE LOOP ---
+// --- 6. GAME LOOP ANIMATE ---
 let tempo = 0;
 function animate() {
     requestAnimationFrame(animate);
     tempo += 0.05;
 
-    // Anima a chuva de cinzas vulcânicas
+    // Movimentação das cinzas vulcânicas
     const pos = particulas.geometry.attributes.position.array;
     for(let i = 1; i < particlesCount * 3; i += 3) {
-        pos[i] -= 0.05; // Partículas caem lentamente
-        if(pos[i] < 0) { // Se tocarem no chão, voltam pro céu
-            pos[i] = 40; 
-        }
+        pos[i] -= 0.06;
+        if(pos[i] < 0) pos[i] = 40; 
     }
     particulas.geometry.attributes.position.needsUpdate = true;
-    particulas.rotation.y += 0.001; // Gira o campo de cinzas com o vento
+    particulas.rotation.y += 0.0008;
 
     if (gameState === "EXPLORANDO" && mouseTravado) {
         const velocidade = 0.25;
 
-        // Movimentação
         if (teclado['w'] || teclado['arrowup']) playerGroup.translateZ(-velocidade);
         if (teclado['s'] || teclado['arrowdown']) playerGroup.translateZ(velocidade);
         if (teclado['a'] || teclado['arrowleft']) playerGroup.translateX(-velocidade);
         if (teclado['d'] || teclado['arrowright']) playerGroup.translateX(velocidade);
 
-        // Caminhar ajusta levemente a altura do jogador (Bobbing de passos)
+        // Balanço de passos (Bobbing) ao andar
         if (teclado['w'] || teclado['s'] || teclado['a'] || teclado['d']) {
-            playerGroup.position.y = Math.abs(Math.sin(tempo * 2)) * 0.3;
+            playerGroup.position.y = Math.abs(Math.sin(tempo * 2.5)) * 0.25;
         } else {
             playerGroup.position.y = 0;
         }
 
+        // Delimita o mapa gigante
         playerGroup.position.x = Math.max(-70, Math.min(70, playerGroup.position.x));
         playerGroup.position.z = Math.max(-70, Math.min(70, playerGroup.position.z));
 
-        // Animação do Monstro Respirando e flutuando
-        enemyGroup.position.y = Math.sin(tempo * 0.5) * 0.5;
-        demonTorso.scale.x = 1 + Math.sin(tempo) * 0.05; // Respiração peitoral
+        // Asas batendo
+        wingL.rotation.y = Math.sin(tempo) * 0.25;
+        wingR.rotation.y = -Math.sin(tempo) * 0.25;
 
-        // O Monstro sempre vira o rosto para encarar o jogador na neblina!
-        enemyGroup.lookAt(playerGroup.position);
+        enemyGroup.position.y = Math.sin(tempo * 0.5) * 0.4 + 0.5;
+        demonTorso.scale.x = 1 + Math.sin(tempo) * 0.04; 
+
+        // Monstro rastreia o jogador com o olhar
+        enemyGroup.lookAt(playerGroup.position.x, enemyGroup.position.y, playerGroup.position.z);
 
         testarEncontroBatalha();
     }
