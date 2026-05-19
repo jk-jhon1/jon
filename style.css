@@ -9,38 +9,158 @@ body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #0c0f14;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #05070a;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 canvas {
     display: block;
     width: 100vw;
     height: 100vh;
-}
-
-#reticula {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 6px;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 10;
-    pointer-events: none;
-    box-shadow: 0 0 4px rgba(0,0,0,0.5);
+    top: 0;
+    left: 0;
+    z-index: 1;
 }
 
+/* --- ESTILIZAÇÃO DA TELA INICIAL --- */
+#tela-inicial {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, #0f172a 0%, #05070a 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 30;
+    transition: opacity 0.5s ease;
+}
+
+.menu-container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.titulo-jogo {
+    font-size: 64px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 6px;
+    text-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+}
+
+.titulo-jogo span {
+    color: #00f3ff;
+}
+
+.subtitulo-jogo {
+    font-size: 14px;
+    color: #64748b;
+    letter-spacing: 8px;
+    margin-bottom: 50px;
+    font-weight: 700;
+}
+
+.menu-botoes {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.btn-menu {
+    width: 280px;
+    padding: 16px 32px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #05070a;
+    background: #00f3ff;
+    border: 1px solid #00f3ff;
+    border-radius: 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 15px rgba(0, 243, 255, 0.2);
+}
+
+.btn-menu:hover {
+    background: transparent;
+    color: #00f3ff;
+    box-shadow: 0 0 25px rgba(0, 243, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.btn-menu.btn-secundario {
+    background: transparent;
+    color: #94a3b8;
+    border-color: #334155;
+    box-shadow: none;
+}
+
+.btn-menu.btn-secundario:hover {
+    border-color: #94a3b8;
+    color: #ffffff;
+}
+
+/* --- PAINEL DE OPÇÕES --- */
+#painel-opcoes {
+    position: absolute;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid #334155;
+    padding: 30px;
+    border-radius: 8px;
+    width: 340px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    color: white;
+}
+
+#painel-opcoes h3 {
+    font-size: 16px;
+    letter-spacing: 1px;
+    color: #00f3ff;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 10px;
+}
+
+.opcao-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+#painel-opcoes button {
+    background: #334155;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#painel-opcoes button:hover {
+    background: #475569;
+}
+
+/* --- INTERFACES DO JOGO EM ATIVIDADE --- */
 #travar-mouse-ui {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(12, 15, 20, 0.93);
-    color: #3b82f6;
+    background: rgba(5, 7, 10, 0.85);
+    color: #00f3ff;
     font-weight: 700;
     font-size: 18px;
     letter-spacing: 2px;
@@ -51,7 +171,19 @@ canvas {
     text-align: center;
     cursor: pointer;
     z-index: 20;
-    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s;
+}
+
+#reticula {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    background: rgba(0, 243, 255, 0.8);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    pointer-events: none;
 }
 
 #game-hud {
@@ -67,37 +199,35 @@ canvas {
 }
 
 .hud-box {
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid #1e293b;
     padding: 14px 20px;
-    border-radius: 10px;
+    border-radius: 8px;
     width: 290px;
     backdrop-filter: blur(8px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .boss-hud {
-    width: 380px;
-    border-color: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
 }
 
 .hud-label {
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 1.5px;
-    color: #4b5563;
+    color: #94a3b8;
     margin-bottom: 6px;
 }
 
 .boss-hud .hud-label {
-    color: #dc2626;
+    color: #f87171;
     text-align: right;
 }
 
 .hp-container {
-    background: #e5e7eb;
+    background: #1e293b;
     width: 100%;
-    height: 10px;
+    height: 8px;
     border-radius: 99px;
     overflow: hidden;
 }
@@ -106,20 +236,20 @@ canvas {
     height: 100%;
     width: 100%;
     border-radius: 99px;
-    transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.15s ease-out;
 }
 
 .player-hp {
-    background: linear-gradient(90deg, #2563eb, #60a5fa);
+    background: linear-gradient(90deg, #0088ff, #00f3ff);
 }
 
 .monster-hp {
-    background: linear-gradient(90deg, #dc2626, #f87171);
+    background: linear-gradient(90deg, #b91c1c, #f87171);
 }
 
 .hp-texto {
     font-size: 11px;
-    color: #1f2937;
+    color: #ffffff;
     margin-top: 5px;
     font-weight: 700;
 }
@@ -132,17 +262,16 @@ canvas {
     position: absolute;
     bottom: 24px;
     left: 24px;
-    background: rgba(255, 255, 255, 0.95);
-    border-left: 4px solid #2563eb;
+    background: rgba(15, 23, 42, 0.9);
+    border-left: 4px solid #00f3ff;
     padding: 14px 20px;
-    color: #1f2937;
+    color: #e2e8f0;
     font-size: 13px;
     font-weight: 600;
-    border-radius: 6px;
+    border-radius: 4px;
     pointer-events: none;
     z-index: 5;
-    max-width: 380px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
 }
 
 .hidden {
