@@ -12,31 +12,26 @@
     <div id="tela-inicial">
         <div class="menu-container">
             <h1 class="titulo-jogo">HOLO<span>KNIGHT</span></h1>
-            <p class="subtitulo-jogo">THE OGRE'S ABYSS</p>
-            
+            <p class="subtitulo-jogo">SISTEMA DE MÚLTIPLAS AMEAÇAS</p>
             <div class="menu-botoes">
                 <button id="btn-iniciar" class="btn-menu">INICIAR SIMULADOR</button>
-                <button id="btn-opcoes" class="btn-menu btn-secundario">OPÇÕES DA MATRIZ</button>
             </div>
-        </div>
-
-        <div id="painel-opcoes" class="hidden">
-            <h3>CONFIGURAÇÕES DO SISTEMA</h3>
-            <div class="opcao-item">
-                <label for="slider-sens">Sensibilidade do Mouse:</label>
-                <input type="range" id="slider-sens" min="1" max="5" value="2" step="0.5">
-            </div>
-            <div class="opcao-item">
-                <label for="check-wireframe">Apenas Malha Digital (Wireframe):</label>
-                <input type="checkbox" id="check-wireframe">
-            </div>
-            <button id="btn-fechar-opcoes">SALVAR E VOLTAR</button>
         </div>
     </div>
 
     <div id="travar-mouse-ui" class="hidden">
         CLIQUE NA TELA PARA CONTROLAR O CAVALEIRO
-        <br><span style="font-size: 13px; color: #888; margin-top: 10px;">(WASD: Mover | SHIFT: Esquiva/Dash | Mouse Esq: Atacar | Mouse Dir: Bloquear | 1,2,3: Mudar de Arma | Q: Curar)</span>
+        <br><span style="font-size: 13px; color: #888; margin-top: 10px;">(WASD: Mover | SHIFT: Dash | Mouse Esq: Atacar | Mouse Dir: Defender | 1,2,3: Armas | Q: Curar | E: Inventário)</span>
+    </div>
+
+    <div id="painel-inventario" class="hidden">
+        <div class="inventario-header">
+            <h2>INVENTÁRIO DA MATRIZ</h2>
+            <button id="btn-fechar-inv">X</button>
+        </div>
+        <div id="grid-inventario">
+            </div>
+        <div class="inventario-info">Pressione 'E' para voltar ao combate.</div>
     </div>
 
     <div id="reticula" class="hidden"></div>
@@ -44,14 +39,9 @@
     <div id="game-hud" class="hidden">
         <div class="hud-box player-hud">
             <div class="hud-label">🛡️ HOLOGRAPHIC KNIGHT</div>
-            <div class="hp-container">
-                <div id="bar-player-hp" class="hp-bar player-hp"></div>
-            </div>
+            <div class="hp-container"><div id="bar-player-hp" class="hp-bar player-hp"></div></div>
             <div class="hp-texto"><span id="lbl-player-hp">100</span> / 100 HP</div>
-            
-            <div class="hp-container stamina-container" style="margin-top: 6px;">
-                <div id="bar-player-stamina" class="hp-bar player-stamina"></div>
-            </div>
+            <div class="hp-container stamina-container" style="margin-top: 6px;"><div id="bar-player-stamina" class="hp-bar player-stamina"></div></div>
         </div>
 
         <div class="combat-ui-center">
@@ -59,15 +49,8 @@
             <div class="weapon-inventory-panel">
                 <div class="weapon-slot">⚔️ <span id="lbl-arma">Lâmina Digital</span></div>
                 <div class="inventory-slot">🧪 Poções (Q): <span id="lbl-pocoes">3</span></div>
+                <div class="inventory-slot">🎒 Itens: <span id="lbl-total-itens">0</span></div>
             </div>
-        </div>
-
-        <div id="boss-hud" class="hud-box boss-hud hidden">
-            <div class="hud-label">👹 OGRO ESMAGADOR</div>
-            <div class="hp-container">
-                <div id="bar-monster-hp" class="hp-bar monster-hp"></div>
-            </div>
-            <div class="hp-texto"><span id="lbl-monster-hp">1000</span> / 1000 HP</div>
         </div>
     </div>
 
