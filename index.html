@@ -35,8 +35,8 @@
     </div>
 
     <div id="travar-mouse-ui" class="hidden">
-        CLIQUE NA TELA PARA RETOMAR O CONTROLE
-        <br><span style="font-size: 13px; color: #888; margin-top: 10px;">(W, A, S, D: Mover | Mouse: Olhar | Clique Esquerdo: Atacar | Clique Direito: Defender)</span>
+        CLIQUE PARA RETOMAR O CONTROLE
+        <br><span style="font-size: 13px; color: #888; margin-top: 10px;">(WASD: Mover | SHIFT: Esquiva | Mouse Esq: Atacar | Mouse Dir: Defender | 1,2,3: Trocar Arma | Q: Curar)</span>
     </div>
 
     <div id="reticula" class="hidden"></div>
@@ -48,6 +48,18 @@
                 <div id="bar-player-hp" class="hp-bar player-hp"></div>
             </div>
             <div class="hp-texto"><span id="lbl-player-hp">100</span> / 100 HP</div>
+            <div class="hp-container stamina-container" style="margin-top: 5px;">
+                <div id="bar-player-stamina" class="hp-bar player-stamina"></div>
+            </div>
+        </div>
+
+        <div class="combat-ui-center">
+            <div id="combo-counter" class="hidden">COMBO x<span id="lbl-combo">1</span></div>
+            
+            <div class="weapon-inventory-panel">
+                <div class="weapon-slot">Arma Atual: <span id="lbl-arma">Lâmina Digital</span></div>
+                <div class="inventory-slot">Poções (Q): <span id="lbl-pocoes">3</span></div>
+            </div>
         </div>
 
         <div id="boss-hud" class="hud-box boss-hud hidden">
