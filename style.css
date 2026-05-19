@@ -9,8 +9,8 @@ body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #1e2530; /* Fundo mais claro e azulado */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0c0f14;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 canvas {
@@ -19,31 +19,30 @@ canvas {
     height: 100vh;
 }
 
-/* Mira Central */
 #reticula {
     position: absolute;
     top: 50%;
     left: 50%;
     width: 6px;
     height: 6px;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.7);
     border-radius: 50%;
     transform: translate(-50%, -50%);
     z-index: 10;
     pointer-events: none;
+    box-shadow: 0 0 4px rgba(0,0,0,0.5);
 }
 
-/* Tela de Entrada */
 #travar-mouse-ui {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(230, 240, 255, 0.9);
-    color: #1e3a8a;
-    font-weight: bold;
-    font-size: 20px;
+    background: rgba(12, 15, 20, 0.93);
+    color: #3b82f6;
+    font-weight: 700;
+    font-size: 18px;
     letter-spacing: 2px;
     display: flex;
     flex-direction: column;
@@ -52,16 +51,15 @@ canvas {
     text-align: center;
     cursor: pointer;
     z-index: 20;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s;
 }
 
-/* HUD DO JOGO */
 #game-hud {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    padding: 20px 40px;
+    padding: 24px;
     display: flex;
     justify-content: space-between;
     pointer-events: none;
@@ -69,25 +67,26 @@ canvas {
 }
 
 .hud-box {
-    background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(240,245,255,0.8) 100%);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 12px 20px;
-    border-radius: 8px;
-    width: 280px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 14px 20px;
+    border-radius: 10px;
+    width: 290px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .boss-hud {
-    width: 400px;
-    border-color: rgba(239, 68, 68, 0.4);
+    width: 380px;
+    border-color: rgba(239, 68, 68, 0.2);
 }
 
 .hud-label {
     font-size: 11px;
-    font-weight: bold;
+    font-weight: 800;
     letter-spacing: 1.5px;
     color: #4b5563;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
 }
 
 .boss-hud .hud-label {
@@ -95,57 +94,55 @@ canvas {
     text-align: right;
 }
 
-/* Barras de HP */
 .hp-container {
     background: #e5e7eb;
     width: 100%;
-    height: 12px;
-    border-radius: 4px;
+    height: 10px;
+    border-radius: 99px;
     overflow: hidden;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
 }
 
 .hp-bar {
     height: 100%;
     width: 100%;
-    transition: width 0.1s linear;
+    border-radius: 99px;
+    transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .player-hp {
-    background: linear-gradient(to right, #2563eb, #60a5fa);
+    background: linear-gradient(90deg, #2563eb, #60a5fa);
 }
 
 .monster-hp {
-    background: linear-gradient(to right, #dc2626, #f87171);
+    background: linear-gradient(90deg, #dc2626, #f87171);
 }
 
 .hp-texto {
     font-size: 11px;
     color: #1f2937;
-    margin-top: 4px;
-    font-weight: bold;
+    margin-top: 5px;
+    font-weight: 700;
 }
 
 .boss-hud .hp-texto {
     text-align: right;
 }
 
-/* Feed de Combate */
 #combat-log {
     position: absolute;
-    bottom: 20px;
-    left: 20px;
-    background: rgba(255, 255, 255, 0.9);
-    border-left: 4px solid #3b82f6;
-    padding: 12px 20px;
+    bottom: 24px;
+    left: 24px;
+    background: rgba(255, 255, 255, 0.95);
+    border-left: 4px solid #2563eb;
+    padding: 14px 20px;
     color: #1f2937;
     font-size: 13px;
-    font-weight: 500;
-    border-radius: 0 6px 6px 0;
+    font-weight: 600;
+    border-radius: 6px;
     pointer-events: none;
     z-index: 5;
-    max-width: 350px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    max-width: 380px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .hidden {
