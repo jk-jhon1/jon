@@ -3,63 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gothic Dark Fantasy RPG</title>
+    <title>Gothic Action RPG - Realista</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Importando o Three.js corretamente via CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <!-- UI de Exploração (Instrução do Mouse) -->
+    <!-- Mira Central para imersão estilo Minecraft/Action RPG -->
+    <div id="reticula"></div>
+
+    <!-- UI Inicial de Bloqueio de Mouse -->
     <div id="travar-mouse-ui">
-        Clique aqui para ativar a câmera e mover!
-        <br><span style="font-size: 13px; color: #888;">(Use W, A, S, D para andar e ESC para soltar)</span>
+        CLIQUE PARA ENTRAR NO ABISMO
+        <br><span style="font-size: 13px; color: #888;">(W, A, S, D para andar | Mouse olha | Clique Esquerdo ataca | Clique Direito defende)</span>
     </div>
 
-    <!-- Tela de Turno / Combate (Escondida por padrão) -->
-    <div id="battle-screen" class="hidden">
-        <div class="battle-container">
-            <h2>⚔️ COMBATE SANGRENTO ⚔️</h2>
-            <hr class="divisor">
-            
-            <div class="battle-flex">
-                <!-- Painel do Herói -->
-                <div class="fighter-box player-box">
-                    <h3>🛡️ Cavaleiro Alado</h3>
-                    <div class="hp-container">
-                        <div id="bar-player-hp" class="hp-bar player-hp"></div>
-                    </div>
-                    <p>HP: <span id="lbl-player-hp">100</span> / 100</p>
-                    <span id="lbl-player-state" class="state-badge"></span>
-                </div>
-
-                <div class="vs">VS</div>
-
-                <!-- Painel do Monstro -->
-                <div class="fighter-box monster-box">
-                    <h3 id="lbl-monster-name">Barrog, o Destruidor</h3>
-                    <div class="hp-container">
-                        <div id="bar-monster-hp" class="hp-bar monster-hp"></div>
-                    </div>
-                    <p>HP: <span id="lbl-monster-hp">180</span> / 180</p>
-                    <span id="lbl-monster-state" class="state-badge"></span>
-                </div>
+    <!-- HUD de Combate em Tempo Real -->
+    <div id="game-hud">
+        <!-- Vida do Herói -->
+        <div class="hud-box player-hud">
+            <div class="hud-label">🛡️ CAVALEIRO ALADO</div>
+            <div class="hp-container">
+                <div id="bar-player-hp" class="hp-bar player-hp"></div>
             </div>
+            <div class="hp-texto"><span id="lbl-player-hp">100</span> / 100 HP</div>
+        </div>
 
-            <!-- Histórico da Batalha -->
-            <div id="battle-log">A escuridão aguarda suas ordens...</div>
-
-            <!-- Botões de Ação -->
-            <div class="battle-actions">
-                <button onclick="comandar('ataque_leve')">🗡️ Lâminas Rápidas</button>
-                <button onclick="comandar('ataque_pesado')">💥 Impacto Supremo</button>
-                <button onclick="comandar('defender')">🛡️ Barreira Escura</button>
-                <button onclick="comandar('curar')">🧪 Elixir Divino (<span id="lbl-potions">3</span>)</button>
+        <!-- Vida do Chefe (Só aparece quando ele toma dano ou está perto) -->
+        <div id="boss-hud" class="hud-box boss-hud hidden">
+            <div class="hud-label" id="lbl-monster-name">BARROG, O DESTRUIDOR</div>
+            <div class="hp-container">
+                <div id="bar-monster-hp" class="hp-bar monster-hp"></div>
             </div>
+            <div class="hp-texto"><span id="lbl-monster-hp">500</span> / 500 HP</div>
         </div>
     </div>
 
-    <!-- O Script do Jogo -->
+    <!-- Painel de Avisos/Combate rápido no canto -->
+    <div id="combat-log">A escuridão aguarda seus passos...</div>
+
     <script src="js/game.js"></script>
 </body>
 </html>
