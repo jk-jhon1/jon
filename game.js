@@ -1,4 +1,4 @@
-// Aguarda o carregamento do DOM para garantir estabilidade absoluta
+// Aguarda o carregamento do DOM para garantir estabilidade absoluta das UIs
 window.addEventListener('DOMContentLoaded', () => {
     
     // --- 1. PROPRIEDADES DO SISTEMA E MOTOR GRÁFICO ---
@@ -16,8 +16,9 @@ window.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(renderer.domElement);
 
     const clock = new THREE.Clock();
+    let tempoAcumulado = 0; // CORRIGIDO: Inicialização de tempo para o Delta Time global
 
-    // Cache de vetores para otimização de memória da GPU
+    // Cache estático de vetores contra Garbage Collection Leaks (Stuttering Zero)
     const _vectorScratchA = new THREE.Vector3();
     const _vectorScratchB = new THREE.Vector3();
     const _forwardVector = new THREE.Vector3();
@@ -141,7 +142,7 @@ window.addEventListener('DOMContentLoaded', () => {
     scene.add(enemyGroup);
     enemyGroup.position.set(15, 0, -25);
 
-    // --- 5. LÓGICA DE JOGO E COMANDOS ---
+    // --- 5. LÓGICA DE ESTADOS E ENTRADAS ---
     const playerState = { hp: 100, hpMax: 100, defendendo: false, atacando: false, cooldownAtaque: 0.0, timerDanoGlow: 0.0 };
     const bossState = { hp: 500, hpMax: 500, vivo: true, cooldownAtaque: 0.0, alertado: false, timerDanoGlow: 0.0 };
 
@@ -239,19 +240,22 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 6. LOOP DE RENDERIZAÇÃO E MOVIMENTO ---
+    // --- 6. CORE GAME LOOP (FPS INDEPENDENTE E ESTÁVEL) ---
     function animate() {
         requestAnimationFrame(animate);
 
         const delta = clock.getDelta();
+        tempoAcumulado += delta; // Atualização constante segura
 
-        // Animação de Partículas em Tempo Real
-        const pos = particulas.geometry.attributes.position.array;
-        for(let i = 1; i < pCount * 3; i += 3) {
-            pos[i] -= 1.8 * delta;
-            if(pos[i] < 0) pos[i] = 35;
+        // Correção de segurança nas partículas
+        if (particulas && particulas.geometry.attributes.position) {
+            const pos = particulas.geometry.attributes.position.array;
+            for(let i = 1; i < pCount * 3; i += 3) {
+                pos[i] -= 1.8 * delta;
+                if(pos[i] < 0) pos[i] = 35;
+            }
+            particulas.geometry.attributes.position.needsUpdate = true;
         }
-        particulas.geometry.attributes.position.needsUpdate = true;
 
         if (mouseTravado) {
             if (playerState.cooldownAtaque > 0) playerState.cooldownAtaque -= delta;
