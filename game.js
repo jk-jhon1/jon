@@ -3,7 +3,7 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // --- 1. PROPRIEDADES DO SISTEMA E MOTOR GRÁFICO ---
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x05070a); // Fundo mais escuro para destacar o holograma
+    scene.background = new THREE.Color(0x05070a); 
     scene.fog = new THREE.FogExp2(0x05070a, 0.015);
 
     const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 500);
@@ -22,13 +22,17 @@ window.addEventListener('DOMContentLoaded', () => {
     const _vectorScratchB = new THREE.Vector3();
     const _forwardVector = new THREE.Vector3();
 
-    // Iluminação ajustada para atmosfera cibernética escura
-    const ambientLight = new THREE.AmbientLight(0x0a1520, 0.5);
+    const ambientLight = new THREE.AmbientLight(0x0a1520, 0.6);
     scene.add(ambientLight);
 
     const sunLight = new THREE.DirectionalLight(0x00aaff, 0.8);
     sunLight.position.set(30, 70, 20);
     scene.add(sunLight);
+
+    // Lanterna de ambiente para destacar o Ogro
+    const orcLight = new THREE.DirectionalLight(0xfffaed, 0.5);
+    orcLight.position.set(-30, 50, -20);
+    scene.add(orcLight);
 
     // --- 2. GERAÇÃO DE CENÁRIO ---
     const floorGeo = new THREE.PlaneGeometry(160, 160, 40, 40);
@@ -47,7 +51,6 @@ window.addEventListener('DOMContentLoaded', () => {
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Pilares e Cristais do mapa
     const pilarGeo = new THREE.CylinderGeometry(0.7, 1.1, 14, 12);
     const pilarMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
     const cristalGeo = new THREE.OctahedronGeometry(1.8, 0);
@@ -72,7 +75,6 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Partículas flutuantes (Matriz de dados digital)
     const particlesGeo = new THREE.BufferGeometry();
     const pCount = 500;
     const pPoints = new Float32Array(pCount * 3);
@@ -81,26 +83,11 @@ window.addEventListener('DOMContentLoaded', () => {
     const particulas = new THREE.Points(particlesGeo, new THREE.PointsMaterial({ size: 0.15, color: 0x00f0ff, transparent: true, opacity: 0.4 }));
     scene.add(particulas);
 
-    // --- 3. CONFIGURAÇÃO DO JOGADOR (HERÓI HOLOGRÁFICO ALADO) ---
+    // --- 3. JOGADOR (HERÓI HOLOGRÁFICO ALADO) ---
     const playerGroup = new THREE.Group();
+    const holoMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true, transparent: true, opacity: 0.35 });
+    const holoGlowMat = new THREE.MeshStandardMaterial({ color: 0x00aeff, emissive: 0x005577, transparent: true, opacity: 0.7, roughness: 0.1 });
 
-    // MATERIAIS DO HOLOGRAMA (Inspirados na imagem fornecida)
-    const holoMat = new THREE.MeshBasicMaterial({ 
-        color: 0x00f3ff, 
-        wireframe: true, 
-        transparent: true, 
-        opacity: 0.35 
-    });
-    
-    const holoGlowMat = new THREE.MeshStandardMaterial({ 
-        color: 0x00aeff, 
-        emissive: 0x005577, 
-        transparent: true, 
-        opacity: 0.7,
-        roughness: 0.1
-    });
-
-    // Corpo Holográfico
     const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.4, 1.5, 12), holoMat);
     torso.position.y = 1.5; 
     const torsoGlow = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.38, 1.48, 8), holoGlowMat);
@@ -117,7 +104,6 @@ window.addEventListener('DOMContentLoaded', () => {
     visor.position.set(0, 2.45, -0.22); 
     playerGroup.add(visor);
 
-    // Espada Laser Holográfica
     const swordGroup = new THREE.Group();
     const blade = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.4, 0.04), new THREE.MeshBasicMaterial({color: 0x00ffff}));
     blade.position.y = 1.2;
@@ -128,30 +114,16 @@ window.addEventListener('DOMContentLoaded', () => {
     swordGroup.rotation.set(Math.PI / 3, 0, -Math.PI / 10);
     playerGroup.add(swordGroup);
 
-    // ESTRUTURA DAS ASAS DE MATRIZ DIGITAL
     const wingGroupL = new THREE.Group();
     const wingGroupR = new THREE.Group();
     wingGroupL.position.set(-0.4, 2.0, 0.2);
     wingGroupR.position.set(0.4, 2.0, 0.2);
-
-    // Geometria das penas da asa cibernética
     const penaGeo = new THREE.BoxGeometry(1.5, 0.15, 0.02);
-    
-    // Construção de camadas de asas geométricas
     for(let i = 0; i < 6; i++) {
-        let penaL = new THREE.Mesh(penaGeo, holoMat);
-        penaL.position.set(-0.7, -i * 0.18, 0);
-        penaL.rotation.z = Math.PI / 8 + (i * 0.08);
-        wingGroupL.add(penaL);
-
-        let penaR = new THREE.Mesh(penaGeo, holoMat);
-        penaR.position.set(0.7, -i * 0.18, 0);
-        penaR.rotation.z = -Math.PI / 8 - (i * 0.08);
-        wingGroupR.add(penaR);
+        let penaL = new THREE.Mesh(penaGeo, holoMat); penaL.position.set(-0.7, -i * 0.18, 0); penaL.rotation.z = Math.PI / 8 + (i * 0.08); wingGroupL.add(penaL);
+        let penaR = new THREE.Mesh(penaGeo, holoMat); penaR.position.set(0.7, -i * 0.18, 0); penaR.rotation.z = -Math.PI / 8 - (i * 0.08); wingGroupR.add(penaR);
     }
-
-    playerGroup.add(wingGroupL);
-    playerGroup.add(wingGroupR);
+    playerGroup.add(wingGroupL, wingGroupR);
     scene.add(playerGroup);
 
     const cameraPivot = new THREE.Group();
@@ -161,27 +133,93 @@ window.addEventListener('DOMContentLoaded', () => {
     camera.position.set(0, 0.4, 5.0);
     camera.lookAt(0, 1.9, -2);
 
-    // --- 4. CONFIGURAÇÃO DO INIMIGO ---
+    // --- 4. INIMIGO COMPLETO (OGRO GUERREIRO DA IMAGEM) ---
     const enemyGroup = new THREE.Group();
-    const golemMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5 });
-    const energyCoreMat = new THREE.MeshStandardMaterial({ color: 0xff3b3b, emissive: 0x8b0000 }); // Inimigo vermelho para contrastar com o herói azul
+    
+    // Materiais orgânicos e rústicos do Ogro
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0x5a6344, roughness: 0.85 }); // Pele verde-oliva robusta
+    const leatherMat = new THREE.MeshStandardMaterial({ color: 0x3d2516, roughness: 0.9 }); // Couros e cintos
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x523624, roughness: 0.95 }); // Porrete e base do escudo
+    const boneMat = new THREE.MeshStandardMaterial({ color: 0xdecaa5, roughness: 0.7 }); // Ombreira de crânio e dentes/espinhos
+    const ironMat = new THREE.MeshStandardMaterial({ color: 0x4f4f4f, metalness: 0.6, roughness: 0.5 }); // Detalhes de ferro
 
-    const dTorso = new THREE.Mesh(new THREE.SphereGeometry(1.5, 12, 12), golemMat);
-    dTorso.position.y = 2.5; dTorso.scale.set(1.1, 1.4, 0.9);
-    enemyGroup.add(dTorso);
+    // Corpo musculoso avantajado e largo
+    const ogreTorso = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.1, 2.6, 16), skinMat);
+    ogreTorso.position.y = 2.2;
+    ogreTorso.scale.set(1.4, 1.0, 1.1); // Tronco largo característico
+    enemyGroup.add(ogreTorso);
 
-    const dHead = new THREE.Mesh(new THREE.SphereGeometry(0.48, 12, 12), golemMat);
-    dHead.position.y = 4.1;
-    enemyGroup.add(dHead);
+    // Cabeça forte com mandíbula pronunciada
+    const ogreHead = new THREE.Mesh(new THREE.SphereGeometry(0.65, 14, 14), skinMat);
+    ogreHead.position.set(0, 3.7, 0.1);
+    ogreHead.scale.set(1.1, 1.2, 1.1);
+    enemyGroup.add(ogreHead);
 
-    const hornL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.12, 1.1, 6), energyCoreMat);
-    hornL.position.set(-0.45, 4.6, 0.1); hornL.rotation.set(-0.3, 0, -0.4);
-    enemyGroup.add(hornL);
-    const hornR = hornL.clone(); hornR.position.x = 0.45; hornR.rotation.z = 0.4;
-    enemyGroup.add(hornR);
+    // Ombreira de Crânio de Javali (Lado Esquerdo do Ogro - Direito do jogador olhando de frente)
+    const boneShoulder = new THREE.Mesh(new THREE.SphereGeometry(0.55, 10, 10), boneMat);
+    boneShoulder.position.set(-1.2, 3.1, 0.1);
+    boneShoulder.scale.set(1.2, 0.7, 0.8);
+    enemyGroup.add(boneShoulder);
+    // Presas projetadas da ombreira
+    const horn1 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.1, 0.6, 6), boneMat);
+    horn1.position.set(-1.5, 3.3, 0.4);
+    horn1.rotation.set(0.4, 0, -0.6);
+    enemyGroup.add(horn1);
+
+    // Cinto largo de couro
+    const ogreBelt = new THREE.Mesh(new THREE.CylinderGeometry(1.22, 1.22, 0.4, 16), leatherMat);
+    ogreBelt.position.y = 1.3;
+    enemyGroup.add(ogreBelt);
+
+    // Braço Direito (Segurando o porrete apoiado no ombro)
+    const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.28, 1.6, 8), skinMat);
+    armR.position.set(1.3, 2.9, 0.3);
+    armR.rotation.set(-Math.PI / 3, 0, Math.PI / 6);
+    enemyGroup.add(armR);
+
+    // PORRETE GIGANTE COM ESPINHOS (Arma principal)
+    const clubGroup = new THREE.Group();
+    const clubBase = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.2, 3.8, 12), woodMat);
+    clubBase.position.y = 1.4;
+    clubGroup.add(clubBase);
+    // Reforços de ferro e espinhos no porrete
+    for(let i = 0; i < 8; i++) {
+        let spike = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.3, 5), boneMat);
+        spike.position.set(Math.sin(i) * 0.45, 2.2 + (i*0.15), Math.cos(i) * 0.45);
+        spike.lookAt(Math.sin(i)*2, 2.2 + (i*0.15), Math.cos(i)*2);
+        spike.rotation.x += Math.PI/2;
+        clubGroup.add(spike);
+    }
+    clubGroup.position.set(1.2, 3.6, -0.4);
+    clubGroup.rotation.set(Math.PI / 2.3, 0, -Math.PI / 8); // Apoiado transversalmente no ombro
+    enemyGroup.add(clubGroup);
+
+    // ESCUDO DE MADEIRA COM ESPINHOS (Mão Esquerda)
+    const shieldGroup = new THREE.Group();
+    const shieldBase = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.15, 16), woodMat);
+    shieldBase.rotation.x = Math.PI / 2;
+    shieldGroup.add(shieldBase);
+    const shieldBrim = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.1, 0.18, 16, 1, true), ironMat);
+    shieldBrim.rotation.x = Math.PI / 2;
+    shieldGroup.add(shieldBrim);
+    // Espinhos pontiagudos ao redor do escudo
+    for(let i = 0; i < 6; i++) {
+        let angle = (i / 6) * Math.PI * 2;
+        let shieldSpike = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.35, 4), boneMat);
+        shieldSpike.position.set(Math.sin(angle) * 1.05, Math.cos(angle) * 1.05, 0);
+        shieldSpike.rotation.set(0, 0, -angle);
+        shieldGroup.add(shieldSpike);
+    }
+    shieldGroup.position.set(-1.5, 1.9, 0.8);
+    shieldGroup.rotation.set(0, Math.PI / 6, 0);
+    enemyGroup.add(shieldGroup);
 
     scene.add(enemyGroup);
     enemyGroup.position.set(15, 0, -25);
+
+    // Altera o rótulo do monstro dinamicamente no HUD HTML
+    const lblBoss = document.getElementById("lbl-monster-name");
+    if(lblBoss) lblBoss.innerText = "OGRO ESMAGADOR";
 
     // --- 5. LÓGICA DE ESTADOS E ENTRADAS ---
     const playerState = { hp: 100, hpMax: 100, defendendo: false, atacando: false, cooldownAtaque: 0.0, timerDanoGlow: 0.0 };
@@ -222,12 +260,12 @@ window.addEventListener('DOMContentLoaded', () => {
             enemyGroup.getWorldPosition(_vectorScratchB);
             let distanciaFisica = _vectorScratchA.distanceTo(_vectorScratchB);
             
-            if (distanciaFisica < 4.8) {
+            if (distanciaFisica < 5.5) { // Alcance levemente maior devido ao tamanho do Ogro
                 _forwardVector.set(0, 0, -1).applyQuaternion(playerGroup.quaternion);
                 _vectorScratchB.sub(_vectorScratchA).normalize();
                 let produtoEscalar = _forwardVector.dot(_vectorScratchB);
 
-                if (produtoEscalar > 0.86) {
+                if (produtoEscalar > 0.82) {
                     bossState.alertado = true;
                     let dano = 22 + Math.floor(Math.random() * 12);
                     bossState.hp = Math.max(0, bossState.hp - dano);
@@ -235,11 +273,11 @@ window.addEventListener('DOMContentLoaded', () => {
                     
                     document.getElementById("boss-hud").classList.remove("hidden");
                     atualizarHUD();
-                    logCombate.innerText = `💥 Ruído Crítico! Você injetou ${dano} de dano lógico ao Titã.`;
+                    logCombate.innerText = `💥 Ruído Crítico! Você cortou a defesa do Ogro aplicando ${dano} de dano.`;
 
                     if (bossState.hp <= 0 && bossState.vivo) {
                         bossState.vivo = false;
-                        logCombate.innerText = "✨ Processo encerrado. O Guardião foi deletado.";
+                        logCombate.innerText = "✨ Alvo Destruído. O Ogro desabou em combate!";
                         scene.remove(enemyGroup);
                         document.getElementById("boss-hud").classList.add("hidden");
                     }
@@ -273,8 +311,8 @@ window.addEventListener('DOMContentLoaded', () => {
     let shakeTimer = 0.0;
     function processarCameraShake(delta) {
         if (shakeTimer > 0) {
-            camera.position.x = (Math.random() - 0.5) * 0.12;
-            camera.position.y = 0.4 + (Math.random() - 0.5) * 0.12;
+            camera.position.x = (Math.random() - 0.5) * 0.15;
+            camera.position.y = 0.4 + (Math.random() - 0.5) * 0.15;
             shakeTimer -= delta;
         } else {
             camera.position.set(0, 0.4, 5.0);
@@ -288,13 +326,13 @@ window.addEventListener('DOMContentLoaded', () => {
         const delta = clock.getDelta();
         tempoAcumulado += delta; 
 
-        // Animação de bater asas baseada em seno matemático
+        // Animação das asas holográficas do herói
         if(wingGroupL && wingGroupR) {
             wingGroupL.rotation.y = Math.sin(tempoAcumulado * 4) * 0.3;
             wingGroupR.rotation.y = -Math.sin(tempoAcumulado * 4) * 0.3;
         }
 
-        // Movimentação dos dados flutuantes no mapa
+        // Partículas cibernéticas
         if (particulas && particulas.geometry.attributes.position) {
             const pos = particulas.geometry.attributes.position.array;
             for(let i = 1; i < pCount * 3; i += 3) {
@@ -310,9 +348,14 @@ window.addEventListener('DOMContentLoaded', () => {
             if (bossState.timerDanoGlow > 0) bossState.timerDanoGlow -= delta;
             if (playerState.timerDanoGlow > 0) playerState.timerDanoGlow -= delta;
 
-            golemMat.emissive.setHex(bossState.timerDanoGlow > 0 ? 0xff0000 : 0x000000);
+            // Flash visual vermelho quando o Ogro apanha
+            if(bossState.timerDanoGlow > 0) {
+                skinMat.emissive.setHex(0x550000);
+            } else {
+                skinMat.emissive.setHex(0x000000);
+            }
             
-            // Efeito visual de dano piscando no holograma
+            // Efeito visual piscando no holograma do herói
             if (playerState.timerDanoGlow > 0) {
                 holoMat.color.setHex(0xff0055);
             } else {
@@ -341,32 +384,40 @@ window.addEventListener('DOMContentLoaded', () => {
                 enemyGroup.getWorldPosition(_vectorScratchB);
                 let distHeroi = _vectorScratchA.distanceTo(_vectorScratchB);
 
-                if (distHeroi < 25.0) bossState.alertado = true;
+                if (distHeroi < 28.0) bossState.alertado = true;
 
                 if (bossState.alertado) {
                     document.getElementById("boss-hud").classList.remove("hidden");
                     enemyGroup.lookAt(playerGroup.position.x, enemyGroup.position.y, playerGroup.position.z);
 
-                    if (distHeroi > 3.8) {
-                        enemyGroup.translateZ(6.5 * delta);
+                    // Movimento de aproximação do Ogro
+                    if (distHeroi > 4.2) {
+                        enemyGroup.translateZ(5.5 * delta); // Velocidade pesada
+                        // Respiração/Animação de corrida pesada balançando o porrete
+                        clubGroup.rotation.x = (Math.PI / 2.3) + Math.sin(tempoAcumulado * 5) * 0.08;
                     } else {
+                        // IA de Ataque do Ogro (Pancada com Porrete)
                         if (bossState.cooldownAtaque <= 0.0) {
-                            bossState.cooldownAtaque = 0.9;
+                            bossState.cooldownAtaque = 1.2; // Ataques lentos, porém devastadores
                             
-                            let danoInimigo = 14 + Math.floor(Math.random() * 8);
+                            // Animação rápida de golpe com o porrete
+                            clubGroup.rotation.x -= 1.2;
+                            setTimeout(() => { clubGroup.rotation.set(Math.PI / 2.3, 0, -Math.PI / 8); }, 200);
+
+                            let danoInimigo = 20 + Math.floor(Math.random() * 12); // Dano massivo
                             if (playerState.defendendo) {
                                 danoInimigo = Math.floor(danoInimigo * 0.15);
-                                logCombate.innerText = `🛡️ Firewall ativo! Absorveu impacto sofrendo ${danoInimigo} de perda de dados.`;
+                                logCombate.innerText = `🛡️ Impacto Retido! O escudo laser aguentou a marretada, sofrendo ${danoInimigo} HP.`;
                             } else {
                                 playerState.hp = Math.max(0, playerState.hp - danoInimigo);
                                 playerState.timerDanoGlow = 0.15;
-                                shakeTimer = 0.2;
-                                logCombate.innerText = `🚨 Integridade do Holograma comprometida! - ${danoInimigo} HP.`;
+                                shakeTimer = 0.35; // Tremor de tela mais violento devido ao porrete
+                                logCombate.innerText = `🚨 Golpe esmagador do Ogro! O impacto removeu ${danoInimigo} HP.`;
                                 atualizarHUD();
                             }
 
                             if (playerState.hp <= 0) {
-                                logCombate.innerText = "💀 Conexão perdida. Força vital zerada. Reiniciando...";
+                                logCombate.innerText = "💀 Sua matriz de dados foi totalmente pulverizada pelo Ogro. Reiniciando...";
                                 setTimeout(() => location.reload(), 2000);
                             }
                         }
