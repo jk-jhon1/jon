@@ -1,59 +1,60 @@
-// --- 1. CONFIGURAÇÃO DO CENÁRIO 3D ILUMINADO E SUAVE ---
+// --- 1. PROPRIEDADES DO SISTEMA E MOTOR GRÁFICO ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xdce6f5); // Céu claro diurno
-scene.fog = new THREE.FogExp2(0xdce6f5, 0.015); // Névoa suave e clara de horizonte
+scene.background = new THREE.Color(0xdce6f5);
+scene.fog = new THREE.FogExp2(0xdce6f5, 0.015);
 
-const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 500);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Otimização de GPU para telas de alta densidade
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-// Iluminação Global Clara (Elimina sombras densas e escuras)
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); 
+const clock = new THREE.Clock(); // Core do gerenciamento por Delta Time
+
+// Cache estático de memória para evitar Garbage Collection em tempo real
+const _vectorScratchA = new THREE.Vector3();
+const _vectorScratchB = new THREE.Vector3();
+const _forwardVector = new THREE.Vector3();
+
+// Iluminação Eficiente
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
 scene.add(ambientLight);
 
-// Luz Solar Principal
-const sunLight = new THREE.DirectionalLight(0xfffaed, 1.2);
-sunLight.position.set(40, 80, 20);
+const sunLight = new THREE.DirectionalLight(0xfffaed, 1.1);
+sunLight.position.set(30, 70, 20);
 sunLight.castShadow = true;
-sunLight.shadow.mapSize.width = 2048;
-sunLight.shadow.mapSize.height = 2048;
-sunLight.shadow.bias = -0.0005;
+sunLight.shadow.mapSize.set(1024, 1024); // Balanceamento ideal performance/qualidade
+sunLight.shadow.bias = -0.0004;
 scene.add(sunLight);
 
-// --- 2. TERRENO E GEOMETRIA SUAVE ---
-const floorGeo = new THREE.PlaneGeometry(160, 160, 60, 60);
+// --- 2. GERAÇÃO DE CENÁRIO OTIMIZADA ---
+const floorGeo = new THREE.PlaneGeometry(160, 160, 40, 40); // Segmentação reduzida para otimizar cálculos de vértices
 const posAtributo = floorGeo.attributes.position;
-// Ondulações suaves como colinas limpas
+
 for (let i = 0; i < posAtributo.count; i++) {
     let vx = posAtributo.getX(i);
     let vy = posAtributo.getY(i);
-    let vz = Math.sin(vx * 0.08) * Math.cos(vy * 0.08) * 0.8;
+    let vz = Math.sin(vx * 0.08) * Math.cos(vy * 0.08) * 0.7;
     posAtributo.setZ(i, vz);
 }
 floorGeo.computeVertexNormals();
 
-// flatShading: false faz com que o chão fique totalmente liso e sem faces duras
-const floorMat = new THREE.MeshStandardMaterial({ 
-    color: 0x8fa878, // Gramado/Terreno claro
-    roughness: 0.9, 
-    metalness: 0.0,
-    flatShading: false 
-});
+const floorMat = new THREE.MeshStandardMaterial({ color: 0x8fa878, roughness: 0.9, metalness: 0.0, flatShading: false });
 const floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 scene.add(floor);
 
-// Estruturas do cenário: Pilares agora são colunas lisas de mármore azulado
-const pilarGeo = new THREE.CylinderGeometry(0.8, 1.2, 14, 16); // Mais segmentos para ser arredondado
+// Reutilização de instâncias geométricas para poupar VRAM
+const pilarGeo = new THREE.CylinderGeometry(0.7, 1.1, 14, 12);
 const pilarMat = new THREE.MeshStandardMaterial({ color: 0xdae3f0, roughness: 0.4, flatShading: false });
-const cristalGeo = new THREE.OctahedronGeometry(2, 0); // Cristais no lugar da lava escura
-const cristalMat = new THREE.MeshStandardMaterial({ color: 0x00aaff, emissive: 0x0044aa, roughness: 0.1 });
+const cristalGeo = new THREE.OctahedronGeometry(1.8, 0);
+const cristalMat = new THREE.MeshStandardMaterial({ color: 0x00aaff, emissive: 0x0033aa, roughness: 0.1 });
 
-for (let i = 0; i < 40; i++) {
+for (let i = 0; i < 35; i++) {
     let x = (Math.random() - 0.5) * 130;
     let z = (Math.random() - 0.5) * 130;
     if (Math.abs(x) < 12 && Math.abs(z) < 12) continue;
@@ -70,83 +71,79 @@ for (let i = 0; i < 40; i++) {
         cristal.castShadow = true;
         scene.add(cristal);
         
-        const cristalLight = new THREE.PointLight(0x00aaff, 1.5, 12);
+        const cristalLight = new THREE.PointLight(0x00aaff, 1.2, 10);
         cristalLight.position.set(x, 3, z);
         scene.add(cristalLight);
     }
 }
 
-// Partículas flutuantes agora são dentes-de-leão / esferas mágicas de luz branca
+// Emissor Estático de Partículas
 const particlesGeo = new THREE.BufferGeometry();
-const count = 500;
-const points = new Float32Array(count * 3);
-for(let i=0; i<count*3; i++) points[i] = (Math.random() - 0.5) * 120;
-particlesGeo.setAttribute('position', new THREE.BufferAttribute(points, 3));
-const particulas = new THREE.Points(particlesGeo, new THREE.PointsMaterial({
-    size: 0.2, color: 0xffffff, transparent: true, opacity: 0.8
-}));
+const pCount = 400;
+const pPoints = new Float32Array(pCount * 3);
+for(let i = 0; i < pCount * 3; i++) pPoints[i] = (Math.random() - 0.5) * 120;
+particlesGeo.setAttribute('position', new THREE.BufferAttribute(pPoints, 3));
+const particulas = new THREE.Points(particlesGeo, new THREE.PointsMaterial({ size: 0.18, color: 0xffffff, transparent: true, opacity: 0.6 }));
 scene.add(particulas);
 
-// --- 3. ENTIDADES: JOGADOR ---
+// --- 3. CONFIGURAÇÃO DA ENTIDADE DO JOGADOR ---
 const playerGroup = new THREE.Group();
-const armorMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.5, roughness: 0.2, flatShading: false });
-const goldMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.8, roughness: 0.2, flatShading: false });
+const armorMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.4, roughness: 0.2, flatShading: false });
+const goldMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.7, roughness: 0.2, flatShading: false });
 
-const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.4, 1.5, 16), armorMat);
+const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.4, 1.5, 12), armorMat);
 torso.position.y = 1.5; torso.castShadow = true; playerGroup.add(torso);
 
-const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 16), armorMat);
-helmet.position.y = 2.5; helmet.castShadow = true; playerGroup.add(helmet);
+const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.33, 12, 12), armorMat);
+helmet.position.y = 2.45; helmet.castShadow = true; playerGroup.add(helmet);
 
-const visor = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.1, 0.3), new THREE.MeshBasicMaterial({color: 0x3b82f6}));
-visor.position.set(0, 2.5, -0.22); playerGroup.add(visor);
+const visor = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.1, 0.3), new THREE.MeshBasicMaterial({color: 0x3b82f6}));
+visor.position.set(0, 2.45, -0.22); playerGroup.add(visor);
 
-// Espada Sagrada Luminosa
 const swordGroup = new THREE.Group();
-const blade = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.2, 0.04), new THREE.MeshStandardMaterial({color: 0xffffff, emissive: 0x93c5fd, metalness: 0.2}));
+const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.2, 0.04), new THREE.MeshStandardMaterial({color: 0xffffff, emissive: 0x93c5fd, metalness: 0.1}));
 blade.position.y = 1.1;
 const crossguard = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.08, 0.08), goldMat);
 crossguard.position.y = 0.1;
 swordGroup.add(blade, crossguard);
-swordGroup.position.set(0.7, 1.2, -0.4);
+swordGroup.position.set(0.6, 1.2, -0.4);
 swordGroup.rotation.set(Math.PI / 3, 0, -Math.PI / 10);
 playerGroup.add(swordGroup);
 
 scene.add(playerGroup);
 
-// Câmera em 3ª pessoa estável
 const cameraPivot = new THREE.Group();
-cameraPivot.position.set(0, 2.6, 0); 
+cameraPivot.position.set(0, 2.5, 0); 
 playerGroup.add(cameraPivot);
 cameraPivot.add(camera);
-camera.position.set(0, 0.5, 5.0);
-camera.lookAt(0, 2.0, -2);
+camera.position.set(0, 0.4, 5.0);
+camera.lookAt(0, 1.9, -2);
 
-// --- 4. ENTIDADES: GUARDIÃO DE CRISTAL (Antigo Monstro) ---
+// --- 4. ENTIDADE DO INIMIGO (TITÃ DE CRISTAL) ---
 const enemyGroup = new THREE.Group();
 const golemMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, flatShading: false });
 const energyCoreMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x1d4ed8 });
 
-const dTorso = new THREE.Mesh(new THREE.SphereGeometry(1.6, 16, 16), golemMat);
+const dTorso = new THREE.Mesh(new THREE.SphereGeometry(1.5, 12, 12), golemMat);
 dTorso.position.y = 2.5; dTorso.scale.set(1.1, 1.4, 0.9); dTorso.castShadow = true;
 enemyGroup.add(dTorso);
 
-const dHead = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), golemMat);
-dHead.position.y = 4.2; dHead.castShadow = true;
+const dHead = new THREE.Mesh(new THREE.SphereGeometry(0.48, 12, 12), golemMat);
+dHead.position.y = 4.1; dHead.castShadow = true;
 enemyGroup.add(dHead);
 
-const hornL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.15, 1.2, 8), energyCoreMat);
-hornL.position.set(-0.5, 4.8, 0.1); hornL.rotation.set(-0.3, 0, -0.4);
+const hornL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.12, 1.1, 6), energyCoreMat);
+hornL.position.set(-0.45, 4.6, 0.1); hornL.rotation.set(-0.3, 0, -0.4);
 enemyGroup.add(hornL);
-const hornR = hornL.clone(); hornR.position.x = 0.5; hornR.rotation.z = 0.4;
+const hornR = hornL.clone(); hornR.position.x = 0.45; hornR.rotation.z = 0.4;
 enemyGroup.add(hornR);
 
 scene.add(enemyGroup);
-enemyGroup.position.set(20, 0, -30);
+enemyGroup.position.set(15, 0, -25);
 
-// --- 5. LÓGICA DE ATRIBUTOS E INPUTS ---
-const playerState = { hp: 100, hpMax: 100, defendendo: false, atacando: false, cooldownAtaque: 0, timerDanoGlow: 0 };
-const bossState = { hp: 500, hpMax: 500, vivo: true, cooldownAtaque: 0, alertado: false, timerDanoGlow: 0 };
+// --- 5. ENGENHARIA DE ESTADOS E EVENTOS ---
+const playerState = { hp: 100, hpMax: 100, defendendo: false, atacando: false, cooldownAtaque: 0.0, timerDanoGlow: 0.0 };
+const bossState = { hp: 500, hpMax: 500, vivo: true, cooldownAtaque: 0.0, alertado: false, timerDanoGlow: 0.0 };
 
 const teclado = {};
 let mouseTravado = false;
@@ -160,50 +157,59 @@ uiMouse.addEventListener("click", () => document.body.requestPointerLock());
 document.addEventListener("pointerlockchange", () => {
     mouseTravado = (document.pointerLockElement === document.body);
     uiMouse.style.opacity = mouseTravado ? "0" : "1";
-    uiMouse.style.pointerEvents = mouseTravado ? "none" : "auto";
+    uiMouse.style.visibility = mouseTravado ? "hidden" : "visible";
 });
 
 document.addEventListener("mousemove", (e) => {
     if (!mouseTravado) return;
-    const sensibilidade = 0.0025;
+    const sensibilidade = 0.0022;
     playerGroup.rotation.y -= e.movementX * sensibilidade;
     cameraPivot.rotation.x -= e.movementY * sensibilidade;
-    cameraPivot.rotation.x = Math.max(-Math.PI / 8, Math.min(Math.PI / 4, cameraPivot.rotation.x));
+    cameraPivot.rotation.x = Math.max(-0.3, Math.min(0.5, cameraPivot.rotation.x));
 });
 
-// --- COMBATE EM TEMPO REAL ---
+// Mecânica Interativa de Ataques Físicos Reais
 window.addEventListener("mousedown", (e) => {
     if (!mouseTravado || !bossState.vivo) return;
 
-    if (e.button === 0 && !playerState.atacando && playerState.cooldownAtaque <= 0) {
+    if (e.button === 0 && !playerState.atacando && playerState.cooldownAtaque <= 0.0) {
         playerState.atacando = true;
-        playerState.cooldownAtaque = 22;
-        logCombate.innerText = "⚔️ Golpe de luz deferido!";
+        playerState.cooldownAtaque = 0.4; // 0.4 segundos de recarga mecânica
+        logCombate.innerText = "⚔️ Investida com lâmina de luz!";
         
-        const playerPos = playerGroup.position.clone().add(new THREE.Vector3(0, 1.5, 0));
-        let distanciaAtaque = playerPos.distanceTo(enemyGroup.position);
+        // CÁLCULO VETORIAL DIREÇÃO + CONE DE ATAQUE (Dot Product Otimizado)
+        playerGroup.getWorldPosition(_vectorScratchA);
+        enemyGroup.getWorldPosition(_vectorScratchB);
+        let distanciaFisica = _vectorScratchA.distanceTo(_vectorScratchB);
         
-        if (distanciaAtaque < 4.8) {
-            bossState.alertado = true;
-            let dano = 25 + Math.floor(Math.random() * 10);
-            bossState.hp = Math.max(0, bossState.hp - dano);
-            bossState.timerDanoGlow = 6;
-            
-            document.getElementById("boss-hud").classList.remove("hidden");
-            atualizarHUD();
-            logCombate.innerText = `💥 Você atingiu o Titã! Causou ${dano} de dano bônus.`;
+        if (distanciaFisica < 4.8) {
+            _forwardVector.set(0, 0, -1).applyQuaternion(playerGroup.quaternion);
+            _vectorScratchB.sub(_vectorScratchA).normalize();
+            let produtoEscalar = _forwardVector.dot(_vectorScratchB);
 
-            if (bossState.hp <= 0 && bossState.vivo) {
-                bossState.vivo = false;
-                logCombate.innerText = "✨ O Guardião purificou-se e desapareceu!";
-                scene.remove(enemyGroup);
-                document.getElementById("boss-hud").classList.add("hidden");
+            // 0.866 corresponde a um cone perfeito de ~60 graus à frente do herói
+            if (produtoEscalar > 0.86) {
+                bossState.alertado = true;
+                let dano = 22 + Math.floor(Math.random() * 12);
+                bossState.hp = Math.max(0, bossState.hp - dano);
+                bossState.timerDanoGlow = 0.12;
+                
+                document.getElementById("boss-hud").classList.remove("hidden");
+                atualizarHUD();
+                logCombate.innerText = `💥 Impacto Direto! Você causou ${dano} de dano ao Titã.`;
+
+                if (bossState.hp <= 0 && bossState.vivo) {
+                    bossState.vivo = false;
+                    logCombate.innerText = "✨ O Guardião desintegrou-se em pura energia vital!";
+                    scene.remove(enemyGroup);
+                    document.getElementById("boss-hud").classList.add("hidden");
+                }
             }
         }
     } 
     else if (e.button === 2) {
         playerState.defendendo = true;
-        swordGroup.position.set(0, 1.5, -0.6);
+        swordGroup.position.set(0, 1.4, -0.5);
         swordGroup.rotation.set(0, 0, Math.PI / 2);
     }
 });
@@ -211,7 +217,7 @@ window.addEventListener("mousedown", (e) => {
 window.addEventListener("mouseup", (e) => {
     if (e.button === 2) {
         playerState.defendendo = false;
-        swordGroup.position.set(0.7, 1.2, -0.4);
+        swordGroup.position.set(0.6, 1.2, -0.4);
         swordGroup.rotation.set(Math.PI / 3, 0, -Math.PI / 10);
     }
 });
@@ -221,75 +227,73 @@ window.addEventListener("contextmenu", e => e.preventDefault());
 function atualizarHUD() {
     document.getElementById("lbl-player-hp").innerText = playerState.hp;
     document.getElementById("bar-player-hp").style.width = `${playerState.hp}%`;
-
     document.getElementById("lbl-monster-hp").innerText = bossState.hp;
     document.getElementById("bar-monster-hp").style.width = `${(bossState.hp / bossState.hpMax) * 100}%`;
 }
 
-let shakeTimer = 0;
-function processarCameraShake() {
+let shakeTimer = 0.0;
+function processarCameraShake(delta) {
     if (shakeTimer > 0) {
-        camera.position.x = (Math.random() - 0.5) * 0.08; // Balanço menor, mais suave
-        camera.position.y = 0.5 + (Math.random() - 0.5) * 0.08;
-        shakeTimer--;
+        camera.position.x = (Math.random() - 0.5) * 0.12;
+        camera.position.y = 0.4 + (Math.random() - 0.5) * 0.12;
+        shakeTimer -= delta;
     } else {
-        camera.position.x = 0;
-        camera.position.y = 0.5;
+        camera.position.set(0, 0.4, 5.0);
     }
 }
 
-// --- 6. LOOP DE ATUALIZAÇÃO DA FILTRAGEM DE TEXTURAS ---
+// --- 6. CORE SIMULATION LOOP (FPS INDEPENDENTE) ---
+let tempoAcumulado = 0;
+
 function animate() {
     requestAnimationFrame(animate);
 
-    // Movimentação flutuante e calma das esferas de luz
+    const delta = clock.getDelta();
+    tempoAcumulado += delta;
+
+    // Animação de Partículas
     const pos = particulas.geometry.attributes.position.array;
-    for(let i = 1; i < count * 3; i += 3) {
-        pos[i] -= 0.03;
+    for(let i = 1; i < pCount * 3; i += 3) {
+        pos[i] -= 1.8 * delta;
         if(pos[i] < 0) pos[i] = 35;
     }
     particulas.geometry.attributes.position.needsUpdate = true;
 
     if (mouseTravado) {
-        if (playerState.cooldownAtaque > 0) playerState.cooldownAtaque--;
-        if (bossState.cooldownAtaque > 0) bossState.cooldownAtaque--;
+        // Decrementos temporais precisos baseados em delta
+        if (playerState.cooldownAtaque > 0) playerState.cooldownAtaque -= delta;
+        if (bossState.cooldownAtaque > 0) bossState.cooldownAtaque -= delta;
+        if (bossState.timerDanoGlow > 0) bossState.timerDanoGlow -= delta;
+        if (playerState.timerDanoGlow > 0) playerState.timerDanoGlow -= delta;
 
+        // Feedback visual de emissivos pós-golpe
+        golemMat.emissive.setHex(bossState.timerDanoGlow > 0 ? 0x3b82f6 : 0x000000);
+        armorMat.emissive.setHex(playerState.timerDanoGlow > 0 ? 0xef4444 : 0x000000);
+
+        // Animação de Arco da Espada
         if (playerState.atacando) {
-            swordGroup.rotation.y -= 0.35;
-            if (swordGroup.rotation.y < -Math.PI / 2) {
+            swordGroup.rotation.y -= 22 * delta;
+            if (swordGroup.rotation.y < -Math.PI / 1.8) {
                 playerState.atacando = false;
                 swordGroup.rotation.set(Math.PI / 3, 0, -Math.PI / 10);
             }
         }
 
-        // Respostas de brilho ao tomar dano (Transparência/Emissão)
-        if (bossState.timerDanoGlow > 0) {
-            golemMat.emissive.setHex(0x3b82f6); // Pisca em azul brilhante
-            bossState.timerDanoGlow--;
-        } else {
-            golemMat.emissive.setHex(0x000000);
-        }
-
-        if (playerState.timerDanoGlow > 0) {
-            armorMat.emissive.setHex(0x3b82f6);
-            playerState.timerDanoGlow--;
-        } else {
-            armorMat.emissive.setHex(0x000000);
-        }
-
-        // Movimentação fluida
-        const vel = 0.22;
-        if (teclado['w']) playerGroup.translateZ(-vel);
-        if (teclado['s']) playerGroup.translateZ(vel);
-        if (teclado['a']) playerGroup.translateX(-vel);
-        if (teclado['d']) playerGroup.translateX(vel);
+        // Movimentação do Herói com normalização de velocidade por segundo
+        const mVel = 12.5 * delta;
+        if (teclado['w']) playerGroup.translateZ(-mVel);
+        if (teclado['s']) playerGroup.translateZ(mVel);
+        if (teclado['a']) playerGroup.translateX(-mVel);
+        if (teclado['d']) playerGroup.translateX(mVel);
 
         playerGroup.position.x = Math.max(-75, Math.min(75, playerGroup.position.x));
         playerGroup.position.z = Math.max(-75, Math.min(75, playerGroup.position.z));
 
-        // IA DO GUARDIÃO
+        // INTELIGÊNCIA ARTIFICIAL E RASTREAMENTO DO BOSS
         if (bossState.vivo) {
-            let distHeroi = enemyGroup.position.distanceTo(playerGroup.position);
+            playerGroup.getWorldPosition(_vectorScratchA);
+            enemyGroup.getWorldPosition(_vectorScratchB);
+            let distHeroi = _vectorScratchA.distanceTo(_vectorScratchB);
 
             if (distHeroi < 25.0) bossState.alertado = true;
 
@@ -297,34 +301,34 @@ function animate() {
                 document.getElementById("boss-hud").classList.remove("hidden");
                 enemyGroup.lookAt(playerGroup.position.x, enemyGroup.position.y, playerGroup.position.z);
 
-                if (distHeroi > 4.0) {
-                    enemyGroup.translateZ(0.10); // Corrida balanceada
+                if (distHeroi > 3.8) {
+                    enemyGroup.translateZ(6.5 * delta); // Velocidade de corrida linear estável
                 } else {
-                    if (bossState.cooldownAtaque <= 0) {
-                        bossState.cooldownAtaque = 55;
+                    if (bossState.cooldownAtaque <= 0.0) {
+                        bossState.cooldownAtaque = 0.9; // Cadência de ataque do Boss
                         
-                        let danoInimigo = 15 + Math.floor(Math.random() * 8);
+                        let danoInimigo = 14 + Math.floor(Math.random() * 8);
                         if (playerState.defendendo) {
-                            danoInimigo = Math.floor(danoInimigo * 0.15);
-                            logCombate.innerText = `🛡️ Ataque absorvido com sucesso! (${danoInimigo} de dano sofrido)`;
+                            danoInimigo = Math.floor(danoInimigo * 0.15); // Mitiga 85% do golpe
+                            logCombate.innerText = `🛡️ Bloqueio Crítico! Absorveu o impacto sofrendo apenas ${danoInimigo} HP.`;
                         } else {
                             playerState.hp = Math.max(0, playerState.hp - danoInimigo);
-                            playerState.timerDanoGlow = 8;
-                            shakeTimer = 8;
-                            logCombate.innerText = `🚨 O Guardião descarregou energia física! Sofreu ${danoInimigo} de dano.`;
+                            playerState.timerDanoGlow = 0.15;
+                            shakeTimer = 0.2; // Ativa tremor de câmera físico por tempo controlado
+                            logCombate.innerText = `🚨 O Guardião desferiu uma pancada energética! - ${danoInimigo} HP.`;
                             atualizarHUD();
                         }
 
                         if (playerState.hp <= 0) {
-                            logCombate.innerText = "💀 Você desmaiou. Reiniciando a área...";
-                            setTimeout(() => location.reload(), 2500);
+                            logCombate.innerText = "💀 Conexão perdida. Força vital zerada. Reiniciando...";
+                            setTimeout(() => location.reload(), 2000);
                         }
                     }
                 }
             }
         }
 
-        processarCameraShake();
+        processarCameraShake(delta);
     }
 
     renderer.render(scene, camera);
