@@ -3,24 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gothic Action RPG - Realista</title>
+    <title>Gothic Action RPG - Performance Edition</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <!-- Mira Central para imersão estilo Minecraft/Action RPG -->
     <div id="reticula"></div>
 
-    <!-- UI Inicial de Bloqueio de Mouse -->
     <div id="travar-mouse-ui">
-        CLIQUE PARA ENTRAR NO ABISMO
-        <br><span style="font-size: 13px; color: #888;">(W, A, S, D para andar | Mouse olha | Clique Esquerdo ataca | Clique Direito defende)</span>
+        CLIQUE PARA INICIAR O SIMULADOR
+        <br><span style="font-size: 13px; color: #aaa; margin-top: 10px;">(W, A, S, D | Mouse | Clique Esquerdo: Atacar | Clique Direito: Defender)</span>
     </div>
 
-    <!-- HUD de Combate em Tempo Real -->
     <div id="game-hud">
-        <!-- Vida do Herói -->
+        <!-- Herói -->
         <div class="hud-box player-hud">
             <div class="hud-label">🛡️ CAVALEIRO ALADO</div>
             <div class="hp-container">
@@ -29,7 +26,7 @@
             <div class="hp-texto"><span id="lbl-player-hp">100</span> / 100 HP</div>
         </div>
 
-        <!-- Vida do Chefe (Só aparece quando ele toma dano ou está perto) -->
+        <!-- Chefe -->
         <div id="boss-hud" class="hud-box boss-hud hidden">
             <div class="hud-label" id="lbl-monster-name">BARROG, O DESTRUIDOR</div>
             <div class="hp-container">
@@ -39,8 +36,7 @@
         </div>
     </div>
 
-    <!-- Painel de Avisos/Combate rápido no canto -->
-    <div id="combat-log">A escuridão aguarda seus passos...</div>
+    <div id="combat-log">Sistema operacional gráfico iniciado. Pronto para combate.</div>
 
     <script src="js/game.js"></script>
 </body>
