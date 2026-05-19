@@ -16,7 +16,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     domBtnOpcoes.addEventListener("click", () => domOpcoes.classList.remove("hidden"));
     domBtnFecharOpcoes.addEventListener("click", () => {
-        // Salva as configurações escolhidas pelo usuário nos inputs
         const valorSens = document.getElementById("slider-sens").value;
         configGlobal.sensibilidade = 0.0011 * valorSens;
         configGlobal.apenasWireframe = document.getElementById("check-wireframe").checked;
@@ -28,11 +27,11 @@ window.addEventListener('DOMContentLoaded', () => {
         domInicial.style.opacity = "0";
         setTimeout(() => {
             domInicial.classList.add("hidden");
-            inicializarMotorJogo(); // Só consome recursos após o clique
+            inicializarMotorJogo(); // Inicializa gráficos e o sistema de áudio
         }, 500);
     });
 
-    // --- CORE DO MOTOR 3D (ENCAPSULADO PARA PERFORMANCE) ---
+    // --- CORE DO MOTOR 3D E SISTEMA DE ÁUDIO ---
     function inicializarMotorJogo() {
         configGlobal.jogoIniciado = true;
 
@@ -47,10 +46,32 @@ window.addEventListener('DOMContentLoaded', () => {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         document.body.appendChild(renderer.domElement);
 
+        // --- ADIÇÃO DA MÚSICA DE FUNDO (WEB AUDIO API DO THREE.JS) ---
+        const audioListener = new THREE.AudioListener();
+        camera.add(audioListener); // Vincula o ouvido do sistema à câmara
+
+        const musicaTema = new THREE.Audio(audioListener);
+        const audioLoader = new THREE.AudioLoader();
+
+        // Carrega o arquivo local que salvaste
+        audioLoader.load('musica-tema.mp3', function(buffer) {
+            musicaTema.setBuffer(buffer);
+            musicaTema.setLoop(true);
+            musicaTema.setVolume(0.40); // Volume balanceado (40%) para não abafar os logs
+            musicaTema.play();
+            document.getElementById("combat-log").innerText = "🎵 Sincronização de Áudio: Tema 'Zero-Sum Decay' ativo.";
+        }, 
+        // Função de progresso (opcional)
+        undefined,
+        // Alerta caso o ficheiro não seja encontrado
+        function(err) {
+            console.log("Certifica-te de que guardaste o ficheiro como 'musica-tema.mp3' na mesma pasta.");
+        });
+
         const clock = new THREE.Clock();
         let tempoAcumulado = 0;
 
-        // Cache de vetores reutilizáveis (Otimização contra gargalo de Garbage Collection)
+        // Cache de vetores reutilizáveis
         const _vA = new THREE.Vector3();
         const _vB = new THREE.Vector3();
         const _fwd = new THREE.Vector3();
@@ -62,7 +83,7 @@ window.addEventListener('DOMContentLoaded', () => {
         scene.add(sunLight);
 
         // --- GERAÇÃO DE CENÁRIO ---
-        const floorGeo = new THREE.PlaneGeometry(160, 160, 20, 20); // Vértices reduzidos de 40 para 20 (Ganho de performance)
+        const floorGeo = new THREE.PlaneGeometry(160, 160, 20, 20);
         const posAtributo = floorGeo.attributes.position;
         for (let i = 0; i < posAtributo.count; i++) {
             let vx = posAtributo.getX(i);
@@ -102,18 +123,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
         // --- CONSTRUÇÃO DO JOGADOR (HOLOGRÁFICO ALADO) ---
         const playerGroup = new THREE.Group();
-        const holoMat = new THREE.MeshBasicMaterial({ 
-            color: 0x00f3ff, 
-            wireframe: true, 
-            transparent: true, 
-            opacity: 0.35 
-        });
-        const holoGlowMat = new THREE.MeshStandardMaterial({ 
-            color: 0x00aeff, 
-            emissive: 0x004466, 
-            transparent: true, 
-            opacity: configGlobal.apenasWireframe ? 0.0 : 0.6 // Respeita a opção selecionada no menu
-        });
+        const holoMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true, transparent: true, opacity: 0.35 });
+        const holoGlowMat = new THREE.MeshStandardMaterial({ color: 0x00aeff, emissive: 0x004466, transparent: true, opacity: configGlobal.apenasWireframe ? 0.0 : 0.6 });
 
         const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.4, 1.5, 10), holoMat);
         torso.position.y = 1.5;
@@ -161,7 +172,6 @@ window.addEventListener('DOMContentLoaded', () => {
         const skinMat = new THREE.MeshStandardMaterial({ color: 0x5a6344, roughness: 0.9 });
         const woodMat = new THREE.MeshStandardMaterial({ color: 0x523624, roughness: 0.9 });
         const boneMat = new THREE.MeshStandardMaterial({ color: 0xdecaa5, roughness: 0.8 });
-        const ironMat = new THREE.MeshStandardMaterial({ color: 0x4f4f4f, metalness: 0.5 });
 
         const ogreTorso = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.1, 2.6, 12), skinMat);
         ogreTorso.position.y = 2.2; ogreTorso.scale.set(1.4, 1.0, 1.1);
@@ -299,11 +309,9 @@ window.addEventListener('DOMContentLoaded', () => {
             const delta = clock.getDelta();
             tempoAcumulado += delta; 
 
-            // Animação das asas holográficas (Seno matemático contínuo)
             wingGroupL.rotation.y = Math.sin(tempoAcumulado * 4) * 0.3;
             wingGroupR.rotation.y = -Math.sin(tempoAcumulado * 4) * 0.3;
 
-            // Queda das partículas do ambiente
             const pos = particulas.geometry.attributes.position.array;
             for(let i = 1; i < pCount * 3; i += 3) {
                 pos[i] -= 2.5 * delta;
@@ -328,7 +336,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // Movimento baseado no teclado
                 const mVel = 12.5 * delta;
                 if (teclado['w']) playerGroup.translateZ(-mVel);
                 if (teclado['s']) playerGroup.translateZ(mVel);
@@ -353,7 +360,6 @@ window.addEventListener('DOMContentLoaded', () => {
                             enemyGroup.translateZ(5.5 * delta);
                             clubGroup.rotation.x = (Math.PI / 2.3) + Math.sin(tempoAcumulado * 5) * 0.08;
                         } else {
-                            // Lógica de Ataque do Ogro Chefe
                             if (bossState.cooldownAtaque <= 0.0) {
                                 bossState.cooldownAtaque = 1.2;
                                 
