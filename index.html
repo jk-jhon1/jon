@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gothic Action RPG - Performance Edition</title>
-    <link rel="stylesheet" href="css/style.css">
+    <!-- Busca o arquivo na mesma pasta, eliminando o erro 404 -->
+    <link rel="stylesheet" href="style.css">
+    <!-- CDN do Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
@@ -38,6 +40,7 @@
 
     <div id="combat-log">Sistema operacional gráfico iniciado. Pronto para combate.</div>
 
-    <script src="js/game.js"></script>
+    <!-- Script na raiz com carregamento deferido seguro -->
+    <script defer src="game.js"></script>
 </body>
 </html>
