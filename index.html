@@ -3,34 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gothic Action RPG - Performance Edition</title>
-    <!-- Link direto para a pasta raiz, eliminando erro 404 -->
+    <title>HoloKnight vs Ogre Esmagador</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Biblioteca Core 3D -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <div id="reticula"></div>
+    <div id="tela-inicial">
+        <div class="menu-container">
+            <h1 class="titulo-jogo">HOLO<span>KNIGHT</span></h1>
+            <p class="subtitulo-jogo">THE OGRE'S ABYSS</p>
+            
+            <div class="menu-botoes">
+                <button id="btn-iniciar" class="btn-menu">INICIAR SIMULADOR</button>
+                <button id="btn-opcoes" class="btn-menu btn-secundario">OPÇÕES DA MATRIZ</button>
+            </div>
+        </div>
 
-    <div id="travar-mouse-ui">
-        CLIQUE PARA INICIAR O SIMULADOR
-        <br><span style="font-size: 13px; color: #aaa; margin-top: 10px;">(W, A, S, D | Mouse | Clique Esquerdo: Atacar | Clique Direito: Defender)</span>
+        <div id="painel-opcoes" class="hidden">
+            <h3>CONFIGURAÇÕES DO SISTEMA</h3>
+            <div class="opcao-item">
+                <label for="slider-sens">Sensibilidade do Mouse:</label>
+                <input type="range" id="slider-sens" min="1" max="5" value="2" step="0.5">
+            </div>
+            <div class="opcao-item">
+                <label for="check-wireframe">Apenas Malha Digital (Wireframe):</label>
+                <input type="checkbox" id="check-wireframe">
+            </div>
+            <button id="btn-fechar-opcoes">SALVAR E VOLTAR</button>
+        </div>
     </div>
 
-    <div id="game-hud">
-        <!-- Herói -->
+    <div id="travar-mouse-ui" class="hidden">
+        CLIQUE NA TELA PARA RETOMAR O CONTROLE
+        <br><span style="font-size: 13px; color: #888; margin-top: 10px;">(W, A, S, D: Mover | Mouse: Olhar | Clique Esquerdo: Atacar | Clique Direito: Defender)</span>
+    </div>
+
+    <div id="reticula" class="hidden"></div>
+
+    <div id="game-hud" class="hidden">
         <div class="hud-box player-hud">
-            <div class="hud-label">🛡️ CAVALEIRO ALADO</div>
+            <div class="hud-label">🛡️ HOLOGRAPHIC KNIGHT</div>
             <div class="hp-container">
                 <div id="bar-player-hp" class="hp-bar player-hp"></div>
             </div>
             <div class="hp-texto"><span id="lbl-player-hp">100</span> / 100 HP</div>
         </div>
 
-        <!-- Chefe -->
         <div id="boss-hud" class="hud-box boss-hud hidden">
-            <div class="hud-label" id="lbl-monster-name">BARROG, O DESTRUIDOR</div>
+            <div class="hud-label">👹 OGRO ESMAGADOR</div>
             <div class="hp-container">
                 <div id="bar-monster-hp" class="hp-bar monster-hp"></div>
             </div>
@@ -38,9 +59,8 @@
         </div>
     </div>
 
-    <div id="combat-log">Sistema operacional gráfico iniciado. Pronto para combate.</div>
+    <div id="combat-log" class="hidden">Sistema pronto. Aguardando inicialização...</div>
 
-    <!-- Script na raiz com carregamento deferido seguro -->
     <script defer src="game.js"></script>
 </body>
 </html>
