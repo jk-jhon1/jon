@@ -1,4 +1,3 @@
-/* --- ESTILO GERAL DO JOGO --- */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -10,8 +9,8 @@ body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #010103;
-    font-family: 'Cinzel', 'Georgia', serif;
+    background-color: #020204;
+    font-family: 'Georgia', serif;
 }
 
 canvas {
@@ -20,172 +19,134 @@ canvas {
     height: 100vh;
 }
 
-/* --- INTERFACE DE BLOQUEIO DE MOUSE --- */
-#travar-mouse-ui {
+/* Mira Central */
+#reticula {
     position: absolute;
     top: 50%;
     left: 50%;
+    width: 6px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
     transform: translate(-50%, -50%);
-    color: #ffaa00;
-    font-weight: bold;
-    font-size: 18px;
-    background: rgba(5, 5, 10, 0.85);
-    padding: 20px 40px;
-    border: 2px solid #442266;
-    border-radius: 4px;
-    text-align: center;
-    cursor: pointer;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
     z-index: 10;
-    transition: all 0.3s ease;
-}
-#travar-mouse-ui:hover {
-    background: rgba(15, 10, 25, 0.95);
-    border-color: #ffaa00;
-    color: #fff;
+    pointer-events: none;
 }
 
-/* --- TELA DE COMBATE (DARK FANTASY) --- */
-#battle-screen {
+/* Tela de Entrada */
+#travar-mouse-ui {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.65);
+    background: rgba(1, 1, 3, 0.85);
+    color: #da9100;
+    font-weight: bold;
+    font-size: 20px;
+    letter-spacing: 3px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    text-align: center;
+    cursor: pointer;
+    z-index: 20;
+    transition: opacity 0.5s ease;
+}
+
+/* HUD DO JOGO (Tempo Real) */
+#game-hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none; /* Não bloqueia cliques no jogo */
     z-index: 5;
 }
 
-.battle-container {
-    background: linear-gradient(135deg, #0d0d13 0%, #050508 100%);
-    border: 2px solid #331111;
-    box-shadow: 0 0 30px rgba(255, 0, 0, 0.15);
-    width: 90%;
-    max-width: 750px;
-    padding: 30px;
-    border-radius: 6px;
-    text-align: center;
-    color: #e0e0e0;
-}
-
-h2 {
-    color: #ff3333;
-    letter-spacing: 2px;
-    font-size: 24px;
-    text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
-}
-
-.divisor {
-    border: 0;
-    height: 1px;
-    background: linear-gradient(to right, transparent, #ff3333, transparent);
-    margin: 15px 0 25px 0;
-}
-
-.battle-flex {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-}
-
-.fighter-box {
-    width: 42%;
-    background: rgba(255, 255, 255, 0.03);
-    padding: 15px;
-    border: 1px solid #222;
+.hud-box {
+    background: linear-gradient(180deg, rgba(10,10,15,0.85) 0%, rgba(5,5,8,0.4) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 12px 20px;
     border-radius: 4px;
+    width: 280px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
 }
 
-.vs {
-    font-size: 22px;
+.boss-hud {
+    width: 400px;
+    border-color: rgba(255, 0, 0, 0.2);
+}
+
+.hud-label {
+    font-size: 11px;
     font-weight: bold;
-    color: #555;
-    text-shadow: 0 0 5px #000;
+    letter-spacing: 2px;
+    color: #aaa;
+    margin-bottom: 5px;
 }
 
-/* --- BARRAS DE VIDA (HP) --- */
+.boss-hud .hud-label {
+    color: #ff4444;
+    text-align: right;
+}
+
+/* Barras de HP */
 .hp-container {
-    background-color: #221111;
+    background: #1a0f0f;
     width: 100%;
-    height: 16px;
-    border-radius: 3px;
-    margin: 10px 0;
-    overflow: hidden;
+    height: 10px;
     border: 1px solid #000;
+    border-radius: 2px;
+    overflow: hidden;
 }
 
 .hp-bar {
     height: 100%;
     width: 100%;
-    transition: width 0.4s ease-out;
+    transition: width 0.1s linear;
 }
 
 .player-hp {
-    background: linear-gradient(to right, #0044ff, #00aaff);
-    box-shadow: 0 0 8px rgba(0, 170, 255, 0.5);
+    background: linear-gradient(to right, #0033aa, #0088ff);
+    box-shadow: 0 0 10px rgba(0, 136, 255, 0.4);
 }
 
 .monster-hp {
-    background: linear-gradient(to right, #990000, #ff2222);
-    box-shadow: 0 0 8px rgba(255, 34, 34, 0.5);
+    background: linear-gradient(to right, #770000, #ff1111);
+    box-shadow: 0 0 10px rgba(255, 17, 17, 0.4);
 }
 
-.state-badge {
-    display: inline-block;
-    margin-top: 5px;
+.hp-texto {
     font-size: 12px;
-    color: #ffaa00;
-}
-
-/* --- LOG DE DIÁLOGOS/AÇÕES --- */
-#battle-log {
-    background: #020203;
-    border-left: 3px solid #ffaa00;
-    padding: 15px;
-    text-align: left;
-    min-height: 55px;
-    font-size: 14px;
-    line-height: 1.4;
-    margin-bottom: 25px;
-    color: #ccc;
-}
-
-/* --- BOTÕES DE AÇÃO --- */
-.battle-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.battle-actions button {
-    background: #12121c;
-    border: 1px solid #3c3c5c;
-    color: #b0b0d0;
-    padding: 12px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    border-radius: 3px;
-    transition: all 0.2s ease;
-}
-
-.battle-actions button:hover:not(:disabled) {
-    background: #1c1c30;
-    border-color: #ffaa00;
     color: #fff;
-    box-shadow: 0 0 10px rgba(255, 170, 0, 0.2);
+    margin-top: 4px;
+    font-weight: bold;
 }
 
-.battle-actions button:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
+.boss-hud .hp-texto {
+    text-align: right;
 }
 
-/* --- CLASSE UTILITÁRIA PARA ESCONDER ELEMENTOS --- */
+/* Feed de Combate no Canto */
+#combat-log {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border-left: 3px solid #ff4444;
+    padding: 10px 20px;
+    color: #ccc;
+    font-size: 13px;
+    pointer-events: none;
+    z-index: 5;
+    max-width: 350px;
+}
+
 .hidden {
     display: none !important;
 }
