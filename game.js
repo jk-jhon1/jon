@@ -1,7 +1,15 @@
 (function() {
     "use strict";
 
-    window.addEventListener('DOMContentLoaded', () => {
+    // --- CORREÇÃO DO GATILHO DE INICIALIZAÇÃO ---
+    // Se o DOM já estiver pronto, inicia direto. Se não, espera o evento.
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+        gerenciarAbertura();
+    } else {
+        window.addEventListener('DOMContentLoaded', gerenciarAbertura);
+    }
+
+    function gerenciarAbertura() {
         const domInicial = document.getElementById("tela-inicial");
         const domBtnIniciar = document.getElementById("btn-iniciar");
         
@@ -13,8 +21,11 @@
                     inicializarMotorJogo(); 
                 }, 500);
             });
+        } else {
+            // Se não houver tela inicial no HTML, roda o jogo imediatamente para não travar
+            inicializarMotorJogo();
         }
-    });
+    }
 
     function inicializarMotorJogo() {
         // --- SETUP DA CENA (Cenário Claro) ---
@@ -33,7 +44,7 @@
         const clock = new THREE.Clock();
         const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _fwd = new THREE.Vector3(), _dir = new THREE.Vector3();
         
-        // --- ESTADOS E ATRIBUTOS CORRIGIDOS ---
+        // --- ESTADOS E ATRIBUTOS ---
         const playerState = { 
             hp: 100, hpMax: 100, stamina: 100, staminaMax: 100,
             defendendo: false, atacando: false, 
@@ -57,8 +68,6 @@
         sunLight.castShadow = true;
         sunLight.shadow.mapSize.width = 2048; 
         sunLight.shadow.mapSize.height = 2048;
-        sunLight.shadow.camera.near = 0.5;
-        sunLight.shadow.camera.far = 200;
         const d = 75;
         sunLight.shadow.camera.left = -d; sunLight.shadow.camera.right = d;
         sunLight.shadow.camera.top = d; sunLight.shadow.camera.bottom = -d;
@@ -78,18 +87,18 @@
         floor.receiveShadow = true;
         scene.add(floor);
 
-        // --- MATERIAIS GLOBAIS ---
+        // --- MATERIAIS DOS PERSONAGENS (Sombrios) ---
         const armorMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.15 });
         const knightGlowMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0x990000, emissiveIntensity: 1.2 });
         const wMatSword = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 1, roughness: 0.1 });
-        const matOgro = new THREE.MeshStandardMaterial({ color: 0x444d35, roughness: 0.95 }); 
+        const matOgro = new THREE.MeshStandardMaterial({ color: 0x2d3522, roughness: 0.95 }); 
         const matDrone = new THREE.MeshStandardMaterial({ color: 0x050505, metalness: 1, roughness: 0.1 }); 
-        const matGuarda = new THREE.MeshStandardMaterial({ color: 0x333344, metalness: 0.9, roughness: 0.4 }); 
+        const matGuarda = new THREE.MeshStandardMaterial({ color: 0x1e1e24, metalness: 0.9, roughness: 0.4 }); 
         const matOlhoMal = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 1.8 });
         const matDano = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xff0000, emissiveIntensity: 4 });
         const geoMembro = new THREE.CylinderGeometry(0.15, 0.12, 1.2, 8); 
 
-        // --- CONSTRUÇÃO DO JOGADOR (Com Arsenal Restaurado) ---
+        // --- CONSTRUÇÃO DO JOGADOR ---
         const playerGroup = new THREE.Group();
         
         const torso = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.5, 0.6), armorMat);
@@ -112,7 +121,6 @@
 
         const hand = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), armorMat); hand.castShadow = true;
         
-        // Restauração das Armas Fixada
         const mSword = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.8, 0.2), wMatSword); mSword.position.y = 1.3; mSword.castShadow = true;
         
         const mHammer = new THREE.Group();
@@ -191,7 +199,7 @@
         spawnInimigo('ogro', 0, -30); spawnInimigo('drone', 15, -20);
         spawnInimigo('drone', -15, -20); spawnInimigo('guarda', 20, -10);
 
-        // --- SISTEMA DE DROPS ---
+        // --- SPAWN DROPS ---
         const geoPocao = new THREE.CylinderGeometry(0.15, 0.15, 0.6, 8);
         const geoSucata = new THREE.OctahedronGeometry(0.3);
 
@@ -205,7 +213,7 @@
             scene.add(malhaDrop); dropsMundo.push({ mesh: malhaDrop, tipo: tipoItem });
         }
 
-        // --- CONTROLES E EVENTOS ---
+        // --- CACHE SEGURO DE INTERFACE GRAPHICA ---
         const uiElements = {
             hud: document.getElementById("game-hud"), reticula: document.getElementById("reticula"),
             combatLog: document.getElementById("combat-log"), uiMouse: document.getElementById("travar-mouse-ui"),
@@ -219,6 +227,7 @@
         if(uiElements.combatLog) uiElements.combatLog.classList.remove("hidden");
         if(uiElements.uiMouse) uiElements.uiMouse.classList.remove("hidden");
 
+        // Captura de Inputs
         window.addEventListener('keydown', e => {
             const key = e.key.toLowerCase(); teclado[key] = true;
 
@@ -251,8 +260,16 @@
         }
 
         if(uiElements.uiMouse) uiElements.uiMouse.addEventListener("click", () => { if(!inventarioAberto) document.body.requestPointerLock(); });
+        
+        // CORREÇÃO: Verificação segura para evitar quebra caso o botão fechar não exista
         const btnFechar = document.getElementById("btn-fechar-inv");
-        if(btnFechar) btnFechar.addEventListener("click", () => { inventarioAberto = false; uiElements.painelInv.classList.add("hidden"); document.body.requestPointerLock(); });
+        if(btnFechar && uiElements.painelInv) {
+            btnFechar.addEventListener("click", () => { 
+                inventarioAberto = false; 
+                uiElements.painelInv.classList.add("hidden"); 
+                document.body.requestPointerLock(); 
+            });
+        }
 
         document.addEventListener("pointerlockchange", () => {
             mouseTravado = (document.pointerLockElement === document.body);
@@ -269,7 +286,7 @@
             cameraPivot.rotation.x = Math.max(-0.3, Math.min(0.5, cameraPivot.rotation.x));
         });
 
-        // --- SISTEMA DE COMBATE CORRIGIDO ---
+        // --- SISTEMA DE COMBATE ---
         window.addEventListener("mousedown", (e) => {
             if (!mouseTravado || inventarioAberto) return;
             const arma = arsenal[playerState.armaEquipada];
@@ -283,7 +300,6 @@
                 inimigos.forEach(inimigo => {
                     if (!inimigo.status.vivo) return;
                     inimigo.mesh.getWorldPosition(_vB);
-                    // Erro corrigido: Usando arma.alcance no lugar de inimigo.status.alcance
                     if (_vA.distanceTo(_vB) < arma.alcance) {
                         _dir.subVectors(_vB, _vA).normalize();
                         if (_fwd.dot(_dir) > 0.6) { 
@@ -314,7 +330,7 @@
             } 
         });
 
-        // --- HUD E INVENTÁRIO ---
+        // --- SINCRONIZAÇÃO DE HUD ---
         function atualizarHUD() {
             if(uiElements.hpBar) uiElements.hpBar.style.width = `${playerState.hp}%`;
             if(uiElements.stmBar) uiElements.stmBar.style.width = `${playerState.stamina}%`;
@@ -350,7 +366,7 @@
 
         function logMsg(msg) { if(uiElements.combatLog) uiElements.combatLog.innerText = msg; }
 
-        // --- LOOP PRINCIPAL ---
+        // --- LOOP DE RENDERIZAÇÃO ---
         function animate() {
             requestAnimationFrame(animate);
             const delta = Math.min(clock.getDelta(), 0.1);
@@ -362,6 +378,7 @@
                     playerState.stamina = Math.min(playerState.staminaMax, playerState.stamina + (25 * delta)); atualizarHUD(); 
                 }
                 
+                // Animação rítmica dos membros inferiores (pernas)
                 const wingDelta = Math.sin(tempoAcumulado * 5) * 0.15;
                 pEsq.rotation.x = -wingDelta; pDir.rotation.x = wingDelta;
 
@@ -379,6 +396,7 @@
                 if (teclado['a']) playerGroup.translateX(-mVel); if (teclado['d']) playerGroup.translateX(mVel);
                 playerGroup.getWorldPosition(_vA);
 
+                // Verificação de Coleta de Itens
                 for (let i = dropsMundo.length - 1; i >= 0; i--) {
                     let drop = dropsMundo[i]; drop.mesh.rotation.y += delta;
                     if (_vA.distanceTo(drop.mesh.position) < 2) { 
@@ -389,6 +407,7 @@
                     }
                 }
 
+                // Inteligência Artificial e Dano de Inimigos
                 inimigos.forEach(inimigo => {
                     if (!inimigo.status.vivo) return;
                     if (inimigo.status.timerDano > 0) { inimigo.status.timerDano -= delta; } 
@@ -421,6 +440,7 @@
                     }
                 });
 
+                // Efeito Tremor de Tela
                 if (shakeTimer > 0) { camera.position.x = (Math.random() - 0.5) * 0.2; shakeTimer -= delta; } 
                 else { camera.position.set(0, 0, 5.5); }
             }
