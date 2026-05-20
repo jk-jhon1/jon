@@ -1,49 +1,282 @@
-* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-body, html { width: 100%; height: 100%; overflow: hidden; background-color: #05070a; font-family: 'Segoe UI', sans-serif; }
-canvas { display: block; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
-
-#tela-inicial { position: absolute; width: 100%; height: 100%; background: radial-gradient(circle at center, #0f172a 0%, #05070a 100%); display: flex; justify-content: center; align-items: center; z-index: 30; transition: opacity 0.5s ease; }
-.menu-container { text-align: center; display: flex; flex-direction: column; align-items: center; }
-.titulo-jogo { font-size: 64px; font-weight: 900; color: #ffffff; letter-spacing: 6px; text-shadow: 0 0 20px rgba(0, 243, 255, 0.4); }
-.titulo-jogo span { color: #00f3ff; }
-.subtitulo-jogo { font-size: 14px; color: #64748b; letter-spacing: 8px; margin-bottom: 50px; font-weight: 700; }
-.btn-menu { width: 280px; padding: 16px 32px; font-size: 14px; font-weight: 700; letter-spacing: 2px; color: #05070a; background: #00f3ff; border: 1px solid #00f3ff; border-radius: 6px; cursor: pointer; transition: all 0.25s ease; }
-.btn-menu:hover { background: transparent; color: #00f3ff; transform: translateY(-2px); }
-
-#travar-mouse-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 7, 10, 0.85); color: #00f3ff; font-weight: 700; font-size: 16px; letter-spacing: 2px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; z-index: 20; }
-#reticula { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: rgba(0, 243, 255, 0.8); border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; }
-
-#game-hud { position: absolute; top: 0; left: 0; width: 100%; padding: 24px; display: flex; justify-content: space-between; pointer-events: none; z-index: 5; }
-.hud-box { background: rgba(15, 23, 42, 0.85); border: 1px solid #1e293b; padding: 14px 20px; border-radius: 8px; width: 290px; backdrop-filter: blur(8px); }
-.hud-label { font-size: 11px; font-weight: 800; color: #94a3b8; margin-bottom: 6px; }
-.hp-container { background: #1e293b; width: 100%; height: 8px; border-radius: 99px; overflow: hidden; }
-.stamina-container { height: 6px; }
-.hp-bar { height: 100%; width: 100%; transition: width 0.1s ease-out; }
-.player-hp { background: linear-gradient(90deg, #0088ff, #00f3ff); }
-.player-stamina { background: linear-gradient(90deg, #10b981, #34d399); }
-.hp-texto { font-size: 11px; color: #ffffff; margin-top: 5px; font-weight: 700; }
-
-.combat-ui-center { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 15px; pointer-events: none; }
-#combo-counter { font-size: 32px; font-weight: 900; color: #f59e0b; text-shadow: 0 0 15px rgba(245, 158, 11, 0.6); letter-spacing: 2px; }
-.weapon-inventory-panel { display: flex; gap: 20px; background: rgba(15, 23, 42, 0.85); border: 1px solid #1e293b; padding: 10px 20px; border-radius: 8px; backdrop-filter: blur(8px); }
-.weapon-slot, .inventory-slot { font-size: 13px; font-weight: 700; color: #e2e8f0; }
-.weapon-slot span { color: #00f3ff; }
-.inventory-slot span { color: #10b981; }
-
-#combat-log { position: absolute; bottom: 24px; left: 24px; background: rgba(15, 23, 42, 0.9); border-left: 4px solid #00f3ff; padding: 14px 20px; color: #e2e8f0; font-size: 13px; font-weight: 600; border-radius: 4px; pointer-events: none; z-index: 5; max-width: 400px; }
-.hidden { display: none !important; }
-
-/* --- NOVO: PAINEL DE INVENTÁRIO ABERTO (TECLA E) --- */
-#painel-inventario {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: rgba(15, 23, 42, 0.95); border: 2px solid #00f3ff; box-shadow: 0 0 40px rgba(0,243,255,0.2);
-    width: 450px; border-radius: 8px; padding: 20px; z-index: 25; color: white; display: flex; flex-direction: column; gap: 15px;
+/* Reset Global */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
 }
-.inventario-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; }
-.inventario-header h2 { font-size: 18px; color: #00f3ff; letter-spacing: 2px; }
-#btn-fechar-inv { background: transparent; border: none; color: #f87171; font-size: 18px; font-weight: bold; cursor: pointer; }
-#grid-inventario { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; min-height: 200px; background: #05070a; padding: 10px; border-radius: 4px; }
-.slot-item { background: #1e293b; border: 1px solid #334155; height: 65px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 24px; position: relative; transition: 0.2s; }
-.slot-item:hover { border-color: #00f3ff; background: #0f172a; cursor: pointer; }
-.item-qtd { position: absolute; bottom: 2px; right: 4px; font-size: 10px; font-weight: bold; color: #94a3b8; }
-.inventario-info { font-size: 11px; text-align: center; color: #64748b; }
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #dbeafe;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* utilitário de ocultação gráfica */
+.hidden {
+    display: none !important;
+}
+
+/* Tela de Entrada */
+#tela-inicial {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s;
+}
+
+.menu-container {
+    text-align: center;
+    color: #f8fafc;
+    padding: 30px;
+}
+
+.menu-container h1 {
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    color: #3b82f6;
+    text-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.menu-container p {
+    color: #94a3b8;
+    margin-bottom: 30px;
+    font-size: 0.95rem;
+}
+
+#btn-iniciar {
+    padding: 16px 44px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    transition: transform 0.1s, background 0.2s;
+}
+
+#btn-iniciar:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+}
+
+#btn-iniciar:active {
+    transform: translateY(0);
+}
+
+/* HUD de Combate */
+#game-hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 500;
+    background: rgba(15, 23, 42, 0.85);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #f8fafc;
+    min-width: 260px;
+    backdrop-filter: blur(4px);
+}
+
+.hud-status {
+    margin-bottom: 12px;
+}
+
+.hud-label {
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #94a3b8;
+    margin-bottom: 4px;
+}
+
+.barra-container {
+    width: 100%;
+    height: 12px;
+    background: #334155;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+#bar-player-hp {
+    width: 100%;
+    height: 100%;
+    background: #ef4444;
+    box-shadow: 0 0 8px #ef4444;
+    transition: width 0.15s ease-out;
+}
+
+#bar-player-stamina {
+    width: 100%;
+    height: 100%;
+    background: #f59e0b;
+    box-shadow: 0 0 8px #f59e0b;
+    transition: width 0.1s ease-out;
+}
+
+.hud-info {
+    font-size: 0.9rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 10px;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.hud-controles {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-align: center;
+}
+
+/* Retícula de Mira Central */
+#reticula {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 400;
+    pointer-events: none;
+}
+
+/* Histórico / Feed de Combate */
+#combat-log {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 500;
+    color: #22d3ee;
+    font-weight: bold;
+    font-size: 1.05rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    pointer-events: none;
+}
+
+/* Indicador de Mouse Desfocado */
+#travar-mouse-ui {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 600;
+    background: #ea580c;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.9; }
+    50% { opacity: 1; transform: scale(1.02); }
+    100% { opacity: 0.9; }
+}
+
+/* Sistema de Inventário Avançado */
+#painel-inventario {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.inventario-caixa {
+    background: #0f172a;
+    border: 2px solid #334155;
+    border-radius: 12px;
+    padding: 25px;
+    width: 380px;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+}
+
+.inventario-caixa h2 {
+    color: #f1f5f9;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#grid-inventario {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.slot-item {
+    width: 60px;
+    height: 60px;
+    background: #1e293b;
+    border: 1px solid #475569;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.slot-item:hover {
+    background: #334155;
+    border-color: #3b82f6;
+}
+
+.item-qtd {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: bold;
+    font-family: monospace;
+}
+
+#btn-fechar-inv {
+    width: 100%;
+    padding: 12px;
+    background: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#btn-fechar-inv:hover {
+    background: #b91c1c;
+}
