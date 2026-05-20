@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Combate 3D</title>
+    <title>ARYSONY - Simulador 3D</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -11,8 +11,8 @@
 
     <div id="tela-inicial">
         <div class="menu-container">
-            <h1>SIMULADOR COMBATE 3D</h1>
-            <p>Use W, A, S, D para andar, Mouse para olhar e atacar.</p>
+            <h1>ARYSONY</h1>
+            <p>[W, A, S, D] Mover | [Mouse] Olhar/Atacar | [Q] Curar | [E] Inventário</p>
             <button id="btn-iniciar">INICIAR SIMULAÇÃO</button>
         </div>
     </div>
@@ -32,25 +32,24 @@
         </div>
         <div class="hud-info">
             <div>🧪 Seringas (Q): <span id="lbl-pocoes">3</span></div>
-            <div>🎒 Itens no Inventário: <span id="lbl-total-itens">0</span>/15</div>
+            <div>🎒 Espaço Ocupado: <span id="lbl-total-itens">0</span>/15</div>
         </div>
         <div class="hud-controles">
-            [1][2][3] Mudar Arma | [SHIFT] Dash | [E] Inventário
+            [1][2][3] Armas | [SHIFT] Avanço/Dash | [E] Compartimento
         </div>
     </div>
 
     <div id="painel-inventario" class="hidden">
         <div class="inventario-caixa">
-            <h2>🎒 ARMAZENAMENTO DE SUCATA</h2>
-            <div id="grid-inventario">
-                </div>
-            <button id="btn-fechar-inv">FECHAR INVENTÁRIO (E)</button>
+            <h2>🎒 COMPARTIMENTO DE ITENS - ARYSONY</h2>
+            <div id="grid-inventario"></div>
+            <button id="btn-fechar-inv">RETORNAR AO COMBATE (E)</button>
         </div>
     </div>
 
     <div id="reticula" class="hidden"></div>
-    <div id="combat-log" class="hidden">Aguardando início...</div>
-    <div id="travar-mouse-ui" class="hidden">Clique na tela para focar o combate</div>
+    <div id="combat-log" class="hidden">Inicializando Sistemas...</div>
+    <div id="travar-mouse-ui" class="hidden">Clique para Focar no Universo de ARYSONY</div>
 
     <script src="main.js"></script>
 </body>
