@@ -47,7 +47,7 @@
         uiElements.combatLog.classList.remove("hidden");
         uiElements.uiMouse.classList.remove("hidden");
 
-        // --- INSTANCIAMENTO E AMBIENTE CLARO ---
+        // --- SISTEMA E AMBIENTE CLARO ---
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xe2e8f0); 
         scene.fog = new THREE.FogExp2(0xe2e8f0, 0.005);
@@ -62,9 +62,11 @@
 
         const clock = new THREE.Clock();
         
+        // Vetores pré-alocados para evitar Garbage Collection em tempo de execução
         const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _fwd = new THREE.Vector3(), _dir = new THREE.Vector3();
         const direcaoMovimento = new THREE.Vector3();
 
+        // Iluminação Otimizada
         scene.add(new THREE.AmbientLight(0xffffff, 0.85)); 
         const sunLight = new THREE.DirectionalLight(0xffffff, 0.9); 
         sunLight.position.set(30, 70, 20);
@@ -76,7 +78,7 @@
         sunLight.shadow.bias = -0.0004;
         scene.add(sunLight);
 
-        // Terreno Cinza Claro
+        // Terreno Modulado Estável
         const floorGeo = new THREE.PlaneGeometry(300, 300, 20, 20);
         const posAttr = floorGeo.attributes.position;
         for (let i = 0; i < posAttr.count; i++) {
@@ -91,7 +93,7 @@
         floor.receiveShadow = true;
         scene.add(floor);
 
-        // --- MATERIAIS PARA ANATOMIA HUMANA / REALISTA ---
+        // --- PALETA DE MATERIAIS ---
         const matPele = new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.6 }); 
         const matCabelo = new THREE.MeshStandardMaterial({ color: 0x2d1a10, roughness: 0.8 }); 
         const matCalca = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.7 }); 
@@ -105,48 +107,61 @@
         const matGuarda = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.4 }); 
         const matOlhoMal = new THREE.MeshStandardMaterial({ color: 0x000000 }); 
         const matDano = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2.0 });
-        
+
+        // --- COMPARTILHAMENTO DE GEOMETRIAS (OTIMIZAÇÃO CRÍTICA) ---
+        const geoCoxa = new THREE.CylinderGeometry(0.16, 0.14, 0.7);
+        const geoCanela = new THREE.CylinderGeometry(0.13, 0.10, 0.6);
+        const geoBota = new THREE.BoxGeometry(0.16, 0.18, 0.32);
+        const geoBraco = new THREE.CylinderGeometry(0.11, 0.10, 0.5);
+        const geoAntebraco = new THREE.CylinderGeometry(0.09, 0.08, 0.45);
+        const geoOmbroMao = new THREE.SphereGeometry(0.13);
         const geoPocao = new THREE.CylinderGeometry(0.1, 0.15, 0.4, 6);
         const geoSucata = new THREE.BoxGeometry(0.3, 0.3, 0.3);
 
-        // --- CONSTRUÇÃO DO JOGADOR HUMANO ---
+        // --- CONSTRUÇÃO DO RECORTE HUMANO ANATÔMICO ---
         const playerGroup = new THREE.Group();
 
-        const coxaEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 0.7), matCalca); coxaEsq.position.set(-0.22, 1.05, 0); coxaEsq.castShadow = true;
-        const canelaEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.10, 0.6), matCalca); canelaEsq.position.set(-0.22, 0.45, 0); canelaEsq.castShadow = true;
-        const botaEsq = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.18, 0.32), matBota); botaEsq.position.set(-0.22, 0.1, 0.06); botaEsq.castShadow = true;
+        // Membros Inferiores
+        const coxaEsq = new THREE.Mesh(geoCoxa, matCalca); coxaEsq.position.set(-0.22, 1.05, 0); coxaEsq.castShadow = true;
+        const canelaEsq = new THREE.Mesh(geoCanela, matCalca); canelaEsq.position.set(-0.22, 0.45, 0); canelaEsq.castShadow = true;
+        const botaEsq = new THREE.Mesh(geoBota, matBota); botaEsq.position.set(-0.22, 0.1, 0.06); botaEsq.castShadow = true;
 
-        const coxaDir = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 0.7), matCalca); coxaDir.position.set(0.22, 1.05, 0); coxaDir.castShadow = true;
-        const canelaDir = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.10, 0.6), matCalca); canelaDir.position.set(0.22, 0.45, 0); canelaDir.castShadow = true;
-        const botaDir = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.18, 0.32), matBota); botaDir.position.set(0.22, 0.1, 0.06); botaDir.castShadow = true;
+        const coxaDir = new THREE.Mesh(geoCoxa, matCalca); coxaDir.position.set(0.22, 1.05, 0); coxaDir.castShadow = true;
+        const canelaDir = new THREE.Mesh(geoCanela, matCalca); canelaDir.position.set(0.22, 0.45, 0); canelaDir.castShadow = true;
+        const botaDir = new THREE.Mesh(geoBota, matBota); botaDir.position.set(0.22, 0.1, 0.06); botaDir.castShadow = true;
 
         playerGroup.add(coxaEsq, canelaEsq, botaEsq, coxaDir, canelaDir, botaDir);
 
+        // Tronco / Equipamento Tático
         const quadril = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.3, 0.4), matCalca); quadril.position.y = 1.45; quadril.castShadow = true;
         const peito = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.30, 0.8, 8), matCalca); peito.position.y = 1.95; peito.castShadow = true;
         const colete = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.7, 0.46), matColete); colete.position.y = 2.0; colete.castShadow = true;
         playerGroup.add(quadril, peito, colete);
 
+        // Face / Identidade Visual
         const pescoco = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.2), matPele); pescoco.position.y = 2.4; pescoco.castShadow = true;
         const cabeca = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 16), matPele); cabeca.position.y = 2.6; cabeca.castShadow = true;
         const cabelo = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), matCabelo); cabelo.position.set(0, 2.64, -0.03); cabelo.scale.set(1.02, 1, 1.05);
         playerGroup.add(pescoco, cabeca, cabelo);
 
-        const ombroEsq = new THREE.Mesh(new THREE.SphereGeometry(0.13), matCalca); ombroEsq.position.set(-0.52, 2.2, 0);
-        const bracoEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.10, 0.5), matPele); bracoEsq.position.set(-0.52, 1.9, 0); bracoEsq.castShadow = true;
-        const antebracoEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.45), matPele); antebracoEsq.position.set(-0.52, 1.45, -0.1); antebracoEsq.rotation.x = Math.PI/6; antebracoEsq.castShadow = true;
+        // Braço Esquerdo Livre
+        const ombroEsq = new THREE.Mesh(geoOmbroMao, matCalca); ombroEsq.position.set(-0.52, 2.2, 0);
+        const bracoEsq = new THREE.Mesh(geoBraco, matPele); bracoEsq.position.set(-0.52, 1.9, 0); bracoEsq.castShadow = true;
+        const antebracoEsq = new THREE.Mesh(geoAntebraco, matPele); antebracoEsq.position.set(-0.52, 1.45, -0.1); antebracoEsq.rotation.x = Math.PI/6; antebracoEsq.castShadow = true;
         const maoEsq = new THREE.Mesh(new THREE.SphereGeometry(0.08), matLuva); maoEsq.position.set(-0.52, 1.25, -0.2);
         playerGroup.add(ombroEsq, bracoEsq, antebracoEsq, maoEsq);
 
+        // Pivot Direto Integrado para Armamento Ativo
         const weaponHandGroup = new THREE.Group();
         weaponHandGroup.position.set(0.52, 2.1, -0.1);
         playerGroup.add(weaponHandGroup);
 
-        const ombroDir = new THREE.Mesh(new THREE.SphereGeometry(0.13), matCalca); ombroDir.position.set(0, 0.1, 0); weaponHandGroup.add(ombroDir);
-        const bracoDir = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.10, 0.5), matCalca); bracoDir.position.set(0, -0.2, -0.1); bracoDir.rotation.x = -Math.PI/6; bracoDir.castShadow = true; weaponHandGroup.add(bracoDir);
-        const antebracoDir = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.45), matPele); antebracoDir.position.set(0, -0.45, -0.3); antebracoDir.rotation.x = -Math.PI/3; antebracoDir.castShadow = true; weaponHandGroup.add(antebracoDir);
+        const ombroDir = new THREE.Mesh(geoOmbroMao, matCalca); ombroDir.position.set(0, 0.1, 0); weaponHandGroup.add(ombroDir);
+        const bracoDir = new THREE.Mesh(geoBraco, matCalca); bracoDir.position.set(0, -0.2, -0.1); bracoDir.rotation.x = -Math.PI/6; bracoDir.castShadow = true; weaponHandGroup.add(bracoDir);
+        const antebracoDir = new THREE.Mesh(geoAntebraco, matPele); antebracoDir.position.set(0, -0.45, -0.3); antebracoDir.rotation.x = -Math.PI/3; antebracoDir.castShadow = true; weaponHandGroup.add(antebracoDir);
         const maoDir = new THREE.Mesh(new THREE.SphereGeometry(0.08), matLuva); maoDir.position.set(0, -0.55, -0.5); weaponHandGroup.add(maoDir);
 
+        // Definição Completa do Arsenal 3D
         const mSword = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.4, 0.14), weaponMat); mSword.position.set(0, -0.2, -1.5); mSword.rotation.x = -Math.PI/2; mSword.castShadow = true;
         
         const mHammer = new THREE.Group();
@@ -161,11 +176,12 @@
         const listaDeArmasMesh = [mSword, mHammer, mDagger];
         scene.add(playerGroup);
 
+        // Instanciação Estabilizada da Câmera Pivotada
         const cameraPivot = new THREE.Group();
         cameraPivot.position.set(0, 2.5, 0); playerGroup.add(cameraPivot);
         cameraPivot.add(camera); camera.position.set(0.6, 0.2, 3.8); camera.lookAt(0, 2.2, -2);
 
-        // --- PROPRIEDADES DA SIMULAÇÃO ---
+        // --- SISTEMAS INTERNOS DO AMBIENTE ---
         const playerState = { 
             hp: 100, hpMax: 100, stamina: 100, staminaMax: 100,
             defendendo: false, atacando: false, 
@@ -207,6 +223,7 @@
             scene.add(enemyGroup); inimigos.push({ mesh: enemyGroup, malhaPrincipal: malhaPrincipal, status: status });
         }
 
+        // Chamadas Iniciais Estáveis
         spawnInimigo('ogro', 0, -35); spawnInimigo('drone', 18, -25);
         spawnInimigo('drone', -18, -25); spawnInimigo('guarda', 22, -15);
 
@@ -220,7 +237,7 @@
             scene.add(malhaDrop); dropsMundo.push({ mesh: malhaDrop, tipo: tipoItem });
         }
 
-        // --- ENTRADAS DO JOGADOR ---
+        // --- ENTRADAS INTERATIVAS E EVENTOS ---
         window.addEventListener('keydown', e => {
             const key = e.key.toLowerCase(); teclado[key] = true;
 
@@ -251,11 +268,18 @@
             logMsg(`⚔️ Ativo: ${arsenal[index].nome}`);
         }
 
-        uiElements.uiMouse.addEventListener("click", () => { if(!inventarioAberto) document.body.requestPointerLock(); });
+        // Captura e Tratamento Seguro de Exceções Assíncronas do Navegador (.catch)
+        uiElements.uiMouse.addEventListener("click", () => { 
+            if(!inventarioAberto) document.body.requestPointerLock(); 
+        });
         
         const btnFechar = document.getElementById("btn-fechar-inv");
         if(btnFechar) {
-            btnFechar.addEventListener("click", () => { inventarioAberto = false; uiElements.painelInv.classList.add("hidden"); document.body.requestPointerLock(); });
+            btnFechar.addEventListener("click", () => { 
+                inventarioAberto = false; 
+                uiElements.painelInv.classList.add("hidden"); 
+                document.body.requestPointerLock(); 
+            });
         }
 
         document.addEventListener("pointerlockchange", () => {
@@ -330,7 +354,7 @@
 
         function logMsg(msg) { uiElements.combatLog.innerText = msg; }
 
-        // --- LOOP PRINCIPAL ---
+        // --- LOOP PRINCIPAL ALTERNADO (60FPS OTIMIZADO) ---
         function animate() {
             requestAnimationFrame(animate);
             const delta = Math.min(clock.getDelta(), 0.1);
