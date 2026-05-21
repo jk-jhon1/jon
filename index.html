@@ -3,67 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARYSONY - Edição Dragão Imperial</title>
+    <title>Simulador de Combate 3D - Matrix</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
     <div id="tela-inicial">
-        <div class="dragao-bg">
-            <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-                <path d="M-10,50 C10,20 30,80 50,40 C70,10 90,70 110,40 M0,45 C20,15 40,75 60,35 C80,5 100,65 120,35" fill="none" stroke="rgba(225, 29, 72, 0.15)" stroke-width="4" stroke-linecap="round"/>
-                <path d="M20,30 C25,20 35,25 40,15 C35,30 25,28 20,30 Z M60,25 C65,15 75,20 80,10 C75,25 65,23 60,25 Z" fill="rgba(225, 29, 72, 0.1)"/>
-                <path d="M30,42 Q40,35 45,45 T60,40" fill="none" stroke="rgba(225, 29, 72, 0.2)" stroke-width="1"/>
-                <path d="M40,52 Q50,45 55,55 T70,50" fill="none" stroke="rgba(225, 29, 72, 0.2)" stroke-width="1"/>
+        
+        <div class="nuvens-bg"></div>
+
+        <div class="dragao-ancestral-topo">
+            <svg viewBox="0 0 800 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M100,150 Q200,50 400,120 T700,70" stroke="#1d4ed8" stroke-width="12" stroke-linecap="round" opacity="0.15"/>
+                <path d="M120,130 Q220,30 400,100 T680,50" stroke="#2563eb" stroke-width="6" stroke-linecap="round" opacity="0.2"/>
+                <main-head>
+                    <path d="M370,90 Q400,40 430,90 Q450,130 400,150 Q350,130 370,90 Z" fill="rgba(37, 99, 235, 0.15)"/>
+                    <path d="M350,100 Q400,120 450,100" stroke="#1e40af" stroke-width="3"/>
+                    <path d="M380,80 L390,90 M420,80 L410,90" stroke="#b91c1c" stroke-width="4"/> 
+                </main-head>
             </svg>
         </div>
 
-        <div class="menu-container">
-            <div class="moldura-borda top-left"></div>
-            <div class="moldura-borda top-right"></div>
-            <div class="moldura-borda bottom-left"></div>
-            <div class="moldura-borda bottom-right"></div>
-
-            <div class="sub-titulo">⚡ SIMULADOR DE COMBATE 3D ⚡</div>
-            <h1>ARYSONY</h1>
+        <div class="interface-grid">
             
-            <div class="painel-comandos">
-                <h3>MANUAL DE COMANDOS</h3>
-                <div class="comando-linha"><span>[W, A, S, D]</span> Movimentação Tática</div>
-                <div class="comando-linha"><span>[Mouse]</span> Olhar / Direcionar Ataque</div>
-                <div class="comando-linha"><span>[Botão Esq.]</span> Desferir Golpe / Ataque</div>
-                <div class="comando-linha"><span>[Botão Dir.]</span> Postura de Defesa (Bloqueio)</div>
-                <div class="comando-linha"><span>[Shift]</span> Avanço Rápido / Dash</div>
-                <div class="comando-linha"><span>[Q]</span> Injetar Seringa de Cura</div>
-                <div class="comando-linha"><span>[E]</span> Acessar Compartimento de Inventário</div>
-                <div class="comando-linha"><span>[1, 2, 3]</span> Alternar Arsenal de Armas</div>
+            <div class="painel-esquerda-combate">
+                <div class="moldura-dragao-azul">
+                    <div class="gema-jade topo-esq"></div>
+                    <div class="gema-jade topo-dir"></div>
+                    <div class="gema-jade baixo-esq"></div>
+                    <div class="gema-jade baixo-dir"></div>
+
+                    <div class="titulo-caixa">
+                        <h2>SIMULADOR COMBATE 3D</h2>
+                    </div>
+                    
+                    <div class="sub-selecao">Select Your Character</div>
+
+                    <div class="personagens-container">
+                        <div class="card-personagem ativo">
+                            <div class="avatar-placeholder p1"></div>
+                            <span>Character 1</span>
+                        </div>
+                        <div class="card-personagem">
+                            <div class="avatar-placeholder p2"></div>
+                            <span>Character 2</span>
+                        </div>
+                        <div class="card-personagem">
+                            <div class="avatar-placeholder p3"></div>
+                            <span>Character 3</span>
+                        </div>
+                    </div>
+
+                    <div class="container-botao-selo">
+                        <button id="btn-iniciar">INICIAR JOGO</button>
+                    </div>
+                </div>
             </div>
 
-            <button id="btn-iniciar">INICIAR SIMULAÇÃO</button>
+            <div class="painel-direita-comandos">
+                
+                <div class="container-medalhoes">
+                    <div class="medalhao-ouro">
+                        <div class="nucleo-matrix">M<small>MATRIX</small></div>
+                    </div>
+                    <div class="medalhao-ouro menor">
+                        <div class="nucleo-matrix">M<small>MATRIX</small></div>
+                    </div>
+                </div>
+
+                <div class="lista-controles-chinesa">
+                    <div class="item-controle">
+                        <div class="mini-dragao-icone"></div>
+                        <p><strong>[W][A][S][D]</strong> Move</p>
+                    </div>
+                    <div class="item-controle">
+                        <div class="mini-dragao-icone deitado"></div>
+                        <p><strong>[Mouse]</strong> Look/Attack</p>
+                    </div>
+                    <div class="item-controle">
+                        <div class="mini-dragao-icone"></div>
+                        <p><strong>[Shift]</strong> Dash</p>
+                    </div>
+                    <div class="item-controle">
+                        <div class="mini-dragao-icone inverter"></div>
+                        <p><strong>[E]</strong> Equip</p>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
     </div>
 
     <div id="game-hud" class="hidden">
         <div class="hud-status">
             <div class="hud-label">INTEGRIDADE (HP)</div>
-            <div class="barra-container">
-                <div id="bar-player-hp"></div>
-            </div>
+            <div class="barra-container"><div id="bar-player-hp"></div></div>
         </div>
         <div class="hud-status">
             <div class="hud-label">ESTÁMINA (STAMINA)</div>
-            <div class="barra-container">
-                <div id="bar-player-stamina"></div>
-            </div>
+            <div class="barra-container"><div id="bar-player-stamina"></div></div>
         </div>
         <div class="hud-info">
             <div>🧪 Seringas (Q): <span id="lbl-pocoes">3</span></div>
             <div>🎒 Espaço Ocupado: <span id="lbl-total-itens">0</span>/15</div>
         </div>
-        <div class="hud-controles">
-            [1][2][3] Armas | [SHIFT] Avanço/Dash | [E] Compartimento
-        </div>
+        <div class="hud-controles">[1][2][3] Armas | [SHIFT] Dash | [E] Inventário</div>
     </div>
 
     <div id="painel-inventario" class="hidden">
@@ -75,8 +121,8 @@
     </div>
 
     <div id="reticula" class="hidden"></div>
-    <div id="combat-log" class="hidden">Inicializando Sistemas...</div>
-    <div id="travar-mouse-ui" class="hidden">Clique para Focar no Universo de ARYSONY</div>
+    <div id="combat-log" class="hidden">Sistemas Inicializados.</div>
+    <div id="travar-mouse-ui" class="hidden">Clique para Entrar no Combate</div>
 
     <script src="game.js"></script>
 </body>
