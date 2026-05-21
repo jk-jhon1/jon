@@ -28,7 +28,7 @@
     }
 
     function inicializarMotorJogo() {
-        // Fallbacks inteligentes de elementos UI
+        // Fallbacks de segurança para elementos da interface (UI)
         const obterElementoSeguro = (id) => document.getElementById(id) || { style: {}, classList: { add:()=>{}, remove:()=>{}, toggle:()=>{} }, innerText: "" };
 
         const uiElements = {
@@ -64,7 +64,7 @@
 
         const clock = new THREE.Clock();
         
-        // Memória Alocada (Garbage Collector Friendly - Sem travamentos de quadros)
+        // Memória Alocada (Evita re-alocação no loop principal para não travar frames)
         const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _fwd = new THREE.Vector3(), _dir = new THREE.Vector3();
         const direcaoMovimento = new THREE.Vector3();
 
@@ -80,7 +80,7 @@
         sunLight.shadow.bias = -0.0006;
         scene.add(sunLight);
 
-        // Terreno Estático Otimizado
+        // Terreno Relevo Otimizado
         const floorGeo = new THREE.PlaneGeometry(300, 300, 20, 20);
         const posAttr = floorGeo.attributes.position;
         for (let i = 0; i < posAttr.count; i++) {
@@ -95,7 +95,7 @@
         floor.receiveShadow = true;
         scene.add(floor);
 
-        // Paleta de Materiais Sombrios/Neon
+        // Paleta de Materiais
         const armorMat = new THREE.MeshStandardMaterial({ color: 0x09090b, metalness: 0.8, roughness: 0.2 });
         const glowMat = new THREE.MeshStandardMaterial({ color: 0x6366f1, emissive: 0x4f46e5, emissiveIntensity: 1.5 });
         const weaponMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.9, roughness: 0.1 });
@@ -105,6 +105,8 @@
         const matOlhoMal = new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 2.0 });
         const matDano = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 3.5 });
         const geoMembro = new THREE.CylinderGeometry(0.14, 0.11, 1.2, 8); 
+        const geoPocao = new THREE.CylinderGeometry(0.1, 0.15, 0.4, 6);
+        const geoSucata = new THREE.BoxGeometry(0.3, 0.3, 0.3);
 
         // --- CONSTRUÇÃO DO JOGADOR ARYSONY ---
         const playerGroup = new THREE.Group();
@@ -188,7 +190,7 @@
             scene.add(enemyGroup); inimigos.push({ mesh: enemyGroup, malhaPrincipal: malhaPrincipal, status: status });
         }
 
-        // População do Mapa
+        // População Inicial do Campo
         spawnInimigo('ogro', 0, -35); spawnInimigo('drone', 18, -25);
         spawnInimigo('drone', -18, -25); spawnInimigo('guarda', 22, -15);
 
@@ -202,7 +204,7 @@
             scene.add(malhaDrop); dropsMundo.push({ mesh: malhaDrop, tipo: tipoItem });
         }
 
-        // --- PROCESSAMENTO DE ENTRADAS (INPUTS) ---
+        // --- CAPTURA DE INPUTS ---
         window.addEventListener('keydown', e => {
             const key = e.key.toLowerCase(); teclado[key] = true;
 
@@ -253,7 +255,7 @@
             cameraPivot.rotation.x = Math.max(-0.4, Math.min(0.6, cameraPivot.rotation.x));
         });
 
-        // Mecânica de Combate Otimizada (Física de Impactos Linear Direcional)
+        // Mecânica de Impactos Otimizada
         window.addEventListener("mousedown", (e) => {
             if (!mouseTravado || inventarioAberto) return;
             const arma = arsenal[playerState.armaEquipada];
@@ -312,7 +314,7 @@
 
         function logMsg(msg) { uiElements.combatLog.innerText = msg; }
 
-        // --- LOOP CRÍTICO DE PERFORMANCE (60 FPS FIXO) ---
+        // --- LOOP PRINCIPAL (60 FPS ESTÁVEIS) ---
         function animate() {
             requestAnimationFrame(animate);
             const delta = Math.min(clock.getDelta(), 0.1);
@@ -320,24 +322,24 @@
             tempoAcumulado += delta;
 
             if (mouseTravado) {
-                // Gestão de Estâmina Ativa
+                // Recuperação de Estâmina Ativa
                 if (!playerState.atacando && !playerState.defendendo && playerState.stamina < playerState.staminaMax) { 
                     playerState.stamina = Math.min(playerState.staminaMax, playerState.stamina + (28 * delta)); atualizarHUD(); 
                 }
                 
-                // Movimento Oscilatório das Pernas Mecânicas
+                // Animação Rítmica de Movimentação
                 const pernaGiro = Math.sin(tempoAcumulado * 6) * 0.18;
                 pEsq.rotation.x = -pernaGiro; pDir.rotation.x = pernaGiro;
 
                 if (playerState.dashTimer > 0) playerState.dashTimer -= delta; else playerState.dashing = false;
                 
-                // Controle de Rotação de Combate da Arma
+                // Rotação Mecânica de Ataque
                 if (playerState.atacando) { 
                     weaponHandGroup.rotation.y -= arsenal[playerState.armaEquipada].velocidade * delta * 4; 
                     if (weaponHandGroup.rotation.y < -1.6) { playerState.atacando = false; weaponHandGroup.rotation.set(Math.PI / 3, 0, -Math.PI / 10); } 
                 }
 
-                // Cálculo Matricial de Velocidade Vetorial Estruturada
+                // Vetores de Translação Físicos
                 direcaoMovimento.set(0, 0, 0);
                 if (teclado['w']) direcaoMovimento.z -= 1;
                 if (teclado['s']) direcaoMovimento.z += 1;
@@ -349,7 +351,7 @@
                 playerGroup.translateOnAxis(direcaoMovimento, mVel);
                 playerGroup.getWorldPosition(_vA);
 
-                // Sensor de Escaneamento de Proximidade (Drops)
+                // Verificação de Coleta de Drops por Proximidade
                 for (let i = dropsMundo.length - 1; i >= 0; i--) {
                     let drop = dropsMundo[i]; drop.mesh.rotation.y += delta * 2;
                     if (_vA.distanceTo(drop.mesh.position) < 1.8) { 
@@ -359,7 +361,7 @@
                     }
                 }
 
-                // Mecânica de Perseguição e Contra-ataque de IAs
+                // Inteligência Artificial de Perseguição e Ataque
                 inimigos.forEach(inimigo => {
                     if (!inimigo.status.vivo) return;
                     if (inimigo.status.timerDano > 0) { inimigo.status.timerDano -= delta; } else { inimigo.malhaPrincipal.material = inimigo.status.materialOriginal; }
@@ -384,7 +386,7 @@
                     }
                 });
 
-                // Matrix Shake FX (Tremor da tela sem causar quebra)
+                // Efeito Estável de Vibração de Câmera (Camera Shake FX)
                 if (shakeTimer > 0) { camera.position.x = (Math.random() - 0.5) * 0.25; shakeTimer -= delta; } else { camera.position.set(0, 0, 5.0); }
             }
             renderer.render(scene, camera);
