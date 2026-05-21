@@ -47,9 +47,9 @@
         uiElements.combatLog.classList.remove("hidden");
         uiElements.uiMouse.classList.remove("hidden");
 
-        // --- INSTANCIAMENTO E AMBIENTE THREE.JS (CENÁRIO CLARO) ---
+        // --- INSTANCIAMENTO E AMBIENTE CLARO ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xe2e8f0); // Cor de fundo clara (Céu/Névoa clara)
+        scene.background = new THREE.Color(0xe2e8f0); 
         scene.fog = new THREE.FogExp2(0xe2e8f0, 0.005);
 
         const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 500);
@@ -65,9 +65,9 @@
         const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _fwd = new THREE.Vector3(), _dir = new THREE.Vector3();
         const direcaoMovimento = new THREE.Vector3();
 
-        // --- ILUMINAÇÃO INTENSIFICADA (MAIS CLARA) ---
-        scene.add(new THREE.AmbientLight(0xffffff, 0.85)); // Luz ambiente forte elimina sombras totalmente pretas
-        const sunLight = new THREE.DirectionalLight(0xffffff, 0.9); // Luz do sol direta e limpa
+        // Luzes estáveis e claras
+        scene.add(new THREE.AmbientLight(0xffffff, 0.85)); 
+        const sunLight = new THREE.DirectionalLight(0xffffff, 0.9); 
         sunLight.position.set(30, 70, 20);
         sunLight.castShadow = true;
         sunLight.shadow.mapSize.set(1024, 1024);
@@ -77,7 +77,7 @@
         sunLight.shadow.bias = -0.0004;
         scene.add(sunLight);
 
-        // Terreno Estilo Concreto Claro Otimizado
+        // Terreno Cinza Claro
         const floorGeo = new THREE.PlaneGeometry(300, 300, 20, 20);
         const posAttr = floorGeo.attributes.position;
         for (let i = 0; i < posAttr.count; i++) {
@@ -86,64 +86,94 @@
             posAttr.setZ(i, Math.sin(vx * 0.05) * Math.cos(vy * 0.05) * 0.3);
         }
         floorGeo.computeVertexNormals();
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.7, metalness: 0.05 }); // Cinza claro
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.7 }); 
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
         floor.receiveShadow = true;
         scene.add(floor);
 
-        // --- PALETA DE CORES VIVAS PARA OS PERSONAGENS ---
-        const armorMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.3 }); // JOGADOR AZUL VIVO
-        const glowMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xb91c1c, emissiveIntensity: 1.0 }); // Visor Vermelho
-        const weaponMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.8, roughness: 0.2 });
+        // --- MATERIAIS PARA ANATOMIA HUMANA / REALISTA ---
+        const matPele = new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.6 }); // Pele humana (tom bronzeado)
+        const matCabelo = new THREE.MeshStandardMaterial({ color: 0x2d1a10, roughness: 0.8 }); // Cabelo castanho escuro
+        const matCalca = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.7 }); // Calça tática Grafite
+        const matBota = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 }); // Botas de couro preto
+        const matColete = new THREE.MeshStandardMaterial({ color: 0x3f3f46, roughness: 0.5, metalness: 0.2 }); // Colete Militar Camuflado escuro
+        const matLuva = new THREE.MeshStandardMaterial({ color: 0x52525b, roughness: 0.6 }); // Luvas de proteção
+        const weaponMat = new THREE.MeshStandardMaterial({ color: 0x71717a, metalness: 0.8, roughness: 0.2 }); // Metal de armas
         
-        // Cores dos inimigos bem destacadas no chão cinza
-        const matOgro = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.8 }); // OGRO VERDE ALTA VISIBILIDADE
-        const matDrone = new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.5 }); // DRONE AMARELO
-        const matGuarda = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.4 }); // GUARDA VERMELHO CEREJA
-        
-        const matOlhoMal = new THREE.MeshStandardMaterial({ color: 0x000000 }); // Olhos pretos contrastantes
+        // Inimigos
+        const matOgro = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.8 }); 
+        const matDrone = new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.5 }); 
+        const matGuarda = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.4 }); 
+        const matOlhoMal = new THREE.MeshStandardMaterial({ color: 0x000000 }); 
         const matDano = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2.0 });
         
-        const geoMembro = new THREE.CylinderGeometry(0.14, 0.11, 1.2, 8); 
         const geoPocao = new THREE.CylinderGeometry(0.1, 0.15, 0.4, 6);
         const geoSucata = new THREE.BoxGeometry(0.3, 0.3, 0.3);
 
-        // --- CONSTRUÇÃO DO JOGADOR ARYSONY ---
+        // --- CONSTRUÇÃO DETALHADA DO PERSONAGEM HUMANO (ARYSONY) ---
         const playerGroup = new THREE.Group();
-        const torso = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.4, 0.5), armorMat); torso.position.y = 1.5; torso.castShadow = true;
-        const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.38, 12, 12), armorMat); helmet.position.y = 2.5; helmet.castShadow = true;
-        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.08, 0.35), glowMat); visor.position.set(0, 0.08, 0.24); helmet.add(visor);
-        playerGroup.add(torso, helmet);
 
-        const pEsq = new THREE.Mesh(geoMembro, armorMat); pEsq.position.set(-0.3, 0.6, 0); pEsq.castShadow = true;
-        const pDir = new THREE.Mesh(geoMembro, armorMat); pDir.position.set(0.3, 0.6, 0); pDir.castShadow = true;
-        const bEsq = new THREE.Mesh(geoMembro, armorMat); bEsq.position.set(-0.6, 1.5, 0); bEsq.rotation.z = Math.PI / 8; bEsq.castShadow = true;
-        playerGroup.add(pEsq, pDir, bEsq);
+        // 1. Pernas e Pés Humanos (Baseados na anatomia real)
+        const coxaEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 0.7), matCalca); coxaEsq.position.set(-0.22, 1.05, 0); coxaEsq.castShadow = true;
+        const canelaEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.10, 0.6), matCalca); canelaEsq.position.set(-0.22, 0.45, 0); canelaEsq.castShadow = true;
+        const botaEsq = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.18, 0.32), matBota); botaEsq.position.set(-0.22, 0.1, 0.06); botaEsq.castShadow = true;
 
+        const coxaDir = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 0.7), matCalca); coxaDir.position.set(0.22, 1.05, 0); coxaDir.castShadow = true;
+        const canelaDir = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.10, 0.6), matCalca); canelaDir.position.set(0.22, 0.45, 0); canelaDir.castShadow = true;
+        const botaDir = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.18, 0.32), matBota); botaDir.position.set(0.22, 0.1, 0.06); botaDir.castShadow = true;
+
+        playerGroup.add(coxaEsq, canelaEsq, botaEsq, coxaDir, canelaDir, botaDir);
+
+        // 2. Quadril e Tronco Humano (Cintura + Peito + Colete Tático)
+        const quadril = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.3, 0.4), matCalca); quadril.position.y = 1.45; quadril.castShadow = true;
+        const peito = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.30, 0.8, 8), matCalca); peito.position.y = 1.95; peito.castShadow = true;
+        const colete = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.7, 0.46), matColete); colete.position.y = 2.0; colete.castShadow = true;
+        playerGroup.add(quadril, peito, colete);
+
+        // 3. Cabeça Humana (Pescoço, Rosto, Cabelo)
+        const pescoco = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.2), matPele); pescoco.position.y = 2.4; pescoco.castShadow = true;
+        const cabeca = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 16), matPele); cabeca.position.y = 2.6; cabeca.castShadow = true;
+        const cabelo = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), matCabelo); cabelo.position.set(0, 2.64, -0.03); cabelo.scale.set(1.02, 1, 1.05);
+        playerGroup.add(pescoco, cabeca, cabelo);
+
+        // 4. Braço Esquerdo (Ombro, Antebraço e Mão com Luva)
+        const ombroEsq = new THREE.Mesh(new THREE.SphereGeometry(0.13), matCalca); ombroEsq.position.set(-0.52, 2.2, 0);
+        const bracoEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.10, 0.5), matPele); bracoEsq.position.set(-0.52, 1.9, 0); bracoEsq.castShadow = true;
+        const antebracoEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.45), matPele); antebracoEsq.position.set(-0.52, 1.45, -0.1); antebracoEsq.rotation.x = Math.PI/6; antebracoEsq.castShadow = true;
+        const maoEsq = new THREE.Mesh(new THREE.SphereGeometry(0.08), matLuva); maoEsq.position.set(-0.52, 1.25, -0.2);
+        playerGroup.add(ombroEsq, bracoEsq, antebracoEsq, maoEsq);
+
+        // 5. Braço Direito Articulado (Carrega o Armamento)
         const weaponHandGroup = new THREE.Group();
-        weaponHandGroup.position.set(0.6, 1.5, -0.3);
-        weaponHandGroup.rotation.set(Math.PI / 3, 0, -Math.PI / 10);
+        weaponHandGroup.position.set(0.52, 2.1, -0.1);
         playerGroup.add(weaponHandGroup);
 
-        const hand = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), armorMat); hand.castShadow = true;
-        const mSword = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.6, 0.18), weaponMat); mSword.position.y = 1.2; mSword.castShadow = true;
+        const ombroDir = new THREE.Mesh(new THREE.SphereGeometry(0.13), matCalca); ombroDir.position.set(0, 0.1, 0); weaponHandGroup.add(ombroDir);
+        const bracoDir = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.10, 0.5), matCalca); bracoDir.position.set(0, -0.2, -0.1); bracoDir.rotation.x = -Math.PI/6; bracoDir.castShadow = true; weaponHandGroup.add(bracoDir);
+        const antebracoDir = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.45), matPele); antebracoDir.position.set(0, -0.45, -0.3); antebracoDir.rotation.x = -Math.PI/3; antebracoDir.castShadow = true; weaponHandGroup.add(antebracoDir);
+        const maoDir = new THREE.Mesh(new THREE.SphereGeometry(0.08), matLuva); maoDir.position.set(0, -0.55, -0.5); weaponHandGroup.add(maoDir);
+
+        // Armas acopladas à mão direita do humano
+        const mSword = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.4, 0.14), weaponMat); mSword.position.set(0, -0.2, -1.5); mSword.rotation.x = -Math.PI/2; mSword.castShadow = true;
         
         const mHammer = new THREE.Group();
-        const hHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.9, 8), armorMat); hHandle.castShadow = true; mHammer.add(hHandle);
-        const hHead = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.45, 0.85), new THREE.MeshStandardMaterial({ color: 0x4f46e5 }));
-        hHead.position.y = 0.9; hHead.castShadow = true; mHammer.add(hHead); mHammer.visible = false;
+        const hHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.6, 8), weaponMat); hHandle.position.set(0, -0.2, -1.1); hHandle.rotation.x = -Math.PI/2; hHandle.castShadow = true; mHammer.add(hHandle);
+        const hHead = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.6), weaponMat); hHead.position.set(0, -0.2, -1.8); hHead.castShadow = true; mHammer.add(hHead); 
+        mHammer.visible = false;
         
-        const mDagger = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.0, 0.06), new THREE.MeshStandardMaterial({ color: 0xec4899 }));
-        mDagger.position.y = 0.4; mDagger.castShadow = true; mDagger.visible = false;
+        const mDagger = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.8, 0.05), weaponMat); mDagger.position.set(0, -0.2, -0.8); mDagger.rotation.x = -Math.PI/2; mDagger.castShadow = true;
+        mDagger.visible = false;
 
-        weaponHandGroup.add(hand, mSword, mHammer, mDagger);
+        weaponHandGroup.add(mSword, mHammer, mDagger);
         const listaDeArmasMesh = [mSword, mHammer, mDagger];
+
         scene.add(playerGroup);
 
+        // Posicionamento de Câmera em Terceira Pessoa (Ombro)
         const cameraPivot = new THREE.Group();
         cameraPivot.position.set(0, 2.5, 0); playerGroup.add(cameraPivot);
-        cameraPivot.add(camera); camera.position.set(0, 0, 5.0); camera.lookAt(0, 2.0, -2);
+        cameraPivot.add(camera); camera.position.set(0.6, 0.2, 3.8); camera.lookAt(0, 2.2, -2);
 
         // --- PROPRIEDADES DA SIMULAÇÃO ---
         const playerState = { 
@@ -153,16 +183,16 @@
         };
         
         const arsenal = [
-            { nome: "Cyber-Lâmina", dano: 28, alcance: 5.8, velocidade: 5.5, custoStamina: 12 },
-            { nome: "Trissecador", dano: 62, alcance: 4.8, velocidade: 3.2, custoStamina: 30 },
-            { nome: "Ferrão Sombrio", dano: 15, alcance: 4.2, velocidade: 9.0, custoStamina: 5 }
+            { nome: "Cyber-Lâmina", dano: 28, alcance: 5.8, velocidade: 6.2, custoStamina: 12 },
+            { nome: "Trissecador", dano: 62, alcance: 4.8, velocidade: 3.8, custoStamina: 30 },
+            { nome: "Ferrão Sombrio", dano: 15, alcance: 4.2, velocidade: 9.5, custoStamina: 5 }
         ];
 
         let inimigos = [], dropsMundo = [], itensInventario = [];
         let mouseTravado = false, inventarioAberto = false, shakeTimer = 0, tempoAcumulado = 0;
         const teclado = {};
 
-        // Sistema de Geração de Inimigos Clariados
+        // Inimigos do Cenário
         function spawnInimigo(tipo, px, pz) {
             const enemyGroup = new THREE.Group();
             const status = { vivo: true, alertado: false, cooldown: 0, timerDano: 0 };
@@ -172,9 +202,6 @@
                 malhaPrincipal = new THREE.Mesh(new THREE.BoxGeometry(2.0, 2.6, 1.6), matOgro); malhaPrincipal.position.y = 1.3; malhaPrincipal.castShadow = true;
                 const cabeca = new THREE.Mesh(new THREE.SphereGeometry(0.65, 10, 10), matOgro); cabeca.position.set(0, 2.0, 0.25);
                 const olho = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.18, 0.18), matOlhoMal); olho.position.set(0, 0.15, 0.55); cabeca.add(olho); malhaPrincipal.add(cabeca);
-                const mOgro = new THREE.CylinderGeometry(0.28, 0.22, 1.6, 8);
-                const pE = new THREE.Mesh(mOgro, matOgro); pE.position.set(-0.6, -1.2, 0); const pD = new THREE.Mesh(mOgro, matOgro); pD.position.set(0.6, -1.2, 0);
-                malhaPrincipal.add(pE, pD);
                 status.hp = 650; status.vel = 5.5; status.danoBase = 22; status.alcance = 4.5; status.nome = "Mestre de Carga";
             } else if (tipo === 'drone') {
                 malhaPrincipal = new THREE.Mesh(new THREE.OctahedronGeometry(0.7), matDrone); malhaPrincipal.position.y = 3.2; malhaPrincipal.castShadow = true;
@@ -191,7 +218,6 @@
             scene.add(enemyGroup); inimigos.push({ mesh: enemyGroup, malhaPrincipal: malhaPrincipal, status: status });
         }
 
-        // Posicionamentos iniciais no campo de simulação clara
         spawnInimigo('ogro', 0, -35); spawnInimigo('drone', 18, -25);
         spawnInimigo('drone', -18, -25); spawnInimigo('guarda', 22, -15);
 
@@ -205,7 +231,7 @@
             scene.add(malhaDrop); dropsMundo.push({ mesh: malhaDrop, tipo: tipoItem });
         }
 
-        // --- EVENTOS DE INPUTS ---
+        // --- CONTROLES INTERNOS ---
         window.addEventListener('keydown', e => {
             const key = e.key.toLowerCase(); teclado[key] = true;
 
@@ -256,6 +282,7 @@
             cameraPivot.rotation.x = Math.max(-0.4, Math.min(0.6, cameraPivot.rotation.x));
         });
 
+        // Mecânicas Físicas de Ataque Humano
         window.addEventListener("mousedown", (e) => {
             if (!mouseTravado || inventarioAberto) return;
             const arma = arsenal[playerState.armaEquipada];
@@ -280,12 +307,13 @@
                     }
                 });
             } else if (e.button === 2 && playerState.stamina >= 8) { 
-                playerState.defendendo = true; weaponHandGroup.position.set(0, 1.3, -0.4); weaponHandGroup.rotation.set(0, 0, Math.PI / 2); 
+                playerState.defendendo = true; 
+                weaponHandGroup.position.set(0.2, 2.0, -0.4); weaponHandGroup.rotation.set(0, -Math.PI/4, Math.PI / 3); 
             }
         });
 
         window.addEventListener("mouseup", (e) => { 
-            if (e.button === 2) { playerState.defendendo = false; weaponHandGroup.position.set(0.6, 1.5, -0.3); weaponHandGroup.rotation.set(Math.PI / 3, 0, -Math.PI / 10); } 
+            if (e.button === 2) { playerState.defendendo = false; weaponHandGroup.position.set(0.52, 2.1, -0.1); weaponHandGroup.rotation.set(0, 0, 0); } 
         });
 
         function atualizarHUD() {
@@ -314,7 +342,7 @@
 
         function logMsg(msg) { uiElements.combatLog.innerText = msg; }
 
-        // --- LOOP CRÍTICO PRINCIPAL ---
+        // --- LOOP DE RENDERIZAÇÃO E MOVIMENTO DETALHADO ---
         function animate() {
             requestAnimationFrame(animate);
             const delta = Math.min(clock.getDelta(), 0.1);
@@ -326,14 +354,21 @@
                     playerState.stamina = Math.min(playerState.staminaMax, playerState.stamina + (28 * delta)); atualizarHUD(); 
                 }
                 
-                const pernaGiro = Math.sin(tempoAcumulado * 6) * 0.18;
-                pEsq.rotation.x = -pernaGiro; pDir.rotation.x = pernaGiro;
+                // Animação Alternada Realista de Passos (Mover pernas humanas)
+                const ritmoPasso = Math.sin(tempoAcumulado * 7.5);
+                if (teclado['w'] || teclado['s'] || teclado['a'] || teclado['d']) {
+                    coxaEsq.rotation.x = ritmoPasso * 0.35; canelaEsq.rotation.x = Math.max(0, -ritmoPasso * 0.2);
+                    coxaDir.rotation.x = -ritmoPasso * 0.35; canelaDir.rotation.x = Math.max(0, ritmoPasso * 0.2);
+                } else {
+                    coxaEsq.rotation.x = coxaDir.rotation.x = canelaEsq.rotation.x = canelaDir.rotation.x = 0;
+                }
 
                 if (playerState.dashTimer > 0) playerState.dashTimer -= delta; else playerState.dashing = false;
                 
+                // Golpe de Ataque Humano Direcionado
                 if (playerState.atacando) { 
-                    weaponHandGroup.rotation.y -= arsenal[playerState.armaEquipada].velocidade * delta * 4; 
-                    if (weaponHandGroup.rotation.y < -1.6) { playerState.atacando = false; weaponHandGroup.rotation.set(Math.PI / 3, 0, -Math.PI / 10); } 
+                    weaponHandGroup.rotation.y -= arsenal[playerState.armaEquipada].velocidade * delta * 3.5; 
+                    if (weaponHandGroup.rotation.y < -1.8) { playerState.atacando = false; weaponHandGroup.rotation.set(0, 0, 0); } 
                 }
 
                 direcaoMovimento.set(0, 0, 0);
@@ -380,7 +415,7 @@
                     }
                 });
 
-                if (shakeTimer > 0) { camera.position.x = (Math.random() - 0.5) * 0.25; shakeTimer -= delta; } else { camera.position.set(0, 0, 5.0); }
+                if (shakeTimer > 0) { camera.position.x = (Math.random() - 0.5) * 0.25; shakeTimer -= delta; } else { camera.position.set(0.6, 0.2, 3.8); }
             }
             renderer.render(scene, camera);
         }
