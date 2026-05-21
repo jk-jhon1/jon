@@ -9,298 +9,317 @@ body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #e2e8f0; 
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    background-color: #e2e8f0;
+    font-family: 'Georgia', 'Segoe UI', serif;
 }
 
-canvas {
-    display: block;
-    width: 100vw;
-    height: 100vh;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* Menu de Entrada com Estilo Chinês Imperial */
+/* TELA DE ENTRADA - ESTILO PAPEL PERGAMINHO DA IMAGEM */
 #tela-inicial {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: #f8fafc; /* Fundo limpo claro */
+    background-color: #f4ede2; /* Cor de pergaminho claro */
+    background-image: radial-gradient(rgba(255,255,255,0.5) 2px, transparent 4px), linear-gradient(to right, rgba(0,0,0,0.02) 1px, transparent 1px);
+    background-size: 24px 24px, 100px 100px;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
-    transition: opacity 0.5s ease-out, visibility 0.5s;
-    overflow: hidden;
+    transition: opacity 0.6s ease-in-out;
 }
 
-/* Vetor do Dragão no Fundo */
-.dragao-bg {
+/* Elementos Decorativos de Fundo (Ondas Chinesas) */
+.nuvens-bg {
     position: absolute;
-    width: 110%;
-    height: 110%;
-    top: -5%;
-    left: -5%;
-    z-index: 1;
+    bottom: -20px;
+    right: -20px;
+    width: 350px;
+    height: 350px;
+    border: 12px double #1e3a8a;
+    border-radius: 68% 32% 43% 57% / 40% 60% 40% 60%;
+    opacity: 0.15;
     pointer-events: none;
-    opacity: 0.85;
-}
-.dragao-bg svg {
-    width: 100%;
-    height: 100%;
 }
 
-.menu-container {
+.dragao-ancestral-topo {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 250px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* LAYOUT EM GRID DUPLO DA IMAGEM */
+.interface-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 0.9fr;
+    gap: 40px;
+    width: 95%;
+    max-width: 1200px;
+    height: auto;
+    align-items: center;
+    z-index: 10;
+    padding: 20px;
+}
+
+/* BLOCO ESQUERDO: MOLDURA DO DRAGÃO AZUL */
+.painel-esquerda-combate {
     position: relative;
-    background: rgba(255, 255, 255, 0.92);
-    border: 3px solid #e11d48; /* Borda Vermelha Imperial */
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(225, 29, 72, 0.05);
-    padding: 50px 60px;
+    width: 100%;
+}
+
+.moldura-dragao-azul {
+    position: relative;
+    background: rgba(253, 251, 247, 0.95);
+    border: 8px solid #2563eb; /* Borda Azul Real */
+    outline: 3px solid #1e40af;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+    padding: 30px 20px 60px 20px;
     border-radius: 4px;
     text-align: center;
-    color: #0f172a;
-    z-index: 5;
-    max-width: 550px;
-    width: 90%;
 }
 
-/* Cantos Ornamentados Estilo Tradicional */
-.moldura-borda {
+/* Detalhes de Cantos em Ouro/Jade */
+.gema-jade {
     position: absolute;
-    width: 24px;
-    height: 24px;
-    border: 4px solid #b91c1c;
+    width: 18px;
+    height: 18px;
+    background: #10b981;
+    border: 3px solid #d97706;
+    border-radius: 50%;
 }
-.top-left { top: 8px; left: 8px; border-right: none; border-bottom: none; }
-.top-right { top: 8px; right: 8px; border-left: none; border-bottom: none; }
-.bottom-left { bottom: 8px; left: 8px; border-right: none; border-top: none; }
-.bottom-right { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+.topo-esq { top: -10px; left: -10px; }
+.topo-dir { top: -10px; right: -10px; }
+.baixo-esq { bottom: -10px; left: -10px; }
+.baixo-dir { bottom: -10px; right: -10px; }
 
-.sub-titulo {
-    font-size: 0.85rem;
-    font-weight: 800;
-    letter-spacing: 3px;
-    color: #b91c1c;
-    margin-bottom: 5px;
+/* Título Estilizado Faixa */
+.titulo-caixa {
+    background: linear-gradient(180deg, #1e40af, #1d4ed8);
+    color: white;
+    padding: 10px 30px;
+    display: inline-block;
+    border-radius: 4px;
+    border: 2px solid #f59e0b;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transform: translateY(-45px);
 }
 
-.menu-container h1 {
-    font-size: 3.5rem;
+.titulo-caixa h2 {
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+    font-family: sans-serif;
     font-weight: 900;
-    letter-spacing: 10px;
-    margin-bottom: 25px;
-    color: #0f172a;
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 10px;
 }
 
-/* Painel de comandos com mais detalhes */
-.painel-comandos {
-    background: #f1f5f9;
-    border-radius: 6px;
-    padding: 20px;
-    margin-bottom: 35px;
-    text-align: left;
-    border: 1px solid #cbd5e1;
-}
-
-.painel-comandos h3 {
-    font-size: 0.9rem;
+.sub-selecao {
+    font-size: 1.1rem;
     color: #475569;
-    letter-spacing: 1.5px;
-    margin-bottom: 15px;
-    text-align: center;
-    border-bottom: 1px dashed #cbd5e1;
-    padding-bottom: 5px;
+    margin-top: -25px;
+    margin-bottom: 25px;
+    font-style: italic;
 }
 
-.comando-linha {
-    font-family: monospace;
-    font-size: 0.9rem;
-    margin-bottom: 8px;
-    color: #334155;
+/* SELEÇÃO DE MANEQUINS REALISTAS */
+.personagens-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.card-personagem {
+    background: #f8fafc;
+    border: 2px solid #cbd5e1;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: center;
 }
 
-.comando-linha span {
-    color: #b91c1c;
+.card-personagem.ativo, .card-personagem:hover {
+    border-color: #2563eb;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.25);
+    background: #eff6ff;
+}
+
+/* Placeholder simulando os renders táticos cinzas da imagem */
+.avatar-placeholder {
+    width: 100%;
+    height: 140px;
+    background-color: #334155;
+    background-image: linear-gradient(to top, #1e293b, #475569);
+    border-radius: 4px;
+    margin-bottom: 8px;
+    position: relative;
+}
+
+/* Detalhe para simular um capacete/soldado básico dentro do bloco geométrico */
+.avatar-placeholder::before {
+    content: '';
+    position: absolute;
+    top: 30%; left: 50%;
+    transform: translate(-50%, -30%);
+    width: 45px; height: 45px;
+    background: #94a3b8;
+    border-radius: 50%;
+}
+
+.card-personagem span {
+    font-size: 0.85rem;
     font-weight: bold;
+    color: #1e293b;
+}
+
+/* BOTÃO INICIAR ABAIXO DA MOLDURA (Igual à imagem) */
+.container-botao-selo {
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
 }
 
 #btn-iniciar {
-    padding: 16px 50px;
-    font-size: 1.1rem;
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 1.2rem;
     font-weight: 900;
-    letter-spacing: 2px;
-    background: #e11d48; /* Vermelho */
     color: white;
-    border: none;
-    border-radius: 4px;
+    background: linear-gradient(135deg, #b91c1c, #dc2626);
+    border: 3px solid #f59e0b;
+    border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 6px 20px rgba(225, 29, 72, 0.4);
-    transition: all 0.2s ease;
+    box-shadow: 0 8px 20px rgba(185, 28, 28, 0.4);
+    transition: transform 0.1s, background 0.2s;
+    letter-spacing: 1px;
 }
 
 #btn-iniciar:hover {
-    background: #b91c1c;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(185, 28, 28, 0.5);
+    background: linear-gradient(135deg, #991b1b, #b91c1c);
+    transform: translateX(-50%) translateY(-2px);
 }
 
-/* Heads-Up Display */
-#game-hud {
-    position: absolute;
-    top: 25px;
-    left: 25px;
-    z-index: 500;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 22px;
-    border-radius: 12px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    color: #0f172a;
-    min-width: 280px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(8px);
+/* BLOCO DIREITO: MEDALHÕES MATRIX E COMANDOS */
+.painel-direita-comandos {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 20px;
 }
 
-.hud-status {
-    margin-bottom: 14px;
+/* Medalhões Metálicos de Ouro */
+.container-medalhoes {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 40px;
+    width: 100%;
 }
 
-.hud-label {
-    font-size: 0.7rem;
-    font-weight: 800;
-    color: #e11d48;
-    margin-bottom: 5px;
+.medalhao-ouro {
+    width: 90px;
+    height: 90px;
+    background: radial-gradient(circle, #f59e0b, #b45309);
+    border: 4px double #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(180, 83, 9, 0.3);
+}
+
+.medalhao-ouro.menor {
+    width: 70px;
+    height: 70px;
+}
+
+.nucleo-matrix {
+    font-family: sans-serif;
+    color: white;
+    font-weight: 900;
+    font-size: 1.8rem;
+    text-align: center;
+    line-height: 1;
+}
+
+.nucleo-matrix small {
+    display: block;
+    font-size: 0.45rem;
     letter-spacing: 1px;
 }
 
-.barra-container {
-    width: 100%;
-    height: 10px;
-    background: #e2e8f0;
-    border-radius: 5px;
-    overflow: hidden;
+/* Lista de Comandos com mini dragões */
+.lista-controles-chinesa {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
-#bar-player-hp { width: 100%; height: 100%; background: linear-gradient(90deg, #dc2626, #f43f5e); }
-#bar-player-stamina { width: 100%; height: 100%; background: linear-gradient(90deg, #d97706, #f59e0b); }
-
-.hud-info {
-    font-size: 0.9rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-    padding-top: 12px;
-    margin-bottom: 10px;
-    line-height: 1.6;
+.item-controle {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
-.hud-controles { font-size: 0.75rem; color: #64748b; text-align: center; }
-
-#reticula {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    width: 8px;
-    height: 8px;
-    background: #dc2626;
-    border: 2px solid white;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 400;
-    pointer-events: none;
+/* Ícone estilizado imitando as curvas azuis dos mini dragões de comandos */
+.mini-dragao-icone {
+    width: 35px;
+    height: 35px;
+    border: 3px solid #1d4ed8;
+    border-radius: 50% 0 50% 50%;
+    transform: rotate(-45deg);
+    position: relative;
+    background: rgba(29, 78, 216, 0.1);
 }
 
-#combat-log {
-    position: fixed;
-    bottom: 25px;
-    left: 25px;
-    z-index: 500;
+.mini-dragao-icone::after {
+    content: '🐉';
+    position: absolute;
+    font-size: 1.1rem;
+    top: 2px; left: 2px;
+    transform: rotate(45deg);
+}
+
+.item-controle p {
+    font-size: 1.25rem;
+    color: #1e293b;
+}
+
+.item-controle strong {
     color: #0f172a;
     font-family: monospace;
-    font-size: 1.1rem;
-    font-weight: bold;
-    background: rgba(255, 255, 255, 0.8);
-    padding: 6px 12px;
-    border-radius: 6px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-right: 5px;
 }
 
-#travar-mouse-ui {
-    position: fixed;
-    top: 25px;
-    right: 25px;
-    z-index: 600;
-    background: #e11d48;
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 0.85rem;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);
+/* CLASSES DE HUD E INTERFACES DE COMBATE (Prevenção de quebras) */
+#game-hud {
+    position: absolute; top: 25px; left: 25px; z-index: 500;
+    background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 8px;
+    color: #0f172a; min-width: 260px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
+.hud-status { margin-bottom: 10px; }
+.hud-label { font-size: 0.7rem; font-weight: bold; color: #2563eb; margin-bottom: 4px; }
+.barra-container { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+#bar-player-hp { width: 100%; height: 100%; background: #dc2626; }
+#bar-player-stamina { width: 100%; height: 100%; background: #d97706; }
+.hud-info { font-size: 0.85rem; margin-top: 10px; line-height: 1.5; }
+.hud-controles { font-size: 0.7rem; color: #64748b; margin-top: 5px; }
+#reticula { position: fixed; top: 50%; left: 50%; width: 6px; height: 6px; background: #dc2626; border-radius: 50%; transform: translate(-50%, -50%); z-index: 400; pointer-events: none; }
+#combat-log { position: fixed; bottom: 20px; left: 20px; z-index: 500; font-family: monospace; font-size: 1rem; background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 4px; }
+#travar-mouse-ui { position: fixed; top: 20px; right: 20px; z-index: 600; background: #2563eb; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
-/* Módulo de Inventário */
-#painel-inventario {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(241, 245, 249, 0.8);
-    backdrop-filter: blur(10px);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.inventario-caixa {
-    background: white;
-    border: 1px solid #cbd5e1;
-    border-radius: 16px;
-    padding: 30px;
-    width: 400px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-}
-
-.inventario-caixa h2 {
-    color: #0f172a;
-    font-size: 1.1rem;
-    letter-spacing: 1px;
-    margin-bottom: 25px;
-    text-align: center;
-}
-
-#grid-inventario {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    margin-bottom: 25px;
-}
-
-.slot-item {
-    width: 64px;
-    height: 64px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    position: relative;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.slot-item:hover { background: #f1f5f9; border-color: #e11d48; transform: scale(1.05); }
-.item-qtd { position: absolute; bottom: 3px; right: 5px; font-size: 0.7rem; color: #64748b; font-weight: bold; }
-#btn-fechar-inv { width: 100%; padding: 14px; background: #dc2626; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-#btn-fechar-inv:hover { background: #b91c1c; }
+/* Inventário */
+#painel-inventario { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+.inventario-caixa { background: white; padding: 25px; border-radius: 12px; width: 360px; text-align: center; }
+#grid-inventario { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; }
+.slot-item { width: 50px; height: 50px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; }
+#btn-fechar-inv { width: 100%; padding: 10px; background: #dc2626; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
