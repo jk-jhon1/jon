@@ -10,81 +10,71 @@
 <body>
 
     <div id="tela-inicial">
-        <div class="nuvens-bg"></div>
+        <div class="crt-scanlines"></div>
+        <div class="matrix-grid-bg"></div>
 
-        <div class="dragao-ancestral-topo">
-            <svg viewBox="0 0 800 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M100,150 Q200,50 400,120 T700,70" stroke="#1d4ed8" stroke-width="12" stroke-linecap="round" opacity="0.15"/>
-                <path d="M120,130 Q220,30 400,100 T680,50" stroke="#2563eb" stroke-width="6" stroke-linecap="round" opacity="0.2"/>
-                <g class="main-head">
-                    <path d="M370,90 Q400,40 430,90 Q450,130 400,150 Q350,130 370,90 Z" fill="rgba(37, 99, 235, 0.15)"/>
-                    <path d="M350,100 Q400,120 450,100" stroke="#1e40af" stroke-width="3"/>
-                    <path d="M380,80 L390,90 M420,80 L410,90" stroke="#b91c1c" stroke-width="4"/> 
-                </g>
-            </svg>
-        </div>
-
-        <div class="interface-grid">
-            <div class="painel-esquerda-combate">
-                <div class="moldura-dragao-azul">
-                    <div class="gema-jade topo-esq"></div>
-                    <div class="gema-jade topo-dir"></div>
-                    <div class="gema-jade baixo-esq"></div>
-                    <div class="gema-jade baixo-dir"></div>
-
-                    <div class="titulo-caixa">
-                        <h2>SIMULADOR COMBATE 3D</h2>
-                    </div>
-                    
-                    <div class="sub-selecao">Select Your Character</div>
-
-                    <div class="personagens-container">
-                        <div class="card-personagem ativo">
-                            <div class="avatar-placeholder p1"></div>
-                            <span>Character 1</span>
-                        </div>
-                        <div class="card-personagem">
-                            <div class="avatar-placeholder p2"></div>
-                            <span>Character 2</span>
-                        </div>
-                        <div class="card-personagem">
-                            <div class="avatar-placeholder p3"></div>
-                            <span>Character 3</span>
-                        </div>
-                    </div>
-
-                    <div class="container-botao-selo">
-                        <button id="btn-iniciar">INICIAR JOGO</button>
-                    </div>
+        <div class="interface-tatica-container">
+            <div class="painel-header">
+                <div class="logo-sis">SYS.MATRIZ_V3.0</div>
+                <div class="status-bar">
+                    <span class="piscar">[ CONEXÃO ESTABELECIDA ]</span>
+                    <span>NÚCLEO: OPERACIONAL</span>
                 </div>
             </div>
 
-            <div class="painel-direita-comandos">
-                <div class="container-medalhoes">
-                    <div class="medalhao-ouro">
-                        <div class="nucleo-matrix">M<small>MATRIX</small></div>
+            <div class="painel-corpo">
+                <div class="bloco-operadores">
+                    <div class="titulo-secao">> SELECIONE O OPERADOR TÁTICO</div>
+                    
+                    <div class="grid-operadores">
+                        <div class="card-op ativo">
+                            <div class="foto-op">OP-01</div>
+                            <div class="dados-op">
+                                <strong>ASSALTO</strong>
+                                <small>Equilíbrio / Velocidade</small>
+                            </div>
+                        </div>
+                        <div class="card-op">
+                            <div class="foto-op">OP-02</div>
+                            <div class="dados-op">
+                                <strong>PESADO</strong>
+                                <small>Resistência / Força</small>
+                            </div>
+                        </div>
+                        <div class="card-op">
+                            <div class="foto-op">OP-03</div>
+                            <div class="dados-op">
+                                <strong>FURTIVO</strong>
+                                <small>Agilidade / Letalidade</small>
+                            </div>
+                        </div>
                     </div>
-                    <div class="medalhao-ouro menor">
-                        <div class="nucleo-matrix">M<small>MATRIX</small></div>
-                    </div>
+
+                    <button id="btn-iniciar" class="btn-matrix">
+                        [ INICIALIZAR SIMULAÇÃO ]
+                    </button>
                 </div>
 
-                <div class="lista-controles-chinesa">
-                    <div class="item-controle">
-                        <div class="mini-dragao-icone"></div>
-                        <p><strong>[W][A][S][D]</strong> Move</p>
+                <div class="bloco-sistema">
+                    <div class="titulo-secao">> DIRETRIZES DE COMBATE</div>
+                    
+                    <div class="caixa-controles">
+                        <ul>
+                            <li><span class="tecla">[W][A][S][D]</span> <span class="acao">Movimentação no Eixo</span></li>
+                            <li><span class="tecla">[MOUSE]</span> <span class="acao">Olhar / Ataque Básico</span></li>
+                            <li><span class="tecla">[B. DIREITO]</span> <span class="acao">Postura Defensiva</span></li>
+                            <li><span class="tecla">[SHIFT]</span> <span class="acao">Evasão Tática (Dash)</span></li>
+                            <li><span class="tecla">[E]</span> <span class="acao">Acessar Inventário / Loot</span></li>
+                            <li><span class="tecla">[Q]</span> <span class="acao">Injetar Seringa (Cura)</span></li>
+                            <li><span class="tecla">[1] [2] [3]</span> <span class="acao">Alternar Armamento</span></li>
+                        </ul>
                     </div>
-                    <div class="item-controle">
-                        <div class="mini-dragao-icone deitado"></div>
-                        <p><strong>[Mouse]</strong> Look/Attack</p>
-                    </div>
-                    <div class="item-controle">
-                        <div class="mini-dragao-icone"></div>
-                        <p><strong>[Shift]</strong> Dash</p>
-                    </div>
-                    <div class="item-controle">
-                        <div class="mini-dragao-icone inverter"></div>
-                        <p><strong>[E]</strong> Equip</p>
+
+                    <div class="terminal-log">
+                        <p>> Carregando módulo de IA inimiga... OK</p>
+                        <p>> Sincronizando biometria... OK</p>
+                        <p class="aviso">> AVISO: Múltiplas assinaturas hostis detectadas.</p>
+                        <p class="piscar">> Aguardando comando do usuário_</p>
                     </div>
                 </div>
             </div>
