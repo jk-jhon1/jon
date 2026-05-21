@@ -9,8 +9,9 @@ body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #e2e8f0;
-    font-family: 'Segoe UI', Georgia, serif;
+    background-color: #050505;
+    font-family: 'Courier New', Courier, monospace;
+    color: #0f0;
 }
 
 canvas {
@@ -23,281 +24,221 @@ canvas {
     display: none !important;
 }
 
-/* TELA DE ENTRADA - ESTILO PERGAMINHO */
+/* =========================================
+   TELA INICIAL - ESTILO MATRIX TÁTICO
+========================================= */
 #tela-inicial {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #f4ede2;
-    background-image: radial-gradient(rgba(255,255,255,0.5) 2px, transparent 4px), linear-gradient(to right, rgba(0,0,0,0.02) 1px, transparent 1px);
-    background-size: 24px 24px, 100px 100px;
+    background-color: #020a02;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
-    transition: opacity 0.5s ease-in-out, visibility 0.5s;
-    will-change: transform, opacity;
+    transition: opacity 0.4s ease-out, visibility 0.4s;
 }
 
-.nuvens-bg {
+/* Efeito de grade no fundo */
+.matrix-grid-bg {
     position: absolute;
-    bottom: -20px;
-    right: -20px;
-    width: 350px;
-    height: 350px;
-    border: 12px double #1e3a8a;
-    border-radius: 68% 32% 43% 57% / 40% 60% 40% 60%;
-    opacity: 0.15;
-    pointer-events: none;
-}
-
-.dragao-ancestral-topo {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80%;
-    height: 250px;
-    pointer-events: none;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(0, 255, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 0, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
     z-index: 1;
 }
 
-/* GRID RESPONSIVO */
-.interface-grid {
-    display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
-    gap: 40px;
-    width: 95%;
-    max-width: 1100px;
-    align-items: center;
+/* Efeito de monitor antigo (Scanlines) */
+.crt-scanlines {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 4px, 3px 100%;
     z-index: 10;
-    padding: 20px;
+    pointer-events: none;
 }
 
-@media (max-width: 768px) {
-    .interface-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-    .painel-direita-comandos {
-        align-items: center !important;
-    }
-}
-
-.painel-esquerda-combate {
+.interface-tatica-container {
     position: relative;
-    width: 100%;
+    z-index: 5;
+    width: 90%;
+    max-width: 1000px;
+    background: rgba(0, 15, 0, 0.85);
+    border: 1px solid #0f0;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.2), inset 0 0 20px rgba(0, 255, 0, 0.1);
+    padding: 2px;
 }
 
-.moldura-dragao-azul {
-    position: relative;
-    background: rgba(253, 251, 247, 0.98);
-    border: 6px solid #2563eb;
-    outline: 3px solid #1e40af;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-    padding: 40px 20px 50px 20px;
-    border-radius: 4px;
-    text-align: center;
-}
-
-.gema-jade {
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    background: #10b981;
-    border: 2px solid #d97706;
-    border-radius: 50%;
-}
-.topo-esq { top: -8px; left: -8px; }
-.topo-dir { top: -8px; right: -8px; }
-.baixo-esq { bottom: -8px; left: -8px; }
-.baixo-dir { bottom: -8px; right: -8px; }
-
-.titulo-caixa {
-    background: linear-gradient(180deg, #1e40af, #1d4ed8);
-    color: white;
-    padding: 10px 25px;
-    display: inline-block;
-    border-radius: 4px;
-    border: 2px solid #f59e0b;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    transform: translateY(-55px);
-}
-
-.titulo-caixa h2 {
-    font-size: 1.4rem;
-    letter-spacing: 2px;
-    font-weight: 900;
-}
-
-.sub-selecao {
-    font-size: 1rem;
-    color: #475569;
-    margin-top: -35px;
-    margin-bottom: 25px;
-    font-style: italic;
-}
-
-.personagens-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.card-personagem {
-    background: #f8fafc;
-    border: 2px solid #cbd5e1;
-    padding: 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
+/* Cabeçalho */
+.painel-header {
+    background: #0f0;
+    color: #000;
+    padding: 10px 20px;
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-}
-
-.card-personagem.ativo, .card-personagem:hover {
-    border-color: #2563eb;
-    background: #eff6ff;
-    transform: translateY(-2px);
-}
-
-.avatar-placeholder {
-    width: 100%;
-    height: 120px;
-    background: linear-gradient(to top, #1e293b, #475569);
-    border-radius: 4px;
-    margin-bottom: 8px;
-    position: relative;
-}
-
-.avatar-placeholder::before {
-    content: '';
-    position: absolute;
-    top: 35%; left: 50%;
-    transform: translate(-50%, -35%);
-    width: 38px; height: 38px;
-    background: #94a3b8;
-    border-radius: 50%;
-}
-
-.card-personagem span {
-    font-size: 0.8rem;
     font-weight: bold;
-    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
-.container-botao-selo {
-    position: absolute;
-    bottom: -22px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 55%;
+.logo-sis { font-size: 1.2rem; }
+.status-bar { font-size: 0.9rem; display: flex; gap: 20px; }
+
+/* Corpo Principal */
+.painel-corpo {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 20px;
+    padding: 30px;
 }
 
-#btn-iniciar {
-    width: 100%;
-    padding: 12px 20px;
-    font-size: 1.15rem;
-    font-weight: 900;
-    color: white;
-    background: linear-gradient(135deg, #b91c1c, #dc2626);
-    border: 2px solid #f59e0b;
-    border-radius: 6px;
-    cursor: pointer;
-    box-shadow: 0 6px 15px rgba(185, 28, 28, 0.4);
-    transition: background 0.2s, transform 0.1s;
+.titulo-secao {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    border-bottom: 1px dashed #0f0;
+    padding-bottom: 5px;
+    letter-spacing: 1px;
 }
 
-#btn-iniciar:hover {
-    background: linear-gradient(135deg, #991b1b, #b91c1c);
-    transform: scale(1.02);
-}
-
-/* BLOCO DIREITO */
-.painel-direita-comandos {
+/* Cartões de Seleção */
+.grid-operadores {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    padding-left: 10px;
-}
-
-.container-medalhoes {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+    gap: 12px;
     margin-bottom: 30px;
 }
 
-.medalhao-ouro {
-    width: 80px;
-    height: 80px;
-    background: radial-gradient(circle, #f59e0b, #b45309);
-    border: 3px double #ffffff;
-    border-radius: 50%;
+.card-op {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    border: 1px solid #004400;
+    background: rgba(0, 20, 0, 0.5);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.card-op:hover, .card-op.ativo {
+    border-color: #0f0;
+    background: rgba(0, 50, 0, 0.5);
+    box-shadow: inset 4px 0 0 #0f0;
+}
+
+.foto-op {
+    width: 50px;
+    height: 50px;
+    background: #002200;
+    border: 1px solid #0f0;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 15px rgba(180, 83, 9, 0.3);
+    font-size: 0.8rem;
+    font-weight: bold;
 }
 
-.medalhao-ouro.menor { width: 64px; height: 64px; }
+.dados-op { display: flex; flex-direction: column; }
+.dados-op strong { font-size: 1.1rem; letter-spacing: 1px; }
+.dados-op small { color: #00aa00; font-size: 0.8rem; }
 
-.nucleo-matrix {
-    color: white;
-    font-weight: 900;
-    font-size: 1.5rem;
-    text-align: center;
-    line-height: 1;
-}
-.nucleo-matrix small { display: block; font-size: 0.4rem; letter-spacing: 0.5px; }
-
-.lista-controles-chinesa { display: flex; flex-direction: column; gap: 15px; }
-.item-controle { display: flex; align-items: center; gap: 12px; }
-
-.mini-dragao-icone {
-    width: 32px;
-    height: 32px;
-    border: 2px solid #1d4ed8;
-    border-radius: 50% 0 50% 50%;
-    transform: rotate(-45deg);
-    position: relative;
-    background: rgba(29, 78, 216, 0.08);
-}
-.mini-dragao-icone::after {
-    content: '🐉';
-    position: absolute;
-    font-size: 1rem;
-    top: 1px; left: 1px;
-    transform: rotate(45deg);
+/* Botão Iniciar */
+.btn-matrix {
+    width: 100%;
+    padding: 15px;
+    background: transparent;
+    color: #0f0;
+    border: 2px solid #0f0;
+    font-family: inherit;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.2s;
 }
 
-.item-controle p { font-size: 1.15rem; color: #1e293b; }
-.item-controle strong { color: #0f172a; font-family: monospace; margin-right: 4px; }
+.btn-matrix:hover {
+    background: #0f0;
+    color: #000;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+}
 
-/* HUD & ELEMENTOS EM JOGO */
+/* Lista de Controles */
+.caixa-controles ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.caixa-controles li {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(0, 30, 0, 0.4);
+    padding: 8px 12px;
+    border-left: 2px solid #005500;
+}
+
+.tecla { font-weight: bold; color: #fff; }
+.acao { color: #00cc00; font-size: 0.9rem; }
+
+/* Terminal de Log Estático */
+.terminal-log {
+    margin-top: 25px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid #004400;
+    font-size: 0.85rem;
+    color: #00aa00;
+    line-height: 1.6;
+}
+
+.aviso { color: #ff3333; }
+.piscar { animation: piscarAnim 1.5s infinite; }
+
+@keyframes piscarAnim {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+@media (max-width: 800px) {
+    .painel-corpo { grid-template-columns: 1fr; }
+}
+
+/* =========================================
+   ELEMENTOS DE JOGO (HUD, INVENTÁRIO, ETC)
+========================================= */
 #game-hud {
     position: absolute; top: 20px; left: 20px; z-index: 500;
-    background: rgba(255, 255, 255, 0.95); padding: 18px; border-radius: 8px;
-    color: #0f172a; min-width: 250px; box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    background: rgba(0, 15, 0, 0.8); border: 1px solid #0f0;
+    padding: 15px; color: #0f0; min-width: 250px;
 }
-.hud-status { margin-bottom: 8px; }
-.hud-label { font-size: 0.65rem; font-weight: bold; color: #2563eb; margin-bottom: 3px; }
-.barra-container { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-#bar-player-hp { width: 100%; height: 100%; background: #dc2626; }
-#bar-player-stamina { width: 100%; height: 100%; background: #d97706; }
-.hud-info { font-size: 0.8rem; margin-top: 8px; line-height: 1.4; }
-.hud-controles { font-size: 0.65rem; color: #64748b; margin-top: 4px; }
+.hud-status { margin-bottom: 10px; }
+.hud-label { font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; }
+.barra-container { width: 100%; height: 10px; background: #002200; border: 1px solid #005500; }
+#bar-player-hp { width: 100%; height: 100%; background: #0f0; transition: width 0.2s; }
+#bar-player-stamina { width: 100%; height: 100%; background: #00aa00; transition: width 0.2s; }
+.hud-info { font-size: 0.85rem; margin-top: 10px; line-height: 1.5; color: #00cc00; }
+.hud-controles { font-size: 0.7rem; color: #008800; margin-top: 8px; border-top: 1px dashed #004400; padding-top: 5px; }
 
-#reticula { position: fixed; top: 50%; left: 50%; width: 6px; height: 6px; background: #dc2626; border-radius: 50%; transform: translate(-50%, -50%); z-index: 400; pointer-events: none; }
-#combat-log { position: fixed; bottom: 20px; left: 20px; z-index: 500; font-family: monospace; font-size: 1rem; background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 4px; }
-#travar-mouse-ui { position: fixed; top: 20px; right: 20px; z-index: 600; background: #2563eb; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+#reticula { position: fixed; top: 50%; left: 50%; width: 4px; height: 4px; background: #0f0; border-radius: 50%; transform: translate(-50%, -50%); z-index: 400; pointer-events: none; box-shadow: 0 0 5px #0f0; }
+#combat-log { position: fixed; bottom: 20px; left: 20px; z-index: 500; background: rgba(0, 15, 0, 0.8); border: 1px solid #0f0; padding: 5px 10px; color: #0f0; font-size: 0.9rem; }
+#travar-mouse-ui { position: fixed; top: 20px; right: 20px; z-index: 600; background: transparent; color: #0f0; border: 1px solid #0f0; padding: 8px 15px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; }
 
-#painel-inventario { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-.inventario-caixa { background: white; padding: 20px; border-radius: 8px; width: 340px; text-align: center; }
-#grid-inventario { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
-.slot-item { width: 45px; height: 45px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer; }
-#btn-fechar-inv { width: 100%; padding: 10px; background: #dc2626; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+#painel-inventario { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+.inventario-caixa { background: #020a02; border: 1px solid #0f0; padding: 20px; width: 350px; text-align: center; box-shadow: 0 0 20px rgba(0,255,0,0.1); }
+.inventario-caixa h2 { font-size: 1.1rem; color: #0f0; border-bottom: 1px solid #005500; padding-bottom: 10px; margin-bottom: 15px; }
+#grid-inventario { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 20px; }
+.slot-item { width: 45px; height: 45px; background: rgba(0, 20, 0, 0.5); border: 1px solid #004400; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; color: #fff; position: relative; }
+.slot-item:hover { border-color: #0f0; background: rgba(0, 50, 0, 0.8); }
+.item-qtd { position: absolute; bottom: 2px; right: 2px; font-size: 0.6rem; font-weight: bold; color: #0f0; }
+#btn-fechar-inv { width: 100%; padding: 10px; background: transparent; color: #0f0; border: 1px solid #0f0; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+#btn-fechar-inv:hover { background: #0f0; color: #000; }
