@@ -3,16 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARYSONY - Simulador 3D Clariado</title>
+    <title>ARYSONY - Edição Dragão Imperial</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
     <div id="tela-inicial">
+        <div class="dragao-bg">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                <path d="M-10,50 C10,20 30,80 50,40 C70,10 90,70 110,40 M0,45 C20,15 40,75 60,35 C80,5 100,65 120,35" fill="none" stroke="rgba(225, 29, 72, 0.15)" stroke-width="4" stroke-linecap="round"/>
+                <path d="M20,30 C25,20 35,25 40,15 C35,30 25,28 20,30 Z M60,25 C65,15 75,20 80,10 C75,25 65,23 60,25 Z" fill="rgba(225, 29, 72, 0.1)"/>
+                <path d="M30,42 Q40,35 45,45 T60,40" fill="none" stroke="rgba(225, 29, 72, 0.2)" stroke-width="1"/>
+                <path d="M40,52 Q50,45 55,55 T70,50" fill="none" stroke="rgba(225, 29, 72, 0.2)" stroke-width="1"/>
+            </svg>
+        </div>
+
         <div class="menu-container">
+            <div class="moldura-borda top-left"></div>
+            <div class="moldura-borda top-right"></div>
+            <div class="moldura-borda bottom-left"></div>
+            <div class="moldura-borda bottom-right"></div>
+
+            <div class="sub-titulo">⚡ SIMULADOR DE COMBATE 3D ⚡</div>
             <h1>ARYSONY</h1>
-            <p>[W, A, S, D] Mover | [Mouse] Olhar/Atacar | [Q] Curar | [E] Inventário</p>
+            
+            <div class="painel-comandos">
+                <h3>MANUAL DE COMANDOS</h3>
+                <div class="comando-linha"><span>[W, A, S, D]</span> Movimentação Tática</div>
+                <div class="comando-linha"><span>[Mouse]</span> Olhar / Direcionar Ataque</div>
+                <div class="comando-linha"><span>[Botão Esq.]</span> Desferir Golpe / Ataque</div>
+                <div class="comando-linha"><span>[Botão Dir.]</span> Postura de Defesa (Bloqueio)</div>
+                <div class="comando-linha"><span>[Shift]</span> Avanço Rápido / Dash</div>
+                <div class="comando-linha"><span>[Q]</span> Injetar Seringa de Cura</div>
+                <div class="comando-linha"><span>[E]</span> Acessar Compartimento de Inventário</div>
+                <div class="comando-linha"><span>[1, 2, 3]</span> Alternar Arsenal de Armas</div>
+            </div>
+
             <button id="btn-iniciar">INICIAR SIMULAÇÃO</button>
         </div>
     </div>
