@@ -65,7 +65,6 @@
         const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _fwd = new THREE.Vector3(), _dir = new THREE.Vector3();
         const direcaoMovimento = new THREE.Vector3();
 
-        // Luzes estáveis e claras
         scene.add(new THREE.AmbientLight(0xffffff, 0.85)); 
         const sunLight = new THREE.DirectionalLight(0xffffff, 0.9); 
         sunLight.position.set(30, 70, 20);
@@ -93,15 +92,14 @@
         scene.add(floor);
 
         // --- MATERIAIS PARA ANATOMIA HUMANA / REALISTA ---
-        const matPele = new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.6 }); // Pele humana (tom bronzeado)
-        const matCabelo = new THREE.MeshStandardMaterial({ color: 0x2d1a10, roughness: 0.8 }); // Cabelo castanho escuro
-        const matCalca = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.7 }); // Calça tática Grafite
-        const matBota = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 }); // Botas de couro preto
-        const matColete = new THREE.MeshStandardMaterial({ color: 0x3f3f46, roughness: 0.5, metalness: 0.2 }); // Colete Militar Camuflado escuro
-        const matLuva = new THREE.MeshStandardMaterial({ color: 0x52525b, roughness: 0.6 }); // Luvas de proteção
-        const weaponMat = new THREE.MeshStandardMaterial({ color: 0x71717a, metalness: 0.8, roughness: 0.2 }); // Metal de armas
+        const matPele = new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.6 }); 
+        const matCabelo = new THREE.MeshStandardMaterial({ color: 0x2d1a10, roughness: 0.8 }); 
+        const matCalca = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.7 }); 
+        const matBota = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 }); 
+        const matColete = new THREE.MeshStandardMaterial({ color: 0x3f3f46, roughness: 0.5, metalness: 0.2 }); 
+        const matLuva = new THREE.MeshStandardMaterial({ color: 0x52525b, roughness: 0.6 }); 
+        const weaponMat = new THREE.MeshStandardMaterial({ color: 0x71717a, metalness: 0.8, roughness: 0.2 }); 
         
-        // Inimigos
         const matOgro = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.8 }); 
         const matDrone = new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.5 }); 
         const matGuarda = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.4 }); 
@@ -111,10 +109,9 @@
         const geoPocao = new THREE.CylinderGeometry(0.1, 0.15, 0.4, 6);
         const geoSucata = new THREE.BoxGeometry(0.3, 0.3, 0.3);
 
-        // --- CONSTRUÇÃO DETALHADA DO PERSONAGEM HUMANO (ARYSONY) ---
+        // --- CONSTRUÇÃO DO JOGADOR HUMANO ---
         const playerGroup = new THREE.Group();
 
-        // 1. Pernas e Pés Humanos (Baseados na anatomia real)
         const coxaEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 0.7), matCalca); coxaEsq.position.set(-0.22, 1.05, 0); coxaEsq.castShadow = true;
         const canelaEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.10, 0.6), matCalca); canelaEsq.position.set(-0.22, 0.45, 0); canelaEsq.castShadow = true;
         const botaEsq = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.18, 0.32), matBota); botaEsq.position.set(-0.22, 0.1, 0.06); botaEsq.castShadow = true;
@@ -125,26 +122,22 @@
 
         playerGroup.add(coxaEsq, canelaEsq, botaEsq, coxaDir, canelaDir, botaDir);
 
-        // 2. Quadril e Tronco Humano (Cintura + Peito + Colete Tático)
         const quadril = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.3, 0.4), matCalca); quadril.position.y = 1.45; quadril.castShadow = true;
         const peito = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.30, 0.8, 8), matCalca); peito.position.y = 1.95; peito.castShadow = true;
         const colete = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.7, 0.46), matColete); colete.position.y = 2.0; colete.castShadow = true;
         playerGroup.add(quadril, peito, colete);
 
-        // 3. Cabeça Humana (Pescoço, Rosto, Cabelo)
         const pescoco = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.2), matPele); pescoco.position.y = 2.4; pescoco.castShadow = true;
         const cabeca = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 16), matPele); cabeca.position.y = 2.6; cabeca.castShadow = true;
         const cabelo = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), matCabelo); cabelo.position.set(0, 2.64, -0.03); cabelo.scale.set(1.02, 1, 1.05);
         playerGroup.add(pescoco, cabeca, cabelo);
 
-        // 4. Braço Esquerdo (Ombro, Antebraço e Mão com Luva)
         const ombroEsq = new THREE.Mesh(new THREE.SphereGeometry(0.13), matCalca); ombroEsq.position.set(-0.52, 2.2, 0);
         const bracoEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.10, 0.5), matPele); bracoEsq.position.set(-0.52, 1.9, 0); bracoEsq.castShadow = true;
         const antebracoEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.45), matPele); antebracoEsq.position.set(-0.52, 1.45, -0.1); antebracoEsq.rotation.x = Math.PI/6; antebracoEsq.castShadow = true;
         const maoEsq = new THREE.Mesh(new THREE.SphereGeometry(0.08), matLuva); maoEsq.position.set(-0.52, 1.25, -0.2);
         playerGroup.add(ombroEsq, bracoEsq, antebracoEsq, maoEsq);
 
-        // 5. Braço Direito Articulado (Carrega o Armamento)
         const weaponHandGroup = new THREE.Group();
         weaponHandGroup.position.set(0.52, 2.1, -0.1);
         playerGroup.add(weaponHandGroup);
@@ -154,7 +147,6 @@
         const antebracoDir = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.45), matPele); antebracoDir.position.set(0, -0.45, -0.3); antebracoDir.rotation.x = -Math.PI/3; antebracoDir.castShadow = true; weaponHandGroup.add(antebracoDir);
         const maoDir = new THREE.Mesh(new THREE.SphereGeometry(0.08), matLuva); maoDir.position.set(0, -0.55, -0.5); weaponHandGroup.add(maoDir);
 
-        // Armas acopladas à mão direita do humano
         const mSword = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.4, 0.14), weaponMat); mSword.position.set(0, -0.2, -1.5); mSword.rotation.x = -Math.PI/2; mSword.castShadow = true;
         
         const mHammer = new THREE.Group();
@@ -167,10 +159,8 @@
 
         weaponHandGroup.add(mSword, mHammer, mDagger);
         const listaDeArmasMesh = [mSword, mHammer, mDagger];
-
         scene.add(playerGroup);
 
-        // Posicionamento de Câmera em Terceira Pessoa (Ombro)
         const cameraPivot = new THREE.Group();
         cameraPivot.position.set(0, 2.5, 0); playerGroup.add(cameraPivot);
         cameraPivot.add(camera); camera.position.set(0.6, 0.2, 3.8); camera.lookAt(0, 2.2, -2);
@@ -192,7 +182,6 @@
         let mouseTravado = false, inventarioAberto = false, shakeTimer = 0, tempoAcumulado = 0;
         const teclado = {};
 
-        // Inimigos do Cenário
         function spawnInimigo(tipo, px, pz) {
             const enemyGroup = new THREE.Group();
             const status = { vivo: true, alertado: false, cooldown: 0, timerDano: 0 };
@@ -231,7 +220,7 @@
             scene.add(malhaDrop); dropsMundo.push({ mesh: malhaDrop, tipo: tipoItem });
         }
 
-        // --- CONTROLES INTERNOS ---
+        // --- ENTRADAS DO JOGADOR ---
         window.addEventListener('keydown', e => {
             const key = e.key.toLowerCase(); teclado[key] = true;
 
@@ -282,7 +271,6 @@
             cameraPivot.rotation.x = Math.max(-0.4, Math.min(0.6, cameraPivot.rotation.x));
         });
 
-        // Mecânicas Físicas de Ataque Humano
         window.addEventListener("mousedown", (e) => {
             if (!mouseTravado || inventarioAberto) return;
             const arma = arsenal[playerState.armaEquipada];
@@ -342,7 +330,7 @@
 
         function logMsg(msg) { uiElements.combatLog.innerText = msg; }
 
-        // --- LOOP DE RENDERIZAÇÃO E MOVIMENTO DETALHADO ---
+        // --- LOOP PRINCIPAL ---
         function animate() {
             requestAnimationFrame(animate);
             const delta = Math.min(clock.getDelta(), 0.1);
@@ -354,7 +342,6 @@
                     playerState.stamina = Math.min(playerState.staminaMax, playerState.stamina + (28 * delta)); atualizarHUD(); 
                 }
                 
-                // Animação Alternada Realista de Passos (Mover pernas humanas)
                 const ritmoPasso = Math.sin(tempoAcumulado * 7.5);
                 if (teclado['w'] || teclado['s'] || teclado['a'] || teclado['d']) {
                     coxaEsq.rotation.x = ritmoPasso * 0.35; canelaEsq.rotation.x = Math.max(0, -ritmoPasso * 0.2);
@@ -365,7 +352,6 @@
 
                 if (playerState.dashTimer > 0) playerState.dashTimer -= delta; else playerState.dashing = false;
                 
-                // Golpe de Ataque Humano Direcionado
                 if (playerState.atacando) { 
                     weaponHandGroup.rotation.y -= arsenal[playerState.armaEquipada].velocidade * delta * 3.5; 
                     if (weaponHandGroup.rotation.y < -1.8) { playerState.atacando = false; weaponHandGroup.rotation.set(0, 0, 0); } 
