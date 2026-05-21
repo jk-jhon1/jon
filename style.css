@@ -10,27 +10,37 @@ body, html {
     height: 100%;
     overflow: hidden;
     background-color: #e2e8f0;
-    font-family: 'Georgia', 'Segoe UI', serif;
+    font-family: 'Segoe UI', Georgia, serif;
 }
 
-/* TELA DE ENTRADA - ESTILO PAPEL PERGAMINHO DA IMAGEM */
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* TELA DE ENTRADA - ESTILO PERGAMINHO */
 #tela-inicial {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #f4ede2; /* Cor de pergaminho claro */
+    background-color: #f4ede2;
     background-image: radial-gradient(rgba(255,255,255,0.5) 2px, transparent 4px), linear-gradient(to right, rgba(0,0,0,0.02) 1px, transparent 1px);
     background-size: 24px 24px, 100px 100px;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
-    transition: opacity 0.6s ease-in-out;
+    transition: opacity 0.5s ease-in-out, visibility 0.5s;
+    will-change: transform, opacity;
 }
 
-/* Elementos Decorativos de Fundo (Ondas Chinesas) */
 .nuvens-bg {
     position: absolute;
     bottom: -20px;
@@ -54,20 +64,28 @@ body, html {
     z-index: 1;
 }
 
-/* LAYOUT EM GRID DUPLO DA IMAGEM */
+/* GRID RESPONSIVO */
 .interface-grid {
     display: grid;
-    grid-template-columns: 1.3fr 0.9fr;
+    grid-template-columns: 1.2fr 0.8fr;
     gap: 40px;
     width: 95%;
-    max-width: 1200px;
-    height: auto;
+    max-width: 1100px;
     align-items: center;
     z-index: 10;
     padding: 20px;
 }
 
-/* BLOCO ESQUERDO: MOLDURA DO DRAGÃO AZUL */
+@media (max-width: 768px) {
+    .interface-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    .painel-direita-comandos {
+        align-items: center !important;
+    }
+}
+
 .painel-esquerda-combate {
     position: relative;
     width: 100%;
@@ -75,57 +93,53 @@ body, html {
 
 .moldura-dragao-azul {
     position: relative;
-    background: rgba(253, 251, 247, 0.95);
-    border: 8px solid #2563eb; /* Borda Azul Real */
+    background: rgba(253, 251, 247, 0.98);
+    border: 6px solid #2563eb;
     outline: 3px solid #1e40af;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.15);
-    padding: 30px 20px 60px 20px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    padding: 40px 20px 50px 20px;
     border-radius: 4px;
     text-align: center;
 }
 
-/* Detalhes de Cantos em Ouro/Jade */
 .gema-jade {
     position: absolute;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     background: #10b981;
-    border: 3px solid #d97706;
+    border: 2px solid #d97706;
     border-radius: 50%;
 }
-.topo-esq { top: -10px; left: -10px; }
-.topo-dir { top: -10px; right: -10px; }
-.baixo-esq { bottom: -10px; left: -10px; }
-.baixo-dir { bottom: -10px; right: -10px; }
+.topo-esq { top: -8px; left: -8px; }
+.topo-dir { top: -8px; right: -8px; }
+.baixo-esq { bottom: -8px; left: -8px; }
+.baixo-dir { bottom: -8px; right: -8px; }
 
-/* Título Estilizado Faixa */
 .titulo-caixa {
     background: linear-gradient(180deg, #1e40af, #1d4ed8);
     color: white;
-    padding: 10px 30px;
+    padding: 10px 25px;
     display: inline-block;
     border-radius: 4px;
     border: 2px solid #f59e0b;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    transform: translateY(-45px);
+    transform: translateY(-55px);
 }
 
 .titulo-caixa h2 {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     letter-spacing: 2px;
-    font-family: sans-serif;
     font-weight: 900;
 }
 
 .sub-selecao {
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: #475569;
-    margin-top: -25px;
+    margin-top: -35px;
     margin-bottom: 25px;
     font-style: italic;
 }
 
-/* SELEÇÃO DE MANEQUINS REALISTAS */
 .personagens-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -136,10 +150,10 @@ body, html {
 .card-personagem {
     background: #f8fafc;
     border: 2px solid #cbd5e1;
-    padding: 10px;
+    padding: 12px;
     border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: transform 0.2s, border-color 0.2s;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -147,179 +161,143 @@ body, html {
 
 .card-personagem.ativo, .card-personagem:hover {
     border-color: #2563eb;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.25);
     background: #eff6ff;
+    transform: translateY(-2px);
 }
 
-/* Placeholder simulando os renders táticos cinzas da imagem */
 .avatar-placeholder {
     width: 100%;
-    height: 140px;
-    background-color: #334155;
-    background-image: linear-gradient(to top, #1e293b, #475569);
+    height: 120px;
+    background: linear-gradient(to top, #1e293b, #475569);
     border-radius: 4px;
     margin-bottom: 8px;
     position: relative;
 }
 
-/* Detalhe para simular um capacete/soldado básico dentro do bloco geométrico */
 .avatar-placeholder::before {
     content: '';
     position: absolute;
-    top: 30%; left: 50%;
-    transform: translate(-50%, -30%);
-    width: 45px; height: 45px;
+    top: 35%; left: 50%;
+    transform: translate(-50%, -35%);
+    width: 38px; height: 38px;
     background: #94a3b8;
     border-radius: 50%;
 }
 
 .card-personagem span {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: bold;
     color: #1e293b;
 }
 
-/* BOTÃO INICIAR ABAIXO DA MOLDURA (Igual à imagem) */
 .container-botao-selo {
     position: absolute;
-    bottom: -25px;
+    bottom: -22px;
     left: 50%;
     transform: translateX(-50%);
-    width: 60%;
+    width: 55%;
 }
 
 #btn-iniciar {
     width: 100%;
-    padding: 14px 20px;
-    font-size: 1.2rem;
+    padding: 12px 20px;
+    font-size: 1.15rem;
     font-weight: 900;
     color: white;
     background: linear-gradient(135deg, #b91c1c, #dc2626);
-    border: 3px solid #f59e0b;
-    border-radius: 8px;
+    border: 2px solid #f59e0b;
+    border-radius: 6px;
     cursor: pointer;
-    box-shadow: 0 8px 20px rgba(185, 28, 28, 0.4);
-    transition: transform 0.1s, background 0.2s;
-    letter-spacing: 1px;
+    box-shadow: 0 6px 15px rgba(185, 28, 28, 0.4);
+    transition: background 0.2s, transform 0.1s;
 }
 
 #btn-iniciar:hover {
     background: linear-gradient(135deg, #991b1b, #b91c1c);
-    transform: translateX(-50%) translateY(-2px);
+    transform: scale(1.02);
 }
 
-/* BLOCO DIREITO: MEDALHÕES MATRIX E COMANDOS */
+/* BLOCO DIREITO */
 .painel-direita-comandos {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    padding-left: 20px;
+    padding-left: 10px;
 }
 
-/* Medalhões Metálicos de Ouro */
 .container-medalhoes {
     display: flex;
     align-items: center;
     gap: 15px;
-    margin-bottom: 40px;
-    width: 100%;
+    margin-bottom: 30px;
 }
 
 .medalhao-ouro {
-    width: 90px;
-    height: 90px;
+    width: 80px;
+    height: 80px;
     background: radial-gradient(circle, #f59e0b, #b45309);
-    border: 4px double #ffffff;
+    border: 3px double #ffffff;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 20px rgba(180, 83, 9, 0.3);
+    box-shadow: 0 6px 15px rgba(180, 83, 9, 0.3);
 }
 
-.medalhao-ouro.menor {
-    width: 70px;
-    height: 70px;
-}
+.medalhao-ouro.menor { width: 64px; height: 64px; }
 
 .nucleo-matrix {
-    font-family: sans-serif;
     color: white;
     font-weight: 900;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     text-align: center;
     line-height: 1;
 }
+.nucleo-matrix small { display: block; font-size: 0.4rem; letter-spacing: 0.5px; }
 
-.nucleo-matrix small {
-    display: block;
-    font-size: 0.45rem;
-    letter-spacing: 1px;
-}
+.lista-controles-chinesa { display: flex; flex-direction: column; gap: 15px; }
+.item-controle { display: flex; align-items: center; gap: 12px; }
 
-/* Lista de Comandos com mini dragões */
-.lista-controles-chinesa {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.item-controle {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-/* Ícone estilizado imitando as curvas azuis dos mini dragões de comandos */
 .mini-dragao-icone {
-    width: 35px;
-    height: 35px;
-    border: 3px solid #1d4ed8;
+    width: 32px;
+    height: 32px;
+    border: 2px solid #1d4ed8;
     border-radius: 50% 0 50% 50%;
     transform: rotate(-45deg);
     position: relative;
-    background: rgba(29, 78, 216, 0.1);
+    background: rgba(29, 78, 216, 0.08);
 }
-
 .mini-dragao-icone::after {
     content: '🐉';
     position: absolute;
-    font-size: 1.1rem;
-    top: 2px; left: 2px;
+    font-size: 1rem;
+    top: 1px; left: 1px;
     transform: rotate(45deg);
 }
 
-.item-controle p {
-    font-size: 1.25rem;
-    color: #1e293b;
-}
+.item-controle p { font-size: 1.15rem; color: #1e293b; }
+.item-controle strong { color: #0f172a; font-family: monospace; margin-right: 4px; }
 
-.item-controle strong {
-    color: #0f172a;
-    font-family: monospace;
-    margin-right: 5px;
-}
-
-/* CLASSES DE HUD E INTERFACES DE COMBATE (Prevenção de quebras) */
+/* HUD & ELEMENTOS EM JOGO */
 #game-hud {
-    position: absolute; top: 25px; left: 25px; z-index: 500;
-    background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 8px;
-    color: #0f172a; min-width: 260px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    position: absolute; top: 20px; left: 20px; z-index: 500;
+    background: rgba(255, 255, 255, 0.95); padding: 18px; border-radius: 8px;
+    color: #0f172a; min-width: 250px; box-shadow: 0 10px 25px rgba(0,0,0,0.08);
 }
-.hud-status { margin-bottom: 10px; }
-.hud-label { font-size: 0.7rem; font-weight: bold; color: #2563eb; margin-bottom: 4px; }
+.hud-status { margin-bottom: 8px; }
+.hud-label { font-size: 0.65rem; font-weight: bold; color: #2563eb; margin-bottom: 3px; }
 .barra-container { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
 #bar-player-hp { width: 100%; height: 100%; background: #dc2626; }
 #bar-player-stamina { width: 100%; height: 100%; background: #d97706; }
-.hud-info { font-size: 0.85rem; margin-top: 10px; line-height: 1.5; }
-.hud-controles { font-size: 0.7rem; color: #64748b; margin-top: 5px; }
+.hud-info { font-size: 0.8rem; margin-top: 8px; line-height: 1.4; }
+.hud-controles { font-size: 0.65rem; color: #64748b; margin-top: 4px; }
+
 #reticula { position: fixed; top: 50%; left: 50%; width: 6px; height: 6px; background: #dc2626; border-radius: 50%; transform: translate(-50%, -50%); z-index: 400; pointer-events: none; }
 #combat-log { position: fixed; bottom: 20px; left: 20px; z-index: 500; font-family: monospace; font-size: 1rem; background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 4px; }
 #travar-mouse-ui { position: fixed; top: 20px; right: 20px; z-index: 600; background: #2563eb; color: white; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
-/* Inventário */
-#painel-inventario { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-.inventario-caixa { background: white; padding: 25px; border-radius: 12px; width: 360px; text-align: center; }
-#grid-inventario { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; }
-.slot-item { width: 50px; height: 50px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; }
+#painel-inventario { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+.inventario-caixa { background: white; padding: 20px; border-radius: 8px; width: 340px; text-align: center; }
+#grid-inventario { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
+.slot-item { width: 45px; height: 45px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer; }
 #btn-fechar-inv { width: 100%; padding: 10px; background: #dc2626; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
