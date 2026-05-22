@@ -2,84 +2,20 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Operação Floresta Tática 3D</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1d1a; font-family: 'Courier New', monospace; }
-        
-        .tela { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; transition: opacity 0.4s ease; }
-        #tela-inicial { background: radial-gradient(circle, #2a3a2a 0%, #101510 100%); }
-        .titulo { color: #33ff33; font-size: 2.5rem; letter-spacing: 4px; margin-bottom: 20px; text-shadow: 0 0 10px rgba(51,255,51,0.5); text-align: center; }
-        .btn { padding: 12px 30px; background: transparent; border: 2px solid #33ff33; color: #33ff33; font-size: 1.2rem; cursor: pointer; font-family: inherit; font-weight: bold; transition: all 0.2s; box-shadow: 0 0 15px rgba(51,255,51,0.2); }
-        .btn:hover { background: #33ff33; color: #000; box-shadow: 0 0 25px #33ff33; }
-        
-        #game-hud { position: absolute; top: 20px; left: 20px; color: #33ff33; z-index: 5; pointer-events: none; }
-        .barra-container { width: 250px; height: 16px; background: rgba(0,20,0,0.6); border: 1px solid #33ff33; margin-bottom: 8px; padding: 2px; }
-        .barra { height: 100%; transition: width 0.1s ease; }
-        #bar-player-hp { background-color: #ff3333; }
-        #bar-player-stamina { background-color: #33ff33; }
-        .contador-status { font-size: 1rem; margin-top: 5px; text-shadow: 1px 1px 2px #000; }
-        
-        #reticula { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; border: 2px solid #33ff33; border-radius: 50%; transform: translate(-50%, -50%); z-index: 4; pointer-events: none; opacity: 0.8; }
-        
-        #combat-log { position: absolute; bottom: 20px; left: 20px; color: #33ff33; font-size: 0.9rem; max-width: 400px; text-shadow: 1px 1px 2px #000; z-index: 5; pointer-events: none; }
-        
-        #travar-mouse-ui { background: rgba(0,0,0,0.5); color: #33ff33; font-size: 1.2rem; cursor: pointer; border: 1px dashed #33ff33; padding: 15px; border-radius: 4px; }
-        
-        #painel-inventario { background: rgba(10,20,10,0.9); border: 2px solid #33ff33; padding: 20px; width: 320px; z-index: 15; color: #33ff33; }
-        .grid-inv { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
-        .slot-item { width: 50px; height: 50px; background: rgba(0,0,0,0.4); border: 1px solid #225522; display: flex; justify-content: center; align-items: center; font-size: 1.3rem; position: relative; }
-        .item-qtd { position: absolute; bottom: 2px; right: 4px; font-size: 0.7rem; color: #33ff33; }
-        .craft-secao { border-top: 1px dashed #33ff33; padding-top: 15px; margin-top: 15px; }
-        .craft-linha { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .btn-craft { padding: 4px 10px; font-size: 0.8rem; }
-        
+        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: sans-serif; }
+        #game-hud { position: absolute; top: 20px; left: 20px; color: #fff; pointer-events: none; text-shadow: 1px 1px 2px #000; }
+        #tela-inicial { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #1a1d1a; z-index: 10; }
         .hidden { display: none !important; }
+        .btn { padding: 15px 30px; cursor: pointer; background: #33ff33; border: none; font-weight: bold; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js"></script>
 </head>
 <body>
-    <div id="tela-inicial" class="tela">
-        <h1 class="titulo">SISTEMA TÁTICO: FLORESTA</h1>
-        <button id="btn-iniciar" class="btn">INICIALIZAR MUNDO 3D</button>
-    </div>
-
-    <div id="game-hud" class="hidden">
-        <div>INTEGRIDADE:</div>
-        <div class="barra-container"><div id="bar-player-hp" class="barra" style="width: 100%;"></div></div>
-        <div>ESTABILIDADE:</div>
-        <div class="barra-container"><div id="bar-player-stamina" class="barra" style="width: 100%;"></div></div>
-        <div class="contador-status">SERINGAS (Q): <span id="lbl-pocoes">3</span> | FLECHAS: <span id="lbl-flechas">15</span></div>
-        <div class="contador-status">INVENTÁRIO (E): <span id="lbl-total-itens">0</span>/15</div>
-        <div class="contador-status" style="color: #ffaa00;">COMBO: <span id="lbl-combo">0</span>x</div>
-    </div>
-
-    <div id="reticula" class="hidden"></div>
-    <div id="combat-log" class="hidden">> Aguardando engajamento tático...</div>
-
-    <div id="travar-mouse-ui" class="tela hidden">
-        <div>CLIQUE NA TELA PARA RETOMAR O CONTROLE</div>
-    </div>
-
-    <div id="painel-inventario" class="tela hidden">
-        <h3>MOCHILA DE RECURSOS</h3>
-        <div id="grid-inventario" class="grid-inv"></div>
-        <div class="craft-secao">
-            <h4>ESTAÇÃO DE FORJA</h4>
-            <div class="craft-linha">
-                <span>Flechas x5 (Custos: 2 Sucatas)</span>
-                <button id="btn-craft-flecha" class="btn btn-craft">FORJAR</button>
-            </div>
-            <div class="craft-linha">
-                <span>Seringa HP (Custos: 3 Sucatas)</span>
-                <button id="btn-craft-pocao" class="btn btn-craft">INJETAR</button>
-            </div>
-        </div>
-        <button id="btn-fechar-inv" class="btn" style="margin-top: 15px; width: 100%; padding: 6px;">RETORNAR</button>
-    </div>
-
+    <div id="tela-inicial"><h1 style="color:#fff">FLORESTA TÁTICA</h1><button id="btn-iniciar" class="btn">INICIAR JOGO</button></div>
+    <div id="game-hud">FPS: <span id="fps-val"></span></div>
     <script src="game.js"></script>
 </body>
 </html>
