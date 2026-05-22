@@ -1,431 +1,338 @@
 (function() {
     "use strict";
 
-    if (document.readyState === "complete" || document.readyState === "interactive") {
-        gerenciarAbertura();
-    } else {
-        window.addEventListener('DOMContentLoaded', gerenciarAbertura);
-    }
+    if (document.readyState === "complete" || document.readyState === "interactive") { gerenciarAbertura(); } 
+    else { window.addEventListener('DOMContentLoaded', gerenciarAbertura); }
 
     function gerenciarAbertura() {
         const domInicial = document.getElementById("tela-inicial");
-        const domBtnIniciar = document.getElementById("btn-iniciar");
-        
-        if (domBtnIniciar) {
-            domBtnIniciar.addEventListener("click", () => {
-                if (domInicial) {
-                    domInicial.style.opacity = "0";
-                    setTimeout(() => { 
-                        domInicial.classList.add("hidden"); 
-                        inicializarMotorJogo(); 
-                    }, 500);
-                }
-            });
-        } else {
-            inicializarMotorJogo();
-        }
+        document.getElementById("btn-iniciar").addEventListener("click", () => {
+            domInicial.style.opacity = "0";
+            setTimeout(() => { domInicial.classList.add("hidden"); inicializarMotorJogo(); }, 400);
+        });
     }
 
     function inicializarMotorJogo() {
-        const obterElementoSeguro = (id) => document.getElementById(id) || { style: {}, classList: { add:()=>{}, remove:()=>{}, toggle:()=>{} }, innerText: "" };
-
-        const uiElements = {
-            hud: obterElementoSeguro("game-hud"),
-            reticula: obterElementoSeguro("reticula"),
-            combatLog: obterElementoSeguro("combat-log"),
-            uiMouse: obterElementoSeguro("travar-mouse-ui"),
-            painelInv: obterElementoSeguro("painel-inventario"),
-            hpBar: obterElementoSeguro("bar-player-hp"),
-            stmBar: obterElementoSeguro("bar-player-stamina"),
-            lblPocoes: obterElementoSeguro("lbl-pocoes"),
-            lblItens: obterElementoSeguro("lbl-total-itens"),
+        const ui = {
+            hud: document.getElementById("game-hud"), reticula: document.getElementById("reticula"),
+            log: document.getElementById("combat-log"), uiMouse: document.getElementById("travar-mouse-ui"),
+            painelInv: document.getElementById("painel-inventario"),
+            hpBar: document.getElementById("bar-player-hp"), stmBar: document.getElementById("bar-player-stamina"),
+            lblPocoes: document.getElementById("lbl-pocoes"), lblFlechas: document.getElementById("lbl-flechas"),
+            lblItens: document.getElementById("lbl-total-itens"), lblCombo: document.getElementById("lbl-combo"),
             gridInv: document.getElementById("grid-inventario")
         };
 
-        uiElements.hud.classList.remove("hidden");
-        uiElements.reticula.classList.remove("hidden");
-        uiElements.combatLog.classList.remove("hidden");
-        uiElements.uiMouse.classList.remove("hidden");
+        ui.hud.classList.remove("hidden"); ui.reticula.classList.remove("hidden"); 
+        ui.log.classList.remove("hidden"); ui.uiMouse.classList.remove("hidden");
 
-        // --- SISTEMA E AMBIENTE CLARO ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xe2e8f0); 
-        scene.fog = new THREE.FogExp2(0xe2e8f0, 0.005);
+        scene.background = new THREE.Color(0x020a02); 
+        scene.fog = new THREE.FogExp2(0x020a02, 0.015);
 
         const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 500);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
 
         const clock = new THREE.Clock();
+        const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _dir = new THREE.Vector3();
         
-        // Vetores pré-alocados para evitar Garbage Collection em tempo de execução
-        const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _fwd = new THREE.Vector3(), _dir = new THREE.Vector3();
-        const direcaoMovimento = new THREE.Vector3();
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5)); 
+        const light = new THREE.DirectionalLight(0x00ff00, 0.6); light.position.set(20, 50, 20); scene.add(light);
 
-        // Iluminação Otimizada
-        scene.add(new THREE.AmbientLight(0xffffff, 0.85)); 
-        const sunLight = new THREE.DirectionalLight(0xffffff, 0.9); 
-        sunLight.position.set(30, 70, 20);
-        sunLight.castShadow = true;
-        sunLight.shadow.mapSize.set(1024, 1024);
-        const d = 80;
-        sunLight.shadow.camera.left = -d; sunLight.shadow.camera.right = d;
-        sunLight.shadow.camera.top = d; sunLight.shadow.camera.bottom = -d;
-        sunLight.shadow.bias = -0.0004;
-        scene.add(sunLight);
+        // Chão Estilo Tron/Matrix
+        const floorGeo = new THREE.PlaneGeometry(200, 200, 10, 10);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x050505, wireframe: true, wireframeLinewidth: 2 }); 
+        const floor = new THREE.Mesh(floorGeo, floorMat); floor.rotation.x = -Math.PI / 2; scene.add(floor);
 
-        // Terreno Modulado Estável
-        const floorGeo = new THREE.PlaneGeometry(300, 300, 20, 20);
-        const posAttr = floorGeo.attributes.position;
-        for (let i = 0; i < posAttr.count; i++) {
-            const vx = posAttr.getX(i);
-            const vy = posAttr.getY(i);
-            posAttr.setZ(i, Math.sin(vx * 0.05) * Math.cos(vy * 0.05) * 0.3);
-        }
-        floorGeo.computeVertexNormals();
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.7 }); 
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = -Math.PI / 2;
-        floor.receiveShadow = true;
-        scene.add(floor);
+        // --- SISTEMA DE PERSONAGEM ---
+        const playerGroup = new THREE.Group(); scene.add(playerGroup);
+        const cameraPivot = new THREE.Group(); cameraPivot.position.set(0, 2.0, 0); playerGroup.add(cameraPivot);
+        cameraPivot.add(camera); camera.position.set(0, 0, 0);
 
-        // --- PALETA DE MATERIAIS ---
-        const matPele = new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.6 }); 
-        const matCabelo = new THREE.MeshStandardMaterial({ color: 0x2d1a10, roughness: 0.8 }); 
-        const matCalca = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.7 }); 
-        const matBota = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 }); 
-        const matColete = new THREE.MeshStandardMaterial({ color: 0x3f3f46, roughness: 0.5, metalness: 0.2 }); 
-        const matLuva = new THREE.MeshStandardMaterial({ color: 0x52525b, roughness: 0.6 }); 
-        const weaponMat = new THREE.MeshStandardMaterial({ color: 0x71717a, metalness: 0.8, roughness: 0.2 }); 
+        const weaponHandGroup = new THREE.Group(); weaponHandGroup.position.set(0.4, -0.3, -0.6); cameraPivot.add(weaponHandGroup);
         
-        const matOgro = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.8 }); 
-        const matDrone = new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.5 }); 
-        const matGuarda = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.4 }); 
-        const matOlhoMal = new THREE.MeshStandardMaterial({ color: 0x000000 }); 
-        const matDano = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2.0 });
-
-        // --- COMPARTILHAMENTO DE GEOMETRIAS (OTIMIZAÇÃO CRÍTICA) ---
-        const geoCoxa = new THREE.CylinderGeometry(0.16, 0.14, 0.7);
-        const geoCanela = new THREE.CylinderGeometry(0.13, 0.10, 0.6);
-        const geoBota = new THREE.BoxGeometry(0.16, 0.18, 0.32);
-        const geoBraco = new THREE.CylinderGeometry(0.11, 0.10, 0.5);
-        const geoAntebraco = new THREE.CylinderGeometry(0.09, 0.08, 0.45);
-        const geoOmbroMao = new THREE.SphereGeometry(0.13);
-        const geoPocao = new THREE.CylinderGeometry(0.1, 0.15, 0.4, 6);
-        const geoSucata = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-
-        // --- CONSTRUÇÃO DO RECORTE HUMANO ANATÔMICO ---
-        const playerGroup = new THREE.Group();
-
-        // Membros Inferiores
-        const coxaEsq = new THREE.Mesh(geoCoxa, matCalca); coxaEsq.position.set(-0.22, 1.05, 0); coxaEsq.castShadow = true;
-        const canelaEsq = new THREE.Mesh(geoCanela, matCalca); canelaEsq.position.set(-0.22, 0.45, 0); canelaEsq.castShadow = true;
-        const botaEsq = new THREE.Mesh(geoBota, matBota); botaEsq.position.set(-0.22, 0.1, 0.06); botaEsq.castShadow = true;
-
-        const coxaDir = new THREE.Mesh(geoCoxa, matCalca); coxaDir.position.set(0.22, 1.05, 0); coxaDir.castShadow = true;
-        const canelaDir = new THREE.Mesh(geoCanela, matCalca); canelaDir.position.set(0.22, 0.45, 0); canelaDir.castShadow = true;
-        const botaDir = new THREE.Mesh(geoBota, matBota); botaDir.position.set(0.22, 0.1, 0.06); botaDir.castShadow = true;
-
-        playerGroup.add(coxaEsq, canelaEsq, botaEsq, coxaDir, canelaDir, botaDir);
-
-        // Tronco / Equipamento Tático
-        const quadril = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.3, 0.4), matCalca); quadril.position.y = 1.45; quadril.castShadow = true;
-        const peito = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.30, 0.8, 8), matCalca); peito.position.y = 1.95; peito.castShadow = true;
-        const colete = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.7, 0.46), matColete); colete.position.y = 2.0; colete.castShadow = true;
-        playerGroup.add(quadril, peito, colete);
-
-        // Face / Identidade Visual
-        const pescoco = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.2), matPele); pescoco.position.y = 2.4; pescoco.castShadow = true;
-        const cabeca = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 16), matPele); cabeca.position.y = 2.6; cabeca.castShadow = true;
-        const cabelo = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), matCabelo); cabelo.position.set(0, 2.64, -0.03); cabelo.scale.set(1.02, 1, 1.05);
-        playerGroup.add(pescoco, cabeca, cabelo);
-
-        // Braço Esquerdo Livre
-        const ombroEsq = new THREE.Mesh(geoOmbroMao, matCalca); ombroEsq.position.set(-0.52, 2.2, 0);
-        const bracoEsq = new THREE.Mesh(geoBraco, matPele); bracoEsq.position.set(-0.52, 1.9, 0); bracoEsq.castShadow = true;
-        const antebracoEsq = new THREE.Mesh(geoAntebraco, matPele); antebracoEsq.position.set(-0.52, 1.45, -0.1); antebracoEsq.rotation.x = Math.PI/6; antebracoEsq.castShadow = true;
-        const maoEsq = new THREE.Mesh(new THREE.SphereGeometry(0.08), matLuva); maoEsq.position.set(-0.52, 1.25, -0.2);
-        playerGroup.add(ombroEsq, bracoEsq, antebracoEsq, maoEsq);
-
-        // Pivot Direto Integrado para Armamento Ativo
-        const weaponHandGroup = new THREE.Group();
-        weaponHandGroup.position.set(0.52, 2.1, -0.1);
-        playerGroup.add(weaponHandGroup);
-
-        const ombroDir = new THREE.Mesh(geoOmbroMao, matCalca); ombroDir.position.set(0, 0.1, 0); weaponHandGroup.add(ombroDir);
-        const bracoDir = new THREE.Mesh(geoBraco, matCalca); bracoDir.position.set(0, -0.2, -0.1); bracoDir.rotation.x = -Math.PI/6; bracoDir.castShadow = true; weaponHandGroup.add(bracoDir);
-        const antebracoDir = new THREE.Mesh(geoAntebraco, matPele); antebracoDir.position.set(0, -0.45, -0.3); antebracoDir.rotation.x = -Math.PI/3; antebracoDir.castShadow = true; weaponHandGroup.add(antebracoDir);
-        const maoDir = new THREE.Mesh(new THREE.SphereGeometry(0.08), matLuva); maoDir.position.set(0, -0.55, -0.5); weaponHandGroup.add(maoDir);
-
-        // Definição Completa do Arsenal 3D
-        const mSword = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.4, 0.14), weaponMat); mSword.position.set(0, -0.2, -1.5); mSword.rotation.x = -Math.PI/2; mSword.castShadow = true;
+        // Armas 3D
+        const wMat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+        const mSword = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.8, 0.1), wMat); mSword.position.set(0, 0.5, -0.5); mSword.rotation.x = -Math.PI/4;
+        const mHammer = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.8), wMat); mHammer.position.set(0, 0, -0.8); mHammer.visible = false;
         
-        const mHammer = new THREE.Group();
-        const hHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.6, 8), weaponMat); hHandle.position.set(0, -0.2, -1.1); hHandle.rotation.x = -Math.PI/2; hHandle.castShadow = true; mHammer.add(hHandle);
-        const hHead = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.6), weaponMat); hHead.position.set(0, -0.2, -1.8); hHead.castShadow = true; mHammer.add(hHead); 
-        mHammer.visible = false;
-        
-        const mDagger = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.8, 0.05), weaponMat); mDagger.position.set(0, -0.2, -0.8); mDagger.rotation.x = -Math.PI/2; mDagger.castShadow = true;
-        mDagger.visible = false;
+        // Novo Arco
+        const mBowGroup = new THREE.Group();
+        const bowMain = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.6), wMat); bowMain.rotation.x = Math.PI/2;
+        mBowGroup.add(bowMain); mBowGroup.position.set(0, 0, -0.8); mBowGroup.visible = false;
 
-        weaponHandGroup.add(mSword, mHammer, mDagger);
-        const listaDeArmasMesh = [mSword, mHammer, mDagger];
-        scene.add(playerGroup);
+        weaponHandGroup.add(mSword, mHammer, mBowGroup);
+        const meshArmas = [mSword, mHammer, mBowGroup];
 
-        // Instanciação Estabilizada da Câmera Pivotada
-        const cameraPivot = new THREE.Group();
-        cameraPivot.position.set(0, 2.5, 0); playerGroup.add(cameraPivot);
-        cameraPivot.add(camera); camera.position.set(0.6, 0.2, 3.8); camera.lookAt(0, 2.2, -2);
-
-        // --- SISTEMAS INTERNOS DO AMBIENTE ---
+        // --- STATUS & MECÂNICAS AVANÇADAS ---
         const playerState = { 
-            hp: 100, hpMax: 100, stamina: 100, staminaMax: 100,
-            defendendo: false, atacando: false, 
-            armaEquipada: 0, pocoes: 3, dashing: false, dashTimer: 0.0
+            hp: 100, stamina: 100, armaEquipada: 0, pocoes: 3, flechas: 15,
+            defendendo: false, atacando: false, carregandoArco: false,
+            dashing: false, dashTimer: 0, invulneravel: false,
+            combo: 0, comboTimer: 0 // Sistema de Combo
         };
         
         const arsenal = [
-            { nome: "Cyber-Lâmina", dano: 28, alcance: 5.8, velocidade: 6.2, custoStamina: 12 },
-            { nome: "Trissecador", dano: 62, alcance: 4.8, velocidade: 3.8, custoStamina: 30 },
-            { nome: "Ferrão Sombrio", dano: 15, alcance: 4.2, velocidade: 9.5, custoStamina: 5 }
+            { tipo: 'melee', nome: "Cyber-Lâmina", dano: 30, alcance: 4.5, custo: 15, vel: 12 },
+            { tipo: 'melee', nome: "Esmagador", dano: 65, alcance: 3.5, custo: 35, vel: 6 },
+            { tipo: 'arco', nome: "Arco Tático", dano: 50, custo: 0 } // Arco não usa stamina pesada, usa flecha
         ];
 
-        let inimigos = [], dropsMundo = [], itensInventario = [];
-        let mouseTravado = false, inventarioAberto = false, shakeTimer = 0, tempoAcumulado = 0;
-        const teclado = {};
+        let inimigos = [], drops = [], itensInv = [], projeteis = [];
+        let mouseTravado = false, invAberto = false, teclado = {};
 
-        function spawnInimigo(tipo, px, pz) {
-            const enemyGroup = new THREE.Group();
-            const status = { vivo: true, alertado: false, cooldown: 0, timerDano: 0 };
-            let malhaPrincipal;
+        function spawnInimigo(px, pz) {
+            const eGroup = new THREE.Group();
+            const malha = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.5, 1.2), new THREE.MeshStandardMaterial({ color: 0xff0000 }));
+            malha.position.y = 1.25; eGroup.position.set(px, 0, pz); eGroup.add(malha);
+            scene.add(eGroup);
+            inimigos.push({ mesh: eGroup, malha: malha, hp: 300, vivo: true, cooldown: 0 });
+        }
+        spawnInimigo(0, -20); spawnInimigo(15, -15); spawnInimigo(-15, -25);
 
-            if (tipo === 'ogro') {
-                malhaPrincipal = new THREE.Mesh(new THREE.BoxGeometry(2.0, 2.6, 1.6), matOgro); malhaPrincipal.position.y = 1.3; malhaPrincipal.castShadow = true;
-                const cabeca = new THREE.Mesh(new THREE.SphereGeometry(0.65, 10, 10), matOgro); cabeca.position.set(0, 2.0, 0.25);
-                const olho = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.18, 0.18), matOlhoMal); olho.position.set(0, 0.15, 0.55); cabeca.add(olho); malhaPrincipal.add(cabeca);
-                status.hp = 650; status.vel = 5.5; status.danoBase = 22; status.alcance = 4.5; status.nome = "Mestre de Carga";
-            } else if (tipo === 'drone') {
-                malhaPrincipal = new THREE.Mesh(new THREE.OctahedronGeometry(0.7), matDrone); malhaPrincipal.position.y = 3.2; malhaPrincipal.castShadow = true;
-                const nucleo = new THREE.Mesh(new THREE.SphereGeometry(0.35), matOlhoMal); malhaPrincipal.add(nucleo);
-                status.hp = 120; status.vel = 11.0; status.danoBase = 8; status.alcance = 2.8; status.nome = "Infiltrador S.A";
-            } else if (tipo === 'guarda') {
-                malhaPrincipal = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.45, 1.9, 10), matGuarda); malhaPrincipal.position.y = 1.6; malhaPrincipal.castShadow = true;
-                const visorGuarda = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.18, 0.8), matOlhoMal); visorGuarda.position.y = 0.65; malhaPrincipal.add(visorGuarda);
-                status.hp = 250; status.vel = 8.0; status.danoBase = 14; status.alcance = 3.6; status.nome = "Defensor ARYSONY";
+        // --- SISTEMA DE CRAFTING E INVENTÁRIO ---
+        document.getElementById("btn-craft-flecha").addEventListener("click", () => tentarCraft('flecha'));
+        document.getElementById("btn-craft-pocao").addEventListener("click", () => tentarCraft('pocao'));
+
+        function tentarCraft(tipo) {
+            let numSucatas = itensInv.filter(i => i === 'sucata').length;
+            if (tipo === 'flecha' && numSucatas >= 2) {
+                removerItemInv('sucata', 2); playerState.flechas += 5; logMsg("🛠️ FORJA: +5 Flechas Criadas.");
+            } else if (tipo === 'pocao' && numSucatas >= 3) {
+                removerItemInv('sucata', 3); playerState.pocoes++; logMsg("🛠️ FORJA: +1 Seringa Criada.");
+            } else {
+                logMsg("⚠️ Recursos Insuficientes! (Requer Sucata)");
             }
-
-            status.materialOriginal = malhaPrincipal.material;
-            enemyGroup.position.set(px, 0, pz); enemyGroup.add(malhaPrincipal);
-            scene.add(enemyGroup); inimigos.push({ mesh: enemyGroup, malhaPrincipal: malhaPrincipal, status: status });
+            atualizarUIInventario();
         }
 
-        // Chamadas Iniciais Estáveis
-        spawnInimigo('ogro', 0, -35); spawnInimigo('drone', 18, -25);
-        spawnInimigo('drone', -18, -25); spawnInimigo('guarda', 22, -15);
-
-        function spawnDrop(px, pz) {
-            const tipoItem = Math.random() > 0.45 ? 'pocao' : 'sucata_digital';
-            const malhaDrop = new THREE.Mesh(
-                tipoItem === 'pocao' ? geoPocao : geoSucata,
-                tipoItem === 'pocao' ? new THREE.MeshStandardMaterial({ color: 0x10b981 }) : new THREE.MeshStandardMaterial({ color: 0x4f46e5 })
-            );
-            malhaDrop.position.set(px, 0.5, pz); malhaDrop.castShadow = true;
-            scene.add(malhaDrop); dropsMundo.push({ mesh: malhaDrop, tipo: tipoItem });
+        function removerItemInv(nome, qtd) {
+            for(let i=0; i<qtd; i++) { let idx = itensInv.indexOf(nome); if(idx > -1) itensInv.splice(idx, 1); }
         }
 
-        // --- ENTRADAS INTERATIVAS E EVENTOS ---
         window.addEventListener('keydown', e => {
             const key = e.key.toLowerCase(); teclado[key] = true;
-
             if (key === 'e') {
-                inventarioAberto = !inventarioAberto;
-                uiElements.painelInv.classList.toggle("hidden", !inventarioAberto);
-                if (inventarioAberto) {
-                    if (mouseTravado) document.exitPointerLock();
-                    atualizarUIInventario(); logMsg("🎒 Compartimento de carga inspecionado.");
-                } else {
-                    document.body.requestPointerLock(); logMsg("⚔️ Armamento pronto.");
-                }
+                invAberto = !invAberto; ui.painelInv.classList.toggle("hidden", !invAberto);
+                if (invAberto) { if(mouseTravado) document.exitPointerLock(); atualizarUIInventario(); } 
+                else { document.body.requestPointerLock(); }
             }
-            if (!mouseTravado || inventarioAberto) return;
-            if (key === 'q' && playerState.pocoes > 0 && playerState.hp < playerState.hpMax) { 
-                playerState.pocoes--; playerState.hp = Math.min(100, playerState.hp + 40); atualizarHUD(); logMsg("🧪 Seringa injetada com sucesso."); 
-            }
+            if (invAberto) return;
+            if (key === 'q' && playerState.pocoes > 0 && playerState.hp < 100) { playerState.pocoes--; playerState.hp = Math.min(100, playerState.hp + 40); atualizarHUD(); logMsg("🧪 Seringa Injetada."); }
             if (key === '1') trocarArma(0); if (key === '2') trocarArma(1); if (key === '3') trocarArma(2);
-            if (key === 'shift' && !playerState.dashing && playerState.stamina >= 18) { 
-                playerState.dashing = true; playerState.dashTimer = 0.2; playerState.stamina -= 18; 
+            // I-frames no Dash
+            if (key === 'shift' && !playerState.dashing && playerState.stamina >= 20) { 
+                playerState.dashing = true; playerState.dashTimer = 0.3; playerState.stamina -= 20; 
+                playerState.invulneravel = true; logMsg("💨 ESQUIVA TÁTICA (I-FRAMES ATIVOS)");
             }
         });
         window.addEventListener('keyup', e => teclado[e.key.toLowerCase()] = false);
 
         function trocarArma(index) {
             playerState.armaEquipada = index;
-            listaDeArmasMesh.forEach((mesh, idx) => mesh.visible = (idx === index));
-            logMsg(`⚔️ Ativo: ${arsenal[index].nome}`);
+            meshArmas.forEach((m, idx) => m.visible = (idx === index));
+            logMsg(`⚔️ Arma: ${arsenal[index].nome}`);
+            playerState.combo = 0; // Reseta combo ao trocar de arma
         }
 
-        // Captura e Tratamento Seguro de Exceções Assíncronas do Navegador (.catch)
-        uiElements.uiMouse.addEventListener("click", () => { 
-            if(!inventarioAberto) document.body.requestPointerLock(); 
-        });
-        
-        const btnFechar = document.getElementById("btn-fechar-inv");
-        if(btnFechar) {
-            btnFechar.addEventListener("click", () => { 
-                inventarioAberto = false; 
-                uiElements.painelInv.classList.add("hidden"); 
-                document.body.requestPointerLock(); 
-            });
-        }
-
-        document.addEventListener("pointerlockchange", () => {
-            mouseTravado = (document.pointerLockElement === document.body);
-            uiElements.uiMouse.style.opacity = mouseTravado ? "0" : "1";
-            uiElements.uiMouse.style.visibility = mouseTravado ? "hidden" : "visible";
-        });
+        ui.uiMouse.addEventListener("click", () => { if(!invAberto) document.body.requestPointerLock(); });
+        document.getElementById("btn-fechar-inv").addEventListener("click", () => { invAberto = false; ui.painelInv.classList.add("hidden"); document.body.requestPointerLock(); });
+        document.addEventListener("pointerlockchange", () => { mouseTravado = (document.pointerLockElement === document.body); ui.uiMouse.classList.toggle("hidden", mouseTravado); });
 
         document.addEventListener("mousemove", (e) => {
-            if (!mouseTravado || inventarioAberto) return;
+            if (!mouseTravado || invAberto) return;
             playerGroup.rotation.y -= e.movementX * 0.002;
             cameraPivot.rotation.x -= e.movementY * 0.002;
-            cameraPivot.rotation.x = Math.max(-0.4, Math.min(0.6, cameraPivot.rotation.x));
+            cameraPivot.rotation.x = Math.max(-0.6, Math.min(0.6, cameraPivot.rotation.x));
         });
 
+        // --- SISTEMA DE COMBATE AVANÇADO ---
         window.addEventListener("mousedown", (e) => {
-            if (!mouseTravado || inventarioAberto) return;
+            if (!mouseTravado || invAberto) return;
             const arma = arsenal[playerState.armaEquipada];
 
-            if (e.button === 0 && !playerState.atacando && playerState.stamina >= arma.custoStamina) {
-                playerState.atacando = true; playerState.stamina -= arma.custoStamina;
-                playerGroup.getWorldPosition(_vA); _fwd.set(0, 0, -1).applyQuaternion(playerGroup.quaternion);
+            if (e.button === 0) { // Clique Esquerdo (Ataque)
+                if (arma.tipo === 'melee' && !playerState.atacando && playerState.stamina >= arma.custo) {
+                    playerState.atacando = true; playerState.stamina -= arma.custo;
+                    
+                    // Sistema de Combo
+                    if(playerState.comboTimer > 0) playerState.combo++; else playerState.combo = 1;
+                    playerState.comboTimer = 1.5; // 1.5s de janela de combo
+                    ui.lblCombo.innerText = playerState.combo;
+                    
+                    let multiCombo = 1 + (playerState.combo * 0.3); // +30% de dano por hit consecutivo
+                    let danoFinal = Math.floor(arma.dano * multiCombo);
 
-                inimigos.forEach(inimigo => {
-                    if (!inimigo.status.vivo) return;
-                    inimigo.mesh.getWorldPosition(_vB);
-                    if (_vA.distanceTo(_vB) < arma.alcance) {
-                        _dir.subVectors(_vB, _vA).normalize();
-                        if (_fwd.dot(_dir) > 0.65) { 
-                            let danoFinal = Math.floor(arma.dano * (1 + (Math.random() * 0.2)));
-                            inimigo.status.hp -= danoFinal; inimigo.status.timerDano = 0.12; inimigo.malhaPrincipal.material = matDano;
-                            logMsg(`💥 Impacto! ${danoFinal} de dano infligido.`);
-                            if (inimigo.status.hp <= 0) { 
-                                inimigo.status.vivo = false; scene.remove(inimigo.mesh); logMsg(`💀 ${inimigo.status.nome} neutralizado.`); spawnDrop(inimigo.mesh.position.x, inimigo.mesh.position.z); 
+                    playerGroup.getWorldPosition(_vA);
+                    const _fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(playerGroup.quaternion);
+
+                    inimigos.forEach(inimigo => {
+                        if (!inimigo.vivo) return;
+                        inimigo.mesh.getWorldPosition(_vB);
+                        if (_vA.distanceTo(_vB) < arma.alcance) {
+                            _dir.subVectors(_vB, _vA).normalize();
+                            if (_fwd.dot(_dir) > 0.5) { 
+                                inimigo.hp -= danoFinal; 
+                                logMsg(`💥 ACERTO CRÍTICO! Dano: ${danoFinal} (Combo x${playerState.combo})`);
+                                if (inimigo.hp <= 0) matarInimigo(inimigo);
                             }
                         }
-                    }
-                });
-            } else if (e.button === 2 && playerState.stamina >= 8) { 
-                playerState.defendendo = true; 
-                weaponHandGroup.position.set(0.2, 2.0, -0.4); weaponHandGroup.rotation.set(0, -Math.PI/4, Math.PI / 3); 
+                    });
+                } 
+                else if (arma.tipo === 'arco' && playerState.flechas > 0) {
+                    playerState.carregandoArco = true; logMsg("🏹 Tensionando Arco...");
+                }
+            } 
+            else if (e.button === 2) { // Clique Direito (Defesa)
+                if (playerState.stamina >= 10) { playerState.defendendo = true; weaponHandGroup.rotation.z = Math.PI/2; }
             }
         });
 
         window.addEventListener("mouseup", (e) => { 
-            if (e.button === 2) { playerState.defendendo = false; weaponHandGroup.position.set(0.52, 2.1, -0.1); weaponHandGroup.rotation.set(0, 0, 0); } 
+            if (e.button === 2) { playerState.defendendo = false; weaponHandGroup.rotation.z = 0; } 
+            
+            // Disparar Flecha FÍSICA ao soltar
+            if (e.button === 0 && playerState.carregandoArco) {
+                playerState.carregandoArco = false; playerState.flechas--; atualizarHUD();
+                logMsg("🏹 Flecha Disparada!");
+
+                const projGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.8);
+                const projMesh = new THREE.Mesh(projGeo, new THREE.MeshBasicMaterial({color: 0x00ff00}));
+                
+                playerGroup.getWorldPosition(_vA);
+                projMesh.position.copy(_vA).add(new THREE.Vector3(0, 2, 0));
+                
+                const dirDisparo = new THREE.Vector3(0, 0, -1).applyQuaternion(cameraPivot.getWorldQuaternion(new THREE.Quaternion()));
+                projMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dirDisparo);
+                
+                scene.add(projMesh);
+                projeteis.push({ mesh: projMesh, dir: dirDisparo, life: 2.0 });
+            }
         });
 
+        function matarInimigo(inimigo) {
+            inimigo.vivo = false; scene.remove(inimigo.mesh); logMsg("💀 ALVO ELIMINADO.");
+            // Dropa 1 a 3 sucatas para o Crafting
+            let qtdDrop = Math.floor(Math.random() * 3) + 1;
+            for(let i=0; i<qtdDrop; i++) {
+                const drop = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), new THREE.MeshStandardMaterial({color: 0x00ff00, wireframe:true}));
+                drop.position.copy(inimigo.mesh.position).add(new THREE.Vector3((Math.random()-0.5), 0.5, (Math.random()-0.5)));
+                scene.add(drop); drops.push({mesh: drop, tipo: 'sucata'});
+            }
+        }
+
         function atualizarHUD() {
-            uiElements.hpBar.style.width = `${playerState.hp}%`; uiElements.stmBar.style.width = `${playerState.stamina}%`;
-            uiElements.lblPocoes.innerText = playerState.pocoes; uiElements.lblItens.innerText = itensInventario.length;
+            ui.hpBar.style.width = `${playerState.hp}%`; ui.stmBar.style.width = `${playerState.stamina}%`;
+            ui.lblPocoes.innerText = playerState.pocoes; ui.lblFlechas.innerText = playerState.flechas;
+            ui.lblItens.innerText = itensInv.length;
         }
 
         function atualizarUIInventario() {
-            if(!uiElements.gridInv) return; uiElements.gridInv.innerHTML = "";
-            let contagem = {}; itensInventario.forEach(item => contagem[item] = (contagem[item] || 0) + 1);
-
+            ui.gridInv.innerHTML = "";
+            let contagem = {}; itensInv.forEach(i => contagem[i] = (contagem[i] || 0) + 1);
             for (let [item, qtd] of Object.entries(contagem)) {
                 let div = document.createElement('div'); div.className = 'slot-item';
-                div.innerHTML = `${item === 'pocao' ? '🧪' : '⚙️'}<div class="item-qtd">x${qtd}</div>`;
-                div.onclick = () => { 
-                    if (item === 'pocao' && playerState.hp < playerState.hpMax) { 
-                        const index = itensInventario.indexOf('pocao'); itensInventario.splice(index, 1); playerState.pocoes++; atualizarUIInventario(); atualizarHUD(); 
-                    } 
-                };
-                uiElements.gridInv.appendChild(div);
+                div.innerHTML = `⚙️<div class="item-qtd">x${qtd}</div>`;
+                ui.gridInv.appendChild(div);
             }
-            for (let i = uiElements.gridInv.children.length; i < 15; i++) { 
-                let div = document.createElement('div'); div.className = 'slot-item'; div.style.background = '#f1f5f9'; uiElements.gridInv.appendChild(div); 
+            for (let i = ui.gridInv.children.length; i < 15; i++) { 
+                let div = document.createElement('div'); div.className = 'slot-item'; ui.gridInv.appendChild(div); 
             }
+            atualizarHUD();
         }
 
-        function logMsg(msg) { uiElements.combatLog.innerText = msg; }
+        function logMsg(msg) { ui.log.innerText = msg; }
 
-        // --- LOOP PRINCIPAL ALTERNADO (60FPS OTIMIZADO) ---
         function animate() {
             requestAnimationFrame(animate);
             const delta = Math.min(clock.getDelta(), 0.1);
-            if (inventarioAberto) { renderer.render(scene, camera); return; }
-            tempoAcumulado += delta;
+            if (invAberto) { renderer.render(scene, camera); return; }
 
             if (mouseTravado) {
-                if (!playerState.atacando && !playerState.defendendo && playerState.stamina < playerState.staminaMax) { 
-                    playerState.stamina = Math.min(playerState.staminaMax, playerState.stamina + (28 * delta)); atualizarHUD(); 
+                // Recuperação de Stamina
+                if (!playerState.atacando && !playerState.defendendo && !playerState.dashing) { 
+                    playerState.stamina = Math.min(100, playerState.stamina + (25 * delta)); atualizarHUD(); 
                 }
                 
-                const ritmoPasso = Math.sin(tempoAcumulado * 7.5);
-                if (teclado['w'] || teclado['s'] || teclado['a'] || teclado['d']) {
-                    coxaEsq.rotation.x = ritmoPasso * 0.35; canelaEsq.rotation.x = Math.max(0, -ritmoPasso * 0.2);
-                    coxaDir.rotation.x = -ritmoPasso * 0.35; canelaDir.rotation.x = Math.max(0, ritmoPasso * 0.2);
-                } else {
-                    coxaEsq.rotation.x = coxaDir.rotation.x = canelaEsq.rotation.x = canelaDir.rotation.x = 0;
-                }
+                // Janela de Combo
+                if(playerState.comboTimer > 0) { playerState.comboTimer -= delta; } 
+                else { playerState.combo = 0; ui.lblCombo.innerText = "0"; }
 
-                if (playerState.dashTimer > 0) playerState.dashTimer -= delta; else playerState.dashing = false;
+                // I-Frames de Esquiva
+                if (playerState.dashTimer > 0) { playerState.dashTimer -= delta; } 
+                else { playerState.dashing = false; playerState.invulneravel = false; }
                 
+                // Animação de Ataque Melee
                 if (playerState.atacando) { 
-                    weaponHandGroup.rotation.y -= arsenal[playerState.armaEquipada].velocidade * delta * 3.5; 
-                    if (weaponHandGroup.rotation.y < -1.8) { playerState.atacando = false; weaponHandGroup.rotation.set(0, 0, 0); } 
+                    weaponHandGroup.rotation.x -= arsenal[playerState.armaEquipada].vel * delta; 
+                    if (weaponHandGroup.rotation.x < -1.5) { playerState.atacando = false; weaponHandGroup.rotation.x = 0; } 
                 }
 
-                direcaoMovimento.set(0, 0, 0);
-                if (teclado['w']) direcaoMovimento.z -= 1;
-                if (teclado['s']) direcaoMovimento.z += 1;
-                if (teclado['a']) direcaoMovimento.x -= 1;
-                if (teclado['d']) direcaoMovimento.x += 1;
-                direcaoMovimento.normalize();
+                // Lógica de Voo das Flechas e Colisão
+                for(let i = projeteis.length - 1; i >= 0; i--) {
+                    let p = projeteis[i];
+                    p.mesh.position.addScaledVector(p.dir, 50 * delta); // Velocidade da flecha
+                    p.life -= delta;
+                    
+                    // Colisão da flecha com inimigos
+                    inimigos.forEach(inimigo => {
+                        if(inimigo.vivo && p.mesh.position.distanceTo(inimigo.mesh.position) < 2.0) {
+                            inimigo.hp -= arsenal[2].dano; // Dano do arco
+                            logMsg(`🎯 HEADSHOT! Dano: ${arsenal[2].dano}`);
+                            if(inimigo.hp <= 0) matarInimigo(inimigo);
+                            p.life = 0; // Destrói flecha ao acertar
+                        }
+                    });
 
-                const mVel = (playerState.dashing ? 32 : 13) * delta;
-                playerGroup.translateOnAxis(direcaoMovimento, mVel);
+                    if(p.life <= 0) { scene.remove(p.mesh); projeteis.splice(i, 1); }
+                }
+
+                // Movimentação
+                _dir.set(0, 0, 0);
+                if (teclado['w']) _dir.z -= 1; if (teclado['s']) _dir.z += 1;
+                if (teclado['a']) _dir.x -= 1; if (teclado['d']) _dir.x += 1;
+                _dir.normalize();
+
+                const mVel = (playerState.dashing ? 35 : 15) * delta;
+                playerGroup.translateOnAxis(_dir, mVel);
                 playerGroup.getWorldPosition(_vA);
 
-                for (let i = dropsMundo.length - 1; i >= 0; i--) {
-                    let drop = dropsMundo[i]; drop.mesh.rotation.y += delta * 2;
-                    if (_vA.distanceTo(drop.mesh.position) < 1.8) { 
-                        if (itensInventario.length < 15) { 
-                            itensInventario.push(drop.tipo); scene.remove(drop.mesh); dropsMundo.splice(i, 1); logMsg(`📦 Item realocado.`); atualizarHUD(); 
-                        } 
+                // Coletar Drops (Sucatas para o Crafting)
+                for (let i = drops.length - 1; i >= 0; i--) {
+                    let drop = drops[i]; drop.mesh.rotation.y += delta;
+                    if (_vA.distanceTo(drop.mesh.position) < 2.0 && itensInv.length < 15) { 
+                        itensInv.push(drop.tipo); scene.remove(drop.mesh); drops.splice(i, 1); 
+                        logMsg("⚙️ Sucata Coletada."); atualizarHUD(); 
                     }
                 }
 
+                // IA dos Inimigos (Respeitando I-Frames)
                 inimigos.forEach(inimigo => {
-                    if (!inimigo.status.vivo) return;
-                    if (inimigo.status.timerDano > 0) { inimigo.status.timerDano -= delta; } else { inimigo.malhaPrincipal.material = inimigo.status.materialOriginal; }
+                    if (!inimigo.vivo) return;
+                    inimigo.mesh.getWorldPosition(_vB); let dist = _vA.distanceTo(_vB);
+                    if (dist < 40) inimigo.mesh.lookAt(playerGroup.position.x, inimigo.mesh.position.y, playerGroup.position.z);
                     
-                    inimigo.mesh.getWorldPosition(_vB); let distHeroi = _vA.distanceTo(_vB);
-                    if (distHeroi < 35) inimigo.status.alertado = true;
-                    if (inimigo.status.alertado) {
-                        inimigo.mesh.lookAt(playerGroup.position.x, inimigo.mesh.position.y, playerGroup.position.z);
-                        if (distHeroi > inimigo.status.alcance) { inimigo.mesh.translateZ(inimigo.status.vel * delta); } else {
-                            if (inimigo.status.cooldown > 0) inimigo.status.cooldown -= delta;
-                            if (inimigo.status.cooldown <= 0) {
-                                inimigo.status.cooldown = 1.4;
-                                if (playerState.dashing) { logMsg("💨 Manobra evasiva executada!"); } else {
-                                    let dano = inimigo.status.danoBase + Math.floor(Math.random() * 4);
-                                    if (playerState.defendendo) { dano = Math.floor(dano * 0.15); playerState.stamina -= 12; logMsg(`🛡️ Impacto Retido.`); } 
-                                    else { playerState.hp -= dano; logMsg(`🚨 Alerta! Sob ataque de ${inimigo.status.nome}: -${dano} HP.`); shakeTimer = 0.25; }
-                                    atualizarHUD();
-                                }
-                                if (playerState.hp <= 0) { logMsg("💀 ARYSONY FOI DESATIVADO."); setTimeout(() => location.reload(), 2000); }
+                    if (dist > 3.0) { inimigo.mesh.translateZ(5 * delta); } 
+                    else {
+                        if (inimigo.cooldown > 0) inimigo.cooldown -= delta;
+                        else {
+                            inimigo.cooldown = 1.5;
+                            // Sistema de Invulnerabilidade (Dodge/Dash)
+                            if (playerState.invulneravel) {
+                                logMsg("👻 ESQUIVOU DO ATAQUE PERFEITAMENTE!");
+                            } else if (playerState.defendendo) { 
+                                playerState.hp -= 5; playerState.stamina -= 15; logMsg("🛡️ BLOQUEIO BEM SUCEDIDO."); 
+                            } else { 
+                                playerState.hp -= 25; logMsg("🚨 DANO CRÍTICO RECEBIDO!"); 
                             }
+                            atualizarHUD();
+                            if (playerState.hp <= 0) { logMsg("💀 FIM DE JOGO."); setTimeout(()=>location.reload(), 2000); }
                         }
                     }
                 });
-
-                if (shakeTimer > 0) { camera.position.x = (Math.random() - 0.5) * 0.25; shakeTimer -= delta; } else { camera.position.set(0.6, 0.2, 3.8); }
             }
             renderer.render(scene, camera);
         }
