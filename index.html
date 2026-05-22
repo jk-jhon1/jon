@@ -15,7 +15,7 @@
 
         <div class="interface-tatica-container">
             <div class="painel-header">
-                <div class="logo-sis">SYS.MATRIZ_V3.0</div>
+                <div class="logo-sis">SYS.MATRIZ_V4.0 (COMBATE AVANÇADO)</div>
                 <div class="status-bar">
                     <span class="piscar">[ CONEXÃO ESTABELECIDA ]</span>
                     <span>NÚCLEO: OPERACIONAL</span>
@@ -25,56 +25,34 @@
             <div class="painel-corpo">
                 <div class="bloco-operadores">
                     <div class="titulo-secao">> SELECIONE O OPERADOR TÁTICO</div>
-                    
                     <div class="grid-operadores">
                         <div class="card-op ativo">
                             <div class="foto-op">OP-01</div>
                             <div class="dados-op">
                                 <strong>ASSALTO</strong>
-                                <small>Equilíbrio / Velocidade</small>
-                            </div>
-                        </div>
-                        <div class="card-op">
-                            <div class="foto-op">OP-02</div>
-                            <div class="dados-op">
-                                <strong>PESADO</strong>
-                                <small>Resistência / Força</small>
-                            </div>
-                        </div>
-                        <div class="card-op">
-                            <div class="foto-op">OP-03</div>
-                            <div class="dados-op">
-                                <strong>FURTIVO</strong>
-                                <small>Agilidade / Letalidade</small>
+                                <small>Lâmina + Arco Tático</small>
                             </div>
                         </div>
                     </div>
-
-                    <button id="btn-iniciar" class="btn-matrix">
-                        [ INICIALIZAR SIMULAÇÃO ]
-                    </button>
+                    <button id="btn-iniciar" class="btn-matrix">[ INICIALIZAR SIMULAÇÃO ]</button>
                 </div>
 
                 <div class="bloco-sistema">
                     <div class="titulo-secao">> DIRETRIZES DE COMBATE</div>
-                    
                     <div class="caixa-controles">
                         <ul>
-                            <li><span class="tecla">[W][A][S][D]</span> <span class="acao">Movimentação no Eixo</span></li>
-                            <li><span class="tecla">[MOUSE]</span> <span class="acao">Olhar / Ataque Básico</span></li>
-                            <li><span class="tecla">[B. DIREITO]</span> <span class="acao">Postura Defensiva</span></li>
-                            <li><span class="tecla">[SHIFT]</span> <span class="acao">Evasão Tática (Dash)</span></li>
-                            <li><span class="tecla">[E]</span> <span class="acao">Acessar Inventário / Loot</span></li>
-                            <li><span class="tecla">[Q]</span> <span class="acao">Injetar Seringa (Cura)</span></li>
+                            <li><span class="tecla">[MOUSE]</span> <span class="acao">Lâmina (Click) / Arco (Segurar)</span></li>
+                            <li><span class="tecla">[B. DIREITO]</span> <span class="acao">Bloqueio (Reduz Dano)</span></li>
+                            <li><span class="tecla">[SHIFT]</span> <span class="acao">Esquiva (Invulnerabilidade)</span></li>
+                            <li><span class="tecla">[E]</span> <span class="acao">Inventário & Forja (Craft)</span></li>
+                            <li><span class="tecla">[Q]</span> <span class="acao">Cura Rápida</span></li>
                             <li><span class="tecla">[1] [2] [3]</span> <span class="acao">Alternar Armamento</span></li>
                         </ul>
                     </div>
-
                     <div class="terminal-log">
-                        <p>> Carregando módulo de IA inimiga... OK</p>
-                        <p>> Sincronizando biometria... OK</p>
-                        <p class="aviso">> AVISO: Múltiplas assinaturas hostis detectadas.</p>
-                        <p class="piscar">> Aguardando comando do usuário_</p>
+                        <p>> Sistemas de balística ativados...</p>
+                        <p>> Matriz de forja e combos online.</p>
+                        <p class="piscar">> Aguardando comando_</p>
                     </div>
                 </div>
             </div>
@@ -92,15 +70,23 @@
         </div>
         <div class="hud-info">
             <div>🧪 Seringas (Q): <span id="lbl-pocoes">3</span></div>
-            <div>🎒 Espaço Ocupado: <span id="lbl-total-itens">0</span>/15</div>
+            <div>🏹 Flechas: <span id="lbl-flechas">15</span></div>
+            <div>🎒 Espaço: <span id="lbl-total-itens">0</span>/15</div>
         </div>
-        <div class="hud-controles">[1][2][3] Armas | [SHIFT] Dash | [E] Inventário</div>
+        <div class="hud-controles-combo">🔥 Combo: <span id="lbl-combo">0</span>x</div>
     </div>
 
     <div id="painel-inventario" class="hidden">
         <div class="inventario-caixa">
-            <h2>🎒 COMPARTIMENTO DE ITENS - ARYSONY</h2>
+            <h2>🎒 COMPARTIMENTO DE ITENS</h2>
             <div id="grid-inventario"></div>
+            
+            <div id="painel-forja">
+                <h3 class="titulo-forja">> FORJA TÁTICA (CRAFT)</h3>
+                <button id="btn-craft-flecha" class="btn-matrix btn-craft">[2x SUCATA] ➔ FABRICAR 5 FLECHAS</button>
+                <button id="btn-craft-pocao" class="btn-matrix btn-craft">[3x SUCATA] ➔ FABRICAR 1 SERINGA</button>
+            </div>
+
             <button id="btn-fechar-inv">RETORNAR AO COMBATE (E)</button>
         </div>
     </div>
