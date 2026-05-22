@@ -28,14 +28,28 @@
         ui.log.classList.remove("hidden"); ui.uiMouse.classList.remove("hidden");
 
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x010501); 
-        scene.fog = new THREE.FogExp2(0x010501, 0.02);
+
+        // --- 1. AJUSTE DE CENÁRIO (Mais claro que 0x010501) ---
+        // Usamos um cinza muito escuro misturado com verde para não "apagar" o cenário.
+        const corCenarioClaro = 0x1a1d1a;
+        scene.background = new THREE.Color(corCenarioClaro); 
+        // Neblina mais suave para dar profundidade sem escurecer.
+        scene.fog = new THREE.FogExp2(corCenarioClaro, 0.015);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+
+        // --- 2. CONFIGURAÇÕES DE REALISMO DO RENDERIZADOR ---
+        // Ativa o cálculo de luzes fisicamente correto (padrão em versões novas).
+        renderer.physicallyCorrectLights = true; 
+        // Tone Mapping ajuda a não "estourar" as cores claras e dá aspecto de câmera.
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0; // Exposição padrão.
+
+        // Sombras Suaves (PCFSoft) são essenciais para realismo sem escurecer demais.
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
         document.body.appendChild(renderer.domElement);
 
         const clock = new THREE.Clock();
@@ -44,22 +58,46 @@
         const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _dir = new THREE.Vector3();
         const _fwd = new THREE.Vector3(), _quat = new THREE.Quaternion(), _up = new THREE.Vector3(0, 1, 0);
         
-        scene.add(new THREE.AmbientLight(0xffffff, 0.3)); 
-        const light = new THREE.DirectionalLight(0x00ff00, 0.8); 
-        light.position.set(20, 50, 20); 
-        light.castShadow = true;
-        scene.add(light);
+        // --- 3. SISTEMA DE ILUMINAÇÃO DE ALTA VISIBILIDADE ---
+        
+        // A) Luz de Hemisfério (Fill Light Tática)
+        // Mimica a luz do céu e o rebote do chão. Impede sombras 100% pretas.
+        // Cor do Céu (Verde Matrix bem claro), Cor do Chão (Preto), Intensidade Alta.
+        const hemiLight = new THREE.HemisphereLight(0x44ff44, 0x000000, 1.2); 
+        scene.add(hemiLight);
 
-        // Chão Tático
+        // B) Luz Direcional Principal (Sun Light - Branca)
+        // Cor branca neutra para realismo nas cores do operador.
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1.5); 
+        sunLight.position.set(20, 50, 20); 
+        sunLight.castShadow = true;
+        
+        // Otimização de Sombras para serem mais claras e suaves
+        sunLight.shadow.mapSize.width = 2048; // Alta resolução.
+        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.camera.near = 1;
+        sunLight.shadow.camera.far = 100;
+        // Shadow Bias ajuda a suavizar artefatos de colisão da sombra no chão.
+        sunLight.shadow.bias = -0.0005;
+        scene.add(sunLight);
+
+        // Chão Tático com Material PBR
         const floorGeo = new THREE.PlaneGeometry(300, 300, 20, 20);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x050505, wireframe: true, wireframeLinewidth: 2 }); 
+        // Rugosidade (roughness) alta e metalicidade (metalness) baixa para evitar reflexos estranhos.
+        const floorMat = new THREE.MeshStandardMaterial({ 
+            color: 0x080808, 
+            wireframe: true, 
+            wireframeLinewidth: 2,
+            roughness: 0.8,
+            metalness: 0.1
+        }); 
         const floor = new THREE.Mesh(floorGeo, floorMat); 
         floor.rotation.x = -Math.PI / 2; 
         floor.receiveShadow = true;
         scene.add(floor);
 
         // Estruturas 3D (Barricadas/Pilares) para imersão
-        const matObstaculo = new THREE.MeshStandardMaterial({ color: 0x002200 });
+        const matObstaculo = new THREE.MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.9 });
         const geoObstaculo = new THREE.BoxGeometry(4, 6, 4);
         const obstaculos = [];
         const posicoesObs = [[10, 10], [-15, 20], [25, -15], [-20, -20], [0, -30], [30, 5]];
@@ -73,11 +111,11 @@
             obstaculos.push(obs);
         });
 
-        // Cache de Geometrias e Materiais
-        const matPadraoVerde = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-        const matInimigo = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-        const matDrop = new THREE.MeshStandardMaterial({ color: 0x00ff00, wireframe: true });
-        const matProj = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        // Cache de Geometrias e Materiais PBR
+        const matPadraoVerde = new THREE.MeshStandardMaterial({ color: 0x33ff33, roughness: 0.4, metalness: 0.6 });
+        const matInimigo = new THREE.MeshStandardMaterial({ color: 0xff3333, roughness: 0.7 });
+        const matDrop = new THREE.MeshStandardMaterial({ color: 0x33ff33, wireframe: true });
+        const matProj = new THREE.MeshBasicMaterial({ color: 0x33ff33 }); // Basic para "brilhar" no escuro
         
         const geoInimigo = new THREE.BoxGeometry(1.2, 2.5, 1.2);
         const geoDrop = new THREE.BoxGeometry(0.4, 0.4, 0.4);
@@ -124,7 +162,7 @@
         function spawnInimigo(px, pz) {
             const eGroup = new THREE.Group();
             const malha = new THREE.Mesh(geoInimigo, matInimigo);
-            malha.position.y = 1.25; malha.castShadow = true;
+            malha.position.y = 1.25; malha.castShadow = true; malha.receiveShadow = true;
             eGroup.position.set(px, 0, pz); eGroup.add(malha);
             scene.add(eGroup);
             inimigos.push({ mesh: eGroup, hp: 300, vivo: true, cooldown: 0 });
