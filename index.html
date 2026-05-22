@@ -8,12 +8,14 @@
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1d1a; font-family: 'Courier New', monospace; }
         
+        /* Telas de Interface */
         .tela { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; transition: opacity 0.4s ease; }
         #tela-inicial { background: radial-gradient(circle, #2a3a2a 0%, #101510 100%); }
         .titulo { color: #33ff33; font-size: 2.5rem; letter-spacing: 4px; margin-bottom: 20px; text-shadow: 0 0 10px rgba(51,255,51,0.5); text-align: center; }
         .btn { padding: 12px 30px; background: transparent; border: 2px solid #33ff33; color: #33ff33; font-size: 1.2rem; cursor: pointer; font-family: inherit; font-weight: bold; transition: all 0.2s; box-shadow: 0 0 15px rgba(51,255,51,0.2); }
         .btn:hover { background: #33ff33; color: #000; box-shadow: 0 0 25px #33ff33; }
         
+        /* HUD de Jogo */
         #game-hud { position: absolute; top: 20px; left: 20px; color: #33ff33; z-index: 5; pointer-events: none; }
         .barra-container { width: 250px; height: 16px; background: rgba(0,20,0,0.6); border: 1px solid #33ff33; margin-bottom: 8px; padding: 2px; }
         .barra { height: 100%; transition: width 0.1s ease; }
@@ -21,12 +23,16 @@
         #bar-player-stamina { background-color: #33ff33; }
         .contador-status { font-size: 1rem; margin-top: 5px; text-shadow: 1px 1px 2px #000; }
         
+        /* Retícula Central */
         #reticula { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; border: 2px solid #33ff33; border-radius: 50%; transform: translate(-50%, -50%); z-index: 4; pointer-events: none; opacity: 0.8; }
         
+        /* Logs de Combate */
         #combat-log { position: absolute; bottom: 20px; left: 20px; color: #33ff33; font-size: 0.9rem; max-width: 400px; text-shadow: 1px 1px 2px #000; z-index: 5; pointer-events: none; }
         
+        /* Travar Mouse UI Overlay */
         #travar-mouse-ui { background: rgba(0,0,0,0.5); color: #33ff33; font-size: 1.2rem; cursor: pointer; border: 1px dashed #33ff33; padding: 15px; border-radius: 4px; }
         
+        /* Painel de Inventário / Forja */
         #painel-inventario { background: rgba(10,20,10,0.9); border: 2px solid #33ff33; padding: 20px; width: 320px; z-index: 15; color: #33ff33; }
         .grid-inv { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
         .slot-item { width: 50px; height: 50px; background: rgba(0,0,0,0.4); border: 1px solid #225522; display: flex; justify-content: center; align-items: center; font-size: 1.3rem; position: relative; }
@@ -37,10 +43,12 @@
         
         .hidden { display: none !important; }
     </style>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js"></script>
 </head>
 <body>
+
     <div id="tela-inicial" class="tela">
         <h1 class="titulo">SISTEMA TÁTICO: FLORESTA</h1>
         <button id="btn-iniciar" class="btn">INICIALIZAR MUNDO 3D</button>
@@ -49,9 +57,11 @@
     <div id="game-hud" class="hidden">
         <div>INTEGRIDADE:</div>
         <div class="barra-container"><div id="bar-player-hp" class="barra" style="width: 100%;"></div></div>
-        <div>ESTABILIDADE:</div>
+        <div>ESTABILIDADE (STAMINA):</div>
         <div class="barra-container"><div id="bar-player-stamina" class="barra" style="width: 100%;"></div></div>
-        <div class="contador-status">SERINGAS (Q): <span id="lbl-pocoes">3</span> | FLECHAS: <span id="lbl-flechas">15</span></div>
+        <div class="contador-status">
+            SERINGAS (Q): <span id="lbl-pocoes">3</span> | FLECHAS: <span id="lbl-flechas">15</span>
+        </div>
         <div class="contador-status">INVENTÁRIO (E): <span id="lbl-total-itens">0</span>/15</div>
         <div class="contador-status" style="color: #ffaa00;">COMBO: <span id="lbl-combo">0</span>x</div>
     </div>
@@ -60,14 +70,15 @@
     <div id="combat-log" class="hidden">> Aguardando engajamento tático...</div>
 
     <div id="travar-mouse-ui" class="tela hidden">
-        <div>CLIQUE NA TELA PARA RETOMAR O CONTROLE</div>
+        <div>CLIQUE NA TELA PARA RETOMAR O CONTROLE DA CÂMERA</div>
     </div>
 
     <div id="painel-inventario" class="tela hidden">
         <h3>MOCHILA DE RECURSOS</h3>
         <div id="grid-inventario" class="grid-inv"></div>
+        
         <div class="craft-secao">
-            <h4>ESTAÇÃO DE FORJA</h4>
+            <h4>ESTAÇÃO DE FORJA TÁTICA</h4>
             <div class="craft-linha">
                 <span>Flechas x5 (Custos: 2 Sucatas)</span>
                 <button id="btn-craft-flecha" class="btn btn-craft">FORJAR</button>
