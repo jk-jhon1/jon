@@ -30,4 +30,59 @@
         
         #travar-mouse-ui { background: rgba(0,0,0,0.7); color: #33ff33; font-size: 1.2rem; cursor: pointer; border: 1px solid #33ff33; padding: 15px; }
         
-        #painel-inventario { background: rgba(10,2
+        #painel-inventario { background: rgba(10,20,10,0.95); border: 2px solid #33ff33; padding: 20px; width: 320px; z-index: 15; color: #33ff33; }
+        .grid-inv { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
+        .slot-item { width: 50px; height: 50px; background: rgba(0,0,0,0.8); border: 1px solid #225522; display: flex; justify-content: center; align-items: center; font-size: 1.3rem; position: relative; }
+        .item-qtd { position: absolute; bottom: 2px; right: 4px; font-size: 0.7rem; color: #33ff33; }
+        .craft-secao { border-top: 1px dashed #33ff33; padding-top: 15px; margin-top: 15px; }
+        .craft-linha { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .btn-craft { padding: 4px 10px; font-size: 0.8rem; }
+        
+        .hidden { display: none !important; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js"></script>
+</head>
+<body>
+    <div id="tela-inicial" class="tela">
+        <h1 class="titulo">OPERAÇÃO: FLORESTA</h1>
+        <button id="btn-iniciar" class="btn">INICIAR MISSÃO</button>
+    </div>
+
+    <div id="game-hud" class="hidden">
+        <div>INTEGRIDADE (HP):</div>
+        <div class="barra-container"><div id="bar-player-hp" class="barra" style="width: 100%;"></div></div>
+        <div>VIGOR (STAMINA):</div>
+        <div class="barra-container"><div id="bar-player-stamina" class="barra" style="width: 100%;"></div></div>
+        <div class="contador-status">SERINGAS [Q]: <span id="lbl-pocoes">3</span> | MUNIÇÃO ARCO: <span id="lbl-flechas">15</span></div>
+        <div class="contador-status">CARGA [E]: <span id="lbl-total-itens">0</span>/15</div>
+        <div class="contador-status" style="color: #ff3333;">MULTIPLICADOR: <span id="lbl-combo">0</span>x</div>
+    </div>
+
+    <div id="reticula" class="hidden"></div>
+    <div id="combat-log" class="hidden">> STATUS: OPERACIONAL. AGUARDANDO CONTATO.</div>
+
+    <div id="travar-mouse-ui" class="tela hidden">
+        <div>[ CLIQUE PARA RETOMAR CONTROLE ]</div>
+    </div>
+
+    <div id="painel-inventario" class="tela hidden">
+        <h3>INVENTÁRIO</h3>
+        <div id="grid-inventario" class="grid-inv"></div>
+        <div class="craft-secao">
+            <h4>SINTETIZADOR</h4>
+            <div class="craft-linha">
+                <span>Munição x5 (Custo: 2 Sucatas)</span>
+                <button id="btn-craft-flecha" class="btn btn-craft">FORJAR</button>
+            </div>
+            <div class="craft-linha">
+                <span>Seringa HP (Custo: 3 Sucatas)</span>
+                <button id="btn-craft-pocao" class="btn btn-craft">SINTETIZAR</button>
+            </div>
+        </div>
+        <button id="btn-fechar-inv" class="btn" style="margin-top: 15px; width: 100%; padding: 6px;">FECHAR</button>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
