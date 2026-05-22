@@ -13,7 +13,7 @@
     }
 
     function inicializarMotorJogo() {
-        // UI
+        // UI Cache
         const ui = {
             hud: document.getElementById("game-hud"), reticula: document.getElementById("reticula"),
             log: document.getElementById("combat-log"), uiMouse: document.getElementById("travar-mouse-ui"),
@@ -28,107 +28,143 @@
         ui.log.classList.remove("hidden"); ui.uiMouse.classList.remove("hidden");
 
         const scene = new THREE.Scene();
+        const corAmbienteClaro = 0x4a5a4a; // Tom esverdeado claro para simular atmosfera de floresta aberta
+        scene.background = new THREE.Color(corAmbienteClaro); 
+        scene.fog = new THREE.FogExp2(corAmbienteClaro, 0.01);
 
-        // --- 1. AJUSTE DE CENÁRIO (Mais claro que 0x010501) ---
-        // Usamos um cinza muito escuro misturado com verde para não "apagar" o cenário.
-        const corCenarioClaro = 0x1a1d1a;
-        scene.background = new THREE.Color(corCenarioClaro); 
-        // Neblina mais suave para dar profundidade sem escurecer.
-        scene.fog = new THREE.FogExp2(corCenarioClaro, 0.015);
-
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-
-        // --- 2. CONFIGURAÇÕES DE REALISMO DO RENDERIZADOR ---
-        // Ativa o cálculo de luzes fisicamente correto (padrão em versões novas).
         renderer.physicallyCorrectLights = true; 
-        // Tone Mapping ajuda a não "estourar" as cores claras e dá aspecto de câmera.
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.0; // Exposição padrão.
-
-        // Sombras Suaves (PCFSoft) são essenciais para realismo sem escurecer demais.
+        renderer.toneMappingExposure = 1.2; 
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
         document.body.appendChild(renderer.domElement);
 
         const clock = new THREE.Clock();
-        
-        // Vetores Globais - Otimização
         const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _dir = new THREE.Vector3();
         const _fwd = new THREE.Vector3(), _quat = new THREE.Quaternion(), _up = new THREE.Vector3(0, 1, 0);
         
-        // --- 3. SISTEMA DE ILUMINAÇÃO DE ALTA VISIBILIDADE ---
-        
-        // A) Luz de Hemisfério (Fill Light Tática)
-        // Mimica a luz do céu e o rebote do chão. Impede sombras 100% pretas.
-        // Cor do Céu (Verde Matrix bem claro), Cor do Chão (Preto), Intensidade Alta.
-        const hemiLight = new THREE.HemisphereLight(0x44ff44, 0x000000, 1.2); 
+        // --- ILUMINAÇÃO REALISTA E CLARA ---
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x445544, 1.4); 
         scene.add(hemiLight);
 
-        // B) Luz Direcional Principal (Sun Light - Branca)
-        // Cor branca neutra para realismo nas cores do operador.
-        const sunLight = new THREE.DirectionalLight(0xffffff, 1.5); 
-        sunLight.position.set(20, 50, 20); 
+        const sunLight = new THREE.DirectionalLight(0xfffaed, 1.8); 
+        sunLight.position.set(100, 150, 50); 
         sunLight.castShadow = true;
-        
-        // Otimização de Sombras para serem mais claras e suaves
-        sunLight.shadow.mapSize.width = 2048; // Alta resolução.
+        sunLight.shadow.mapSize.width = 2048;
         sunLight.shadow.mapSize.height = 2048;
-        sunLight.shadow.camera.near = 1;
-        sunLight.shadow.camera.far = 100;
-        // Shadow Bias ajuda a suavizar artefatos de colisão da sombra no chão.
+        sunLight.shadow.camera.near = 10;
+        sunLight.shadow.camera.far = 400;
+        const dSide = 150;
+        sunLight.shadow.camera.left = -dSide; sunLight.shadow.camera.right = dSide;
+        sunLight.shadow.camera.top = dSide; sunLight.shadow.camera.bottom = -dSide;
         sunLight.shadow.bias = -0.0005;
         scene.add(sunLight);
 
-        // Chão Tático com Material PBR
-        const floorGeo = new THREE.PlaneGeometry(300, 300, 20, 20);
-        // Rugosidade (roughness) alta e metalicidade (metalness) baixa para evitar reflexos estranhos.
+        // --- GERAÇÃO PROCEDURAL DO TERRENO (Planícies e Montanhas) ---
+        const tamanhoMapa = 400;
+        const segmentos = 60;
+        const floorGeo = new THREE.PlaneGeometry(tamanhoMapa, tamanhoMapa, segmentos, segmentos);
+        
+        // Função matemática simples para simular relevo sem bibliotecas externas
+        const vertices = floorGeo.attributes.position;
+        for (let i = 0; i < vertices.count; i++) {
+            let x = vertices.getX(i);
+            let y = vertices.getY(i);
+            
+            // Ondulações grandes para Montanhas ao fundo
+            let montanhas = Math.sin(x * 0.02) * Math.cos(y * 0.02) * 15;
+            // Ondulações médias para colinas e vales nas Planícies
+            let planicies = Math.sin(x * 0.05) * 2 + Math.cos(y * 0.05) * 2;
+            
+            // Se estiver perto do centro (onde o jogador nasce), suaviza para virar planície límpida
+            let distAoCentro = Math.sqrt(x*x + y*y);
+            let fatorSuavizacao = Math.min(1, distAoCentro / 60);
+
+            let alturaFinal = (montanhas + planicies) * fatorSuavizacao;
+            vertices.setZ(i, alturaFinal); 
+        }
+        floorGeo.computeVertexNormals();
+
         const floorMat = new THREE.MeshStandardMaterial({ 
-            color: 0x080808, 
-            wireframe: true, 
-            wireframeLinewidth: 2,
-            roughness: 0.8,
-            metalness: 0.1
+            color: 0x1e3f1e, 
+            roughness: 0.9, 
+            metalness: 0.05,
+            wireframe: false 
         }); 
         const floor = new THREE.Mesh(floorGeo, floorMat); 
         floor.rotation.x = -Math.PI / 2; 
         floor.receiveShadow = true;
         scene.add(floor);
 
-        // Estruturas 3D (Barricadas/Pilares) para imersão
-        const matObstaculo = new THREE.MeshStandardMaterial({ color: 0x0a1a0a, roughness: 0.9 });
-        const geoObstaculo = new THREE.BoxGeometry(4, 6, 4);
-        const obstaculos = [];
-        const posicoesObs = [[10, 10], [-15, 20], [25, -15], [-20, -20], [0, -30], [30, 5]];
-        
-        posicoesObs.forEach(pos => {
-            const obs = new THREE.Mesh(geoObstaculo, matObstaculo);
-            obs.position.set(pos[0], 3, pos[1]);
-            obs.castShadow = true;
-            obs.receiveShadow = true;
-            scene.add(obs);
-            obstaculos.push(obs);
-        });
+        // Função auxiliar para descobrir a altura exata do terreno em qualquer coordenada (X, Z)
+        function obterAlturaTerreno(x, z) {
+            let montanhas = Math.sin(x * 0.02) * Math.cos(z * 0.02) * 15;
+            let planicies = Math.sin(x * 0.05) * 2 + Math.cos(z * 0.05) * 2;
+            let distAoCentro = Math.sqrt(x*x + z*z);
+            let fatorSuavizacao = Math.min(1, distAoCentro / 60);
+            return (montanhas + planicies) * fatorSuavizacao;
+        }
 
-        // Cache de Geometrias e Materiais PBR
-        const matPadraoVerde = new THREE.MeshStandardMaterial({ color: 0x33ff33, roughness: 0.4, metalness: 0.6 });
-        const matInimigo = new THREE.MeshStandardMaterial({ color: 0xff3333, roughness: 0.7 });
+        // --- ECOSSISTEMA: FLORESTA (Geração de Árvores) ---
+        const obstaculos = [];
+        const geoTronco = new THREE.CylinderGeometry(0.3, 0.5, 4, 5);
+        const geoFolhas = new THREE.ConeGeometry(2, 5, 5);
+        const matTronco = new THREE.MeshStandardMaterial({ color: 0x4a2f13, roughness: 0.9 });
+        const matFolhas = new THREE.MeshStandardMaterial({ color: 0x134a1b, roughness: 0.8 });
+
+        function criarArvore(x, z) {
+            const y = obterAlturaTerreno(x, z);
+            const arvoreGroup = new THREE.Group();
+            arvoreGroup.position.set(x, y, z);
+
+            const tronco = new THREE.Mesh(geoTronco, matTronco);
+            tronco.position.y = 2;
+            tronco.castShadow = true; tronco.receiveShadow = true;
+
+            const folhas = new THREE.Mesh(geoFolhas, matFolhas);
+            folhas.position.y = 5.5;
+            folhas.castShadow = true; folhas.receiveShadow = true;
+
+            arvoreGroup.add(tronco, folhas);
+            scene.add(arvoreGroup);
+            
+            // Usado para o sistema de colisão do jogador e inimigos
+            obstaculos.push({ pos: new THREE.Vector3(x, y, z), raio: 1.5 });
+        }
+
+        // Distribui 350 árvores focadas fora da zona central de spawn
+        for (let i = 0; i < 350; i++) {
+            let angulo = Math.random() * Math.PI * 2;
+            let raio = 25 + Math.random() * 150; // Evita o centro exato
+            let tx = Math.cos(angulo) * raio;
+            let tz = Math.sin(angulo) * raio;
+            criarArvore(tx, tz);
+        }
+
+        // Materiais do Combate
+        const matPadraoVerde = new THREE.MeshStandardMaterial({ color: 0x33ff33, roughness: 0.3, metalness: 0.7 });
+        const matInimigo = new THREE.MeshStandardMaterial({ color: 0xd92b2b, roughness: 0.6 });
         const matDrop = new THREE.MeshStandardMaterial({ color: 0x33ff33, wireframe: true });
-        const matProj = new THREE.MeshBasicMaterial({ color: 0x33ff33 }); // Basic para "brilhar" no escuro
+        const matProj = new THREE.MeshBasicMaterial({ color: 0x33ff33 });
         
         const geoInimigo = new THREE.BoxGeometry(1.2, 2.5, 1.2);
         const geoDrop = new THREE.BoxGeometry(0.4, 0.4, 0.4);
         const geoProj = new THREE.CylinderGeometry(0.02, 0.02, 0.8);
 
         // Operador (Player)
-        const playerGroup = new THREE.Group(); scene.add(playerGroup);
+        const playerGroup = new THREE.Group(); 
+        playerGroup.position.set(0, obterAlturaTerreno(0, 0), 0);
+        scene.add(playerGroup);
+
         const cameraPivot = new THREE.Group(); cameraPivot.position.set(0, 2.0, 0); playerGroup.add(cameraPivot);
         cameraPivot.add(camera); camera.position.set(0, 0, 0);
 
         const weaponHandGroup = new THREE.Group(); weaponHandGroup.position.set(0.4, -0.3, -0.6); cameraPivot.add(weaponHandGroup);
         
-        // Armamento
+        // Armamento Visual
         const mSword = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.8, 0.1), matPadraoVerde); 
         mSword.position.set(0, 0.5, -0.5); mSword.rotation.x = -Math.PI/4; mSword.castShadow = true;
         
@@ -160,14 +196,17 @@
         let mouseTravado = false, invAberto = false, teclado = {};
 
         function spawnInimigo(px, pz) {
+            const py = obterAlturaTerreno(px, pz);
             const eGroup = new THREE.Group();
             const malha = new THREE.Mesh(geoInimigo, matInimigo);
             malha.position.y = 1.25; malha.castShadow = true; malha.receiveShadow = true;
-            eGroup.position.set(px, 0, pz); eGroup.add(malha);
+            eGroup.position.set(px, py, pz); eGroup.add(malha);
             scene.add(eGroup);
             inimigos.push({ mesh: eGroup, hp: 300, vivo: true, cooldown: 0 });
         }
-        spawnInimigo(0, -20); spawnInimigo(15, -15); spawnInimigo(-15, -25); spawnInimigo(20, -30);
+        
+        // Spawn de patrulhas nas planícies iniciais
+        spawnInimigo(10, -20); spawnInimigo(25, -15); spawnInimigo(-20, -35); spawnInimigo(40, -40);
 
         // Sistema de Forja
         document.getElementById("btn-craft-flecha").addEventListener("click", () => tentarCraft('flecha'));
@@ -189,7 +228,7 @@
             for(let i=0; i<qtd; i++) { let idx = itensInv.indexOf(nome); if(idx > -1) itensInv.splice(idx, 1); }
         }
 
-        // Controles de Eixo
+        // Input
         window.addEventListener('keydown', e => {
             const key = e.key.toLowerCase(); teclado[key] = true;
             if (key === 'e') {
@@ -231,10 +270,10 @@
             if (!mouseTravado || invAberto) return;
             playerGroup.rotation.y -= e.movementX * 0.002;
             cameraPivot.rotation.x -= e.movementY * 0.002;
-            cameraPivot.rotation.x = Math.max(-1.0, Math.min(1.0, cameraPivot.rotation.x)); // Look mais amplo
+            cameraPivot.rotation.x = Math.max(-1.0, Math.min(1.0, cameraPivot.rotation.x));
         });
 
-        // Engajamento
+        // Ataques e Mecânicas
         window.addEventListener("mousedown", (e) => {
             if (!mouseTravado || invAberto) return;
             const arma = arsenal[playerState.armaEquipada];
@@ -302,7 +341,9 @@
             let qtdDrop = Math.floor(Math.random() * 3) + 1;
             for(let i=0; i<qtdDrop; i++) {
                 const drop = new THREE.Mesh(geoDrop, matDrop);
-                drop.position.copy(inimigo.mesh.position).add(new THREE.Vector3((Math.random()-0.5)*2, 0.5, (Math.random()-0.5)*2));
+                let rx = inimigo.mesh.position.x + (Math.random()-0.5)*2;
+                let rz = inimigo.mesh.position.z + (Math.random()-0.5)*2;
+                drop.position.set(rx, obterAlturaTerreno(rx, rz) + 0.3, rz);
                 scene.add(drop); drops.push({mesh: drop, tipo: 'sucata'});
             }
         }
@@ -329,13 +370,17 @@
 
         function logMsg(msg) { ui.log.innerText = msg; }
 
-        function checkColisaoObstaculos(pos) {
+        function checkColisaoArvores(pos) {
             for(let obs of obstaculos) {
-                if (pos.distanceTo(obs.position) < 3.5) return true;
+                // Cálculo de distância horizontal simples (ignora altura para travar colisões no tronco)
+                let dx = pos.x - obs.pos.x;
+                let dz = pos.z - obs.pos.z;
+                if (Math.sqrt(dx*dx + dz*dz) < obs.raio) return true;
             }
             return false;
         }
 
+        // --- LOOP PRINCIPAL DO MOTOR ---
         function animate() {
             requestAnimationFrame(animate);
             const delta = Math.min(clock.getDelta(), 0.1);
@@ -357,18 +402,21 @@
                     if (weaponHandGroup.rotation.x < -1.5) { playerState.atacando = false; weaponHandGroup.rotation.x = 0; } 
                 }
 
-                // Balística
+                // Física de Balística (Projéteis de Arco)
                 for(let i = projeteis.length - 1; i >= 0; i--) {
                     let p = projeteis[i];
-                    p.mesh.position.addScaledVector(p.dir, 60 * delta);
+                    p.mesh.position.addScaledVector(p.dir, 70 * delta);
                     p.life -= delta;
                     
                     let acertou = false;
-                    if(checkColisaoObstaculos(p.mesh.position)) acertou = true;
+                    if(checkColisaoArvores(p.mesh.position)) acertou = true;
+
+                    // Verifica se atingiu o chão da montanha
+                    if (p.mesh.position.y <= obterAlturaTerreno(p.mesh.position.x, p.mesh.position.z)) acertou = true;
 
                     if(!acertou) {
                         inimigos.forEach(inimigo => {
-                            if(inimigo.vivo && p.mesh.position.distanceTo(inimigo.mesh.position) < 2.0) {
+                            if(inimigo.vivo && p.mesh.position.distanceTo(inimigo.mesh.position) < 2.2) {
                                 inimigo.hp -= arsenal[2].dano;
                                 logMsg(`> IMPACTO: Arco (${arsenal[2].dano} DMG)`);
                                 if(inimigo.hp <= 0) matarInimigo(inimigo);
@@ -380,24 +428,29 @@
                     if(p.life <= 0 || acertou) { scene.remove(p.mesh); projeteis.splice(i, 1); }
                 }
 
-                // Movimento do Jogador
+                // Sistema de Movimentação Realista Adaptada ao Relevo
                 _dir.set(0, 0, 0);
                 if (teclado['w']) _dir.z -= 1; if (teclado['s']) _dir.z += 1;
                 if (teclado['a']) _dir.x -= 1; if (teclado['d']) _dir.x += 1;
                 _dir.normalize();
 
                 if (_dir.lengthSq() > 0) {
-                    const mVel = (playerState.dashing ? 35 : 15) * delta;
+                    const mVel = (playerState.dashing ? 32 : 14) * delta;
                     const oldPos = playerGroup.position.clone();
+                    
                     playerGroup.translateOnAxis(_dir, mVel);
                     
-                    if (checkColisaoObstaculos(playerGroup.position)) {
-                        playerGroup.position.copy(oldPos); // Trava movimento se bater na barricada
+                    // Ajusta dinamicamente a altura Y do jogador baseado nas montanhas/planícies do mapa
+                    let novaAltura = obterAlturaTerreno(playerGroup.position.x, playerGroup.position.z);
+                    playerGroup.position.y = novaAltura;
+                    
+                    if (checkColisaoArvores(playerGroup.position)) {
+                        playerGroup.position.copy(oldPos); // Bloqueia movimento se bater no tronco
                     }
                 }
                 playerGroup.getWorldPosition(_vA);
 
-                // Loot
+                // Coleta de Itens
                 for (let i = drops.length - 1; i >= 0; i--) {
                     let drop = drops[i]; drop.mesh.rotation.y += delta;
                     if (_vA.distanceTo(drop.mesh.position) < 2.5 && itensInv.length < 15) { 
@@ -406,20 +459,24 @@
                     }
                 }
 
-                // IA Inimiga
+                // Inteligência Artificial do Inimigo adaptável ao Relevo
                 inimigos.forEach(inimigo => {
                     if (!inimigo.vivo) return;
                     inimigo.mesh.getWorldPosition(_vB); let dist = _vA.distanceTo(_vB);
-                    if (dist < 40) inimigo.mesh.lookAt(playerGroup.position.x, inimigo.mesh.position.y, playerGroup.position.z);
+                    if (dist < 60) inimigo.mesh.lookAt(playerGroup.position.x, inimigo.mesh.position.y, playerGroup.position.z);
                     
                     if (dist > 3.0) { 
                         const oldEPos = inimigo.mesh.position.clone();
-                        inimigo.mesh.translateZ(5 * delta); 
-                        if (checkColisaoObstaculos(inimigo.mesh.position)) inimigo.mesh.position.copy(oldEPos);
+                        inimigo.mesh.translateZ(6 * delta); 
+                        
+                        // Atualiza altura do inimigo para ele subir montanhas de forma fluida
+                        inimigo.mesh.position.y = obterAlturaTerreno(inimigo.mesh.position.x, inimigo.mesh.position.z);
+                        
+                        if (checkColisaoArvores(inimigo.mesh.position)) inimigo.mesh.position.copy(oldEPos);
                     } else {
                         if (inimigo.cooldown > 0) inimigo.cooldown -= delta;
                         else {
-                            inimigo.cooldown = 1.5;
+                            inimigo.cooldown = 1.4;
                             if (playerState.invulneravel) { logMsg("> ESQUIVA BEM SUCEDIDA."); } 
                             else if (playerState.defendendo) { 
                                 playerState.hp -= 5; playerState.stamina -= 15; logMsg("> IMPACTO ABSORVIDO."); 
