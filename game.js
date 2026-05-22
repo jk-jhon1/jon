@@ -16,7 +16,7 @@
     }
 
     function iniciarEngine() {
-        // Cache de Interface
+        // Cache de referências DOM
         const ui = {
             hud: document.getElementById("game-hud"), reticula: document.getElementById("reticula"),
             log: document.getElementById("combat-log"), uiMouse: document.getElementById("travar-mouse-ui"),
@@ -29,7 +29,7 @@
         ui.hud.classList.remove("hidden"); ui.reticula.classList.remove("hidden"); 
         ui.log.classList.remove("hidden"); ui.uiMouse.classList.remove("hidden");
 
-        // Motor Gráfico e Cena
+        // Configuração da Scena e Renderizador
         const scene = new THREE.Scene();
         const corCeu = 0x87CEEB; 
         scene.background = new THREE.Color(corCeu); 
@@ -42,6 +42,7 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
         document.body.appendChild(renderer.domElement);
 
+        // Monitor de Desempenho (FPS)
         const stats = new Stats();
         stats.showPanel(0);
         stats.dom.style.position = 'absolute';
@@ -54,7 +55,7 @@
         const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _dir = new THREE.Vector3();
         const _fwd = new THREE.Vector3(), _quat = new THREE.Quaternion(), _up = new THREE.Vector3(0, 1, 0);
         
-        // Iluminação Tática (Clara, mas com bom contraste)
+        // Configuração Atmosférica de Luzes
         scene.add(new THREE.HemisphereLight(0xffffff, 0x334433, 1.0));
         const sunLight = new THREE.DirectionalLight(0xffffff, 1.6); 
         sunLight.position.set(100, 200, 50); 
@@ -66,10 +67,10 @@
         sunLight.shadow.camera.top = dSide; sunLight.shadow.camera.bottom = -dSide;
         scene.add(sunLight);
 
-        // Algoritmo de Terreno
+        // Função Matemática do Terreno Procedural (Geração Elevada)
         function obterAlturaTerreno(x, z) {
             let elevacao = (Math.sin(x * 0.02) * Math.cos(z * 0.02) * 15) + (Math.sin(x * 0.05) * 2 + Math.cos(z * 0.05) * 2);
-            let limiteMapa = Math.max(0, 1 - (Math.sqrt(x*x + z*z) / 200)); // Suaviza nas bordas
+            let limiteMapa = Math.max(0, 1 - (Math.sqrt(x*x + z*z) / 250)); 
             return elevacao * limiteMapa;
         }
 
@@ -79,12 +80,12 @@
             vertices.setZ(i, obterAlturaTerreno(vertices.getX(i), vertices.getY(i))); 
         }
         floorGeo.computeVertexNormals();
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x2b4522, roughness: 0.8, metalness: 0.1 });
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x2b4522, roughness: 0.85, metalness: 0.05 });
         const floor = new THREE.Mesh(floorGeo, floorMat); 
         floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true;
         scene.add(floor);
 
-        // Floresta (Otimizada)
+        // População de Árvores por InstancedMesh (Otimização Gráfica)
         const qtdArvores = 400;
         const obstaculos = [];
         const arvoresTroncos = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.4, 0.6, 5, 6), new THREE.MeshStandardMaterial({ color: 0x3d2817 }), qtdArvores);
@@ -95,22 +96,22 @@
         const dummy = new THREE.Object3D();
         for (let i = 0; i < qtdArvores; i++) {
             let angulo = Math.random() * Math.PI * 2;
-            let raio = 20 + Math.random() * 200;
+            let raio = 20 + Math.random() * 210;
             let tx = Math.cos(angulo) * raio; let tz = Math.sin(angulo) * raio;
             let ty = obterAlturaTerreno(tx, tz);
             
             dummy.position.set(tx, ty + 2.5, tz); dummy.updateMatrix(); arvoresTroncos.setMatrixAt(i, dummy.matrix);
             dummy.position.set(tx, ty + 6.5, tz); dummy.updateMatrix(); arvoresFolhas.setMatrixAt(i, dummy.matrix);
-            obstaculos.push({ pos: new THREE.Vector3(tx, ty, tz), raioSq: 2.5 }); // Raio de colisão da árvore
+            obstaculos.push({ pos: new THREE.Vector3(tx, ty, tz), raioSq: 2.5 }); 
         }
         scene.add(arvoresTroncos); scene.add(arvoresFolhas);
 
-        // Materiais Entidades
+        // Definição de Materiais das Entidades
         const matArma = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2, metalness: 0.8 });
-        const matInimigo = new THREE.MeshStandardMaterial({ color: 0x222222 }); // Uniforme tático escuro
+        const matInimigo = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7 }); 
         const matDrop = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 1.0, roughness: 0.2 });
         
-        // Operador (Jogador)
+        // Instanciação do Jogador (Entidade Físico-Tática)
         const playerGroup = new THREE.Group(); 
         playerGroup.position.set(0, obterAlturaTerreno(0, 0), 0);
         scene.add(playerGroup);
@@ -120,7 +121,7 @@
 
         const weaponHand = new THREE.Group(); weaponHand.position.set(0.4, -0.4, -0.7); cameraPivot.add(weaponHand);
         
-        // Arsenal
+        // Modelos de Exibição das Armas
         const mSword = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.6, 0.1), matArma); 
         mSword.position.set(0, 0.6, -0.4); mSword.rotation.x = -Math.PI/6; mSword.castShadow = true;
         
@@ -134,11 +135,12 @@
         weaponHand.add(mSword, mHammer, mBow);
         const meshArmas = [mSword, mHammer, mBow];
 
+        // Estado Estrutural do Operador
         const playerState = { 
             hp: 100, stamina: 100, armaEquipada: 0, pocoes: 3, flechas: 15,
             defendendo: false, atacando: false, carregandoArco: false,
             dashing: false, dashTimer: 0, invulneravel: false, combo: 0, comboTimer: 0,
-            velocityY: 0, isGrounded: true // Física de gravidade
+            velocityY: 0, isGrounded: true
         };
         const arsenal = [
             { tipo: 'melee', nome: "LÂMINA DE COMBATE", dano: 35, alcance: 4.5, custo: 15, vel: 18 },
@@ -149,19 +151,19 @@
         let inimigos = [], drops = [], itensInv = [], projeteis = [];
         let mouseTravado = false, invAberto = false, teclado = {};
 
-        // Geração de Hostis
+        // Criação Anatômica dos Hostis (Humanoides Táticos)
         function criarHostil() {
             const grupo = new THREE.Group();
             const criarParte = (w, h, d, x, y, z) => {
                 const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), matInimigo);
                 mesh.position.set(x, y, z); mesh.castShadow = true; grupo.add(mesh);
             };
-            criarParte(0.7, 0.9, 0.35, 0, 1.25, 0);    // Torso robusto
-            criarParte(0.3, 0.35, 0.3, 0, 1.85, 0);    // Cabeça
-            criarParte(0.2, 0.7, 0.2, -0.45, 1.2, 0);  // Braço E
-            criarParte(0.2, 0.7, 0.2, 0.45, 1.2, 0);   // Braço D
-            criarParte(0.25, 0.8, 0.25, -0.18, 0.4, 0);// Perna E
-            criarParte(0.25, 0.8, 0.25, 0.18, 0.4, 0); // Perna D
+            criarParte(0.7, 0.9, 0.35, 0, 1.25, 0);    
+            criarParte(0.3, 0.35, 0.3, 0, 1.85, 0);    
+            criarParte(0.2, 0.7, 0.2, -0.45, 1.2, 0);  
+            criarParte(0.2, 0.7, 0.2, 0.45, 1.2, 0);   
+            criarParte(0.25, 0.8, 0.25, -0.18, 0.4, 0);
+            criarParte(0.25, 0.8, 0.25, 0.18, 0.4, 0); 
             return grupo;
         }
 
@@ -175,7 +177,7 @@
             inimigos.push({ mesh: hostil, hp: 120, vivo: true, cooldown: 0 });
         }
 
-        // Sistema de Controle e Inventário
+        // Sistema de Controle de Inventário e Processamento de Forja
         document.getElementById("btn-craft-flecha").addEventListener("click", () => forjar('flecha', 2));
         document.getElementById("btn-craft-pocao").addEventListener("click", () => forjar('pocao', 3));
 
@@ -197,7 +199,7 @@
             }
             if (invAberto || !mouseTravado) return;
 
-            // Pulo
+            // Tratamento de Inicialização de Salto Tridimensional
             if (key === ' ' && playerState.isGrounded && playerState.stamina >= 15) {
                 playerState.velocityY = 12; playerState.isGrounded = false; playerState.stamina -= 15;
             }
@@ -227,7 +229,7 @@
             cameraPivot.rotation.x = Math.max(-1.2, Math.min(1.2, cameraPivot.rotation.x));
         });
 
-        // Ações de Combate
+        // Gerenciamento e Execução do Vetor de Ataque
         window.addEventListener("mousedown", e => {
             if (!mouseTravado || invAberto) return;
             const arma = arsenal[playerState.armaEquipada];
@@ -307,28 +309,28 @@
             return false;
         }
 
-        // Loop de Jogo
+        // Loop de Renderização e Atualizações Gerais de Física
         function animate() {
             stats.begin();
             requestAnimationFrame(animate);
-            const dt = Math.min(clock.getDelta(), 0.1); // Previne bugs se a aba for minimizada
+            const dt = Math.min(clock.getDelta(), 0.1); 
             
             if (invAberto) { renderer.render(scene, camera); stats.end(); return; }
 
             if (mouseTravado) {
-                // Recuperação de vigor
+                // Modulação da Regeneração de Vigor
                 if (!playerState.atacando && !playerState.defendendo && !playerState.dashing) { playerState.stamina = Math.min(100, playerState.stamina + (25 * dt)); atualizarHUD(); }
                 if (playerState.comboTimer > 0) playerState.comboTimer -= dt; else if(playerState.combo > 0) { playerState.combo = 0; ui.lblCombo.innerText = "0"; }
                 if (playerState.dashTimer > 0) playerState.dashTimer -= dt; else { playerState.dashing = false; playerState.invulneravel = false; }
                 
-                // Animação de Golpe
+                // Processamento de Vetor de Animação das Mãos de Combate
                 if (playerState.atacando) { 
                     weaponHand.rotation.x -= arsenal[playerState.armaEquipada].vel * dt;
                     weaponHand.rotation.z -= arsenal[playerState.armaEquipada].vel * dt * 0.5;
                     if (weaponHand.rotation.x < -1.8) { playerState.atacando = false; weaponHand.rotation.x = 0; weaponHand.rotation.z = 0; } 
                 }
 
-                // Física de Projéteis
+                // Vetor de Velocidade Balística (Projéteis)
                 for(let i = projeteis.length - 1; i >= 0; i--) {
                     let p = projeteis[i]; p.mesh.position.addScaledVector(p.dir, 80 * dt); p.life -= dt;
                     let hit = checkColisaoObstaculos(p.mesh.position) || (p.mesh.position.y <= obterAlturaTerreno(p.mesh.position.x, p.mesh.position.z));
@@ -344,13 +346,13 @@
                     if(p.life <= 0 || hit) { scene.remove(p.mesh); projeteis.splice(i, 1); }
                 }
 
-                // Input de Movimento
+                // Leitura do Vetor de Input Direcional
                 _dir.set(0, 0, 0);
                 if (teclado['w']) _dir.z -= 1; if (teclado['s']) _dir.z += 1;
                 if (teclado['a']) _dir.x -= 1; if (teclado['d']) _dir.x += 1;
                 _dir.normalize();
 
-                // Movimentação do Jogador
+                // Aplicação de Movimentação Dinâmica no Jogador
                 let movendo = _dir.lengthSq() > 0;
                 if (movendo) {
                     const vel = (playerState.dashing ? 35 : (teclado['shift'] ? 18 : 10)) * dt;
@@ -362,8 +364,8 @@
                     }
                 }
 
-                // Aplicação da Gravidade (Física)
-                playerState.velocityY -= 30 * dt; // Força G
+                // Cálculo Gravitacional Físico e Trava em Superfícies Irregulares
+                playerState.velocityY -= 30 * dt; 
                 playerGroup.position.y += playerState.velocityY * dt;
                 
                 const alturaChao = obterAlturaTerreno(playerGroup.position.x, playerGroup.position.z);
@@ -373,7 +375,7 @@
                     playerState.isGrounded = true;
                 }
 
-                // Head-Bobbing (Movimento da Câmera)
+                // Efeito Cinético Inercial de Head-Bobbing
                 if (movendo && playerState.isGrounded && !playerState.dashing) {
                     cameraPivot.position.y = 2.0 + Math.sin(clock.getElapsedTime() * 12) * 0.08;
                 } else {
@@ -382,7 +384,7 @@
 
                 playerGroup.getWorldPosition(_vA);
 
-                // Coleta de Itens
+                // Rotina de Captura e Coleta de Recursos Drops
                 for (let i = drops.length - 1; i >= 0; i--) {
                     let drop = drops[i]; drop.mesh.rotation.y += dt;
                     if (_vA.distanceToSquared(drop.mesh.position) < 6.0 && itensInv.length < 15) { 
@@ -391,7 +393,7 @@
                     }
                 }
 
-                // IA dos Hostis (Com Steering/Separação)
+                // Inteligência Artificial Comportamental dos Inimigos (Steering & Separação)
                 for (let j = 0; j < inimigos.length; j++) {
                     let ini = inimigos[j];
                     if (!ini.vivo) continue;
@@ -405,7 +407,7 @@
                         const oldX = ini.mesh.position.x; const oldZ = ini.mesh.position.z;
                         ini.mesh.translateZ(7 * dt); 
                         
-                        // Rotina de Separação (Evita que inimigos entrem uns nos outros)
+                        // Algoritmo de Repulsão Mútua para Evitar Sobreposições Complexas
                         for (let k = 0; k < inimigos.length; k++) {
                             if (j !== k && inimigos[k].vivo) {
                                 let distOutro = ini.mesh.position.distanceToSquared(inimigos[k].mesh.position);
@@ -419,6 +421,7 @@
                         ini.mesh.position.y = obterAlturaTerreno(ini.mesh.position.x, ini.mesh.position.z);
                         if (checkColisaoObstaculos(ini.mesh.position)) { ini.mesh.position.x = oldX; ini.mesh.position.z = oldZ; }
                     } else {
+                        // Resposta Tática de Combate Próximo (Cooldown do Inimigo)
                         if (ini.cooldown > 0) ini.cooldown -= dt;
                         else {
                             ini.cooldown = 1.2;
