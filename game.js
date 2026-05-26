@@ -9,6 +9,11 @@
         const btnIniciar = document.getElementById("btn-iniciar");
         if(btnIniciar) {
             btnIniciar.addEventListener("click", () => {
+                // Validação de Segurança Crítica: Three.js carregou?
+                if (typeof THREE === 'undefined') {
+                    alert("ERRO CRÍTICO: A biblioteca Three.js não pôde ser carregada. Verifique sua conexão com a internet ou os arquivos locais.");
+                    return;
+                }
                 domInicial.style.opacity = "0";
                 setTimeout(() => { domInicial.classList.add("hidden"); iniciarEngine(); }, 400);
             });
@@ -16,7 +21,7 @@
     }
 
     function iniciarEngine() {
-        // Cache de referências DOM
+        // Cache de Interface de Segurança
         const ui = {
             hud: document.getElementById("game-hud"), reticula: document.getElementById("reticula"),
             log: document.getElementById("combat-log"), uiMouse: document.getElementById("travar-mouse-ui"),
@@ -26,10 +31,13 @@
             lblCombo: document.getElementById("lbl-combo"), gridInv: document.getElementById("grid-inventario")
         };
 
-        ui.hud.classList.remove("hidden"); ui.reticula.classList.remove("hidden"); 
-        ui.log.classList.remove("hidden"); ui.uiMouse.classList.remove("hidden");
+        // Garante que a UI não quebre se algum elemento falhar
+        if(ui.hud) ui.hud.classList.remove("hidden"); 
+        if(ui.reticula) ui.reticula.classList.remove("hidden"); 
+        if(ui.log) ui.log.classList.remove("hidden"); 
+        if(ui.uiMouse) ui.uiMouse.classList.remove("hidden");
 
-        // Configuração da Scena e Renderizador
+        // Motor Gráfico e Cena
         const scene = new THREE.Scene();
         const corCeu = 0x87CEEB; 
         scene.background = new THREE.Color(corCeu); 
@@ -42,20 +50,27 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
         document.body.appendChild(renderer.domElement);
 
-        // Monitor de Desempenho (FPS)
-        const stats = new Stats();
-        stats.showPanel(0);
-        stats.dom.style.position = 'absolute';
-        stats.dom.style.left = 'auto'; stats.dom.style.top = 'auto';
-        stats.dom.style.right = '10px'; stats.dom.style.bottom = '10px';
-        stats.dom.style.zIndex = '1000';
-        document.body.appendChild(stats.dom);
+        // Inicialização Segura do Monitor de FPS (Evita crash caso o script externo falhe)
+        let stats;
+        if (typeof Stats !== 'undefined') {
+            stats = new Stats();
+            stats.showPanel(0);
+            stats.dom.style.position = 'absolute';
+            stats.dom.style.left = 'auto'; stats.dom.style.top = 'auto';
+            stats.dom.style.right = '10px'; stats.dom.style.bottom = '10px';
+            stats.dom.style.zIndex = '1000';
+            document.body.appendChild(stats.dom);
+        } else {
+            // Objeto Dummy/Mock para ignorar chamadas sem quebrar o loop
+            stats = { begin: function(){}, end: function(){} };
+            console.warn("Stats.js não pôde ser carregado. Executando modo de segurança sem contador de FPS.");
+        }
 
         const clock = new THREE.Clock();
         const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _dir = new THREE.Vector3();
         const _fwd = new THREE.Vector3(), _quat = new THREE.Quaternion(), _up = new THREE.Vector3(0, 1, 0);
         
-        // Configuração Atmosférica de Luzes
+        // Iluminação
         scene.add(new THREE.HemisphereLight(0xffffff, 0x334433, 1.0));
         const sunLight = new THREE.DirectionalLight(0xffffff, 1.6); 
         sunLight.position.set(100, 200, 50); 
@@ -67,7 +82,7 @@
         sunLight.shadow.camera.top = dSide; sunLight.shadow.camera.bottom = -dSide;
         scene.add(sunLight);
 
-        // Função Matemática do Terreno Procedural (Geração Elevada)
+        // Algoritmo de Terreno
         function obterAlturaTerreno(x, z) {
             let elevacao = (Math.sin(x * 0.02) * Math.cos(z * 0.02) * 15) + (Math.sin(x * 0.05) * 2 + Math.cos(z * 0.05) * 2);
             let limiteMapa = Math.max(0, 1 - (Math.sqrt(x*x + z*z) / 250)); 
@@ -85,7 +100,7 @@
         floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true;
         scene.add(floor);
 
-        // População de Árvores por InstancedMesh (Otimização Gráfica)
+        // Floresta (Otimizada)
         const qtdArvores = 400;
         const obstaculos = [];
         const arvoresTroncos = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.4, 0.6, 5, 6), new THREE.MeshStandardMaterial({ color: 0x3d2817 }), qtdArvores);
@@ -106,12 +121,12 @@
         }
         scene.add(arvoresTroncos); scene.add(arvoresFolhas);
 
-        // Definição de Materiais das Entidades
+        // Materiais
         const matArma = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2, metalness: 0.8 });
         const matInimigo = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7 }); 
         const matDrop = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 1.0, roughness: 0.2 });
         
-        // Instanciação do Jogador (Entidade Físico-Tática)
+        // Operador (Jogador)
         const playerGroup = new THREE.Group(); 
         playerGroup.position.set(0, obterAlturaTerreno(0, 0), 0);
         scene.add(playerGroup);
@@ -121,7 +136,7 @@
 
         const weaponHand = new THREE.Group(); weaponHand.position.set(0.4, -0.4, -0.7); cameraPivot.add(weaponHand);
         
-        // Modelos de Exibição das Armas
+        // Arsenal
         const mSword = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.6, 0.1), matArma); 
         mSword.position.set(0, 0.6, -0.4); mSword.rotation.x = -Math.PI/6; mSword.castShadow = true;
         
@@ -135,7 +150,6 @@
         weaponHand.add(mSword, mHammer, mBow);
         const meshArmas = [mSword, mHammer, mBow];
 
-        // Estado Estrutural do Operador
         const playerState = { 
             hp: 100, stamina: 100, armaEquipada: 0, pocoes: 3, flechas: 15,
             defendendo: false, atacando: false, carregandoArco: false,
@@ -151,7 +165,7 @@
         let inimigos = [], drops = [], itensInv = [], projeteis = [];
         let mouseTravado = false, invAberto = false, teclado = {};
 
-        // Criação Anatômica dos Hostis (Humanoides Táticos)
+        // Geração de Hostis
         function criarHostil() {
             const grupo = new THREE.Group();
             const criarParte = (w, h, d, x, y, z) => {
@@ -177,9 +191,11 @@
             inimigos.push({ mesh: hostil, hp: 120, vivo: true, cooldown: 0 });
         }
 
-        // Sistema de Controle de Inventário e Processamento de Forja
-        document.getElementById("btn-craft-flecha").addEventListener("click", () => forjar('flecha', 2));
-        document.getElementById("btn-craft-pocao").addEventListener("click", () => forjar('pocao', 3));
+        // Sistema de Controle e Forja
+        const btnFlecha = document.getElementById("btn-craft-flecha");
+        const btnPocao = document.getElementById("btn-craft-pocao");
+        if(btnFlecha) btnFlecha.addEventListener("click", () => forjar('flecha', 2));
+        if(btnPocao) btnPocao.addEventListener("click", () => forjar('pocao', 3));
 
         function forjar(tipo, custo) {
             if (itensInv.filter(i => i === 'sucata').length >= custo) {
@@ -193,13 +209,12 @@
         window.addEventListener('keydown', e => {
             const key = e.key.toLowerCase(); teclado[key] = true;
             if (key === 'e') {
-                invAberto = !invAberto; ui.painelInv.classList.toggle("hidden", !invAberto);
+                invAberto = !invAberto; if(ui.painelInv) ui.painelInv.classList.toggle("hidden", !invAberto);
                 if (invAberto) { if(mouseTravado) document.exitPointerLock(); atualizarUIInv(); } 
                 else document.body.requestPointerLock();
             }
             if (invAberto || !mouseTravado) return;
 
-            // Tratamento de Inicialização de Salto Tridimensional
             if (key === ' ' && playerState.isGrounded && playerState.stamina >= 15) {
                 playerState.velocityY = 12; playerState.isGrounded = false; playerState.stamina -= 15;
             }
@@ -215,13 +230,16 @@
         window.addEventListener('keyup', e => teclado[e.key.toLowerCase()] = false);
 
         function equiparArma(idx) {
-            playerState.armaEquipada = idx; playerState.carregandoArco = false; playerState.combo = 0; ui.lblCombo.innerText = "0";
+            playerState.armaEquipada = idx; playerState.carregandoArco = false; playerState.combo = 0; if(ui.lblCombo) ui.lblCombo.innerText = "0";
             meshArmas.forEach((m, i) => m.visible = (i === idx)); logMsg(`> ARMAMENTO: ${arsenal[idx].nome}`);
         }
 
-        ui.uiMouse.addEventListener("click", () => { if(!invAberto) document.body.requestPointerLock(); });
-        document.getElementById("btn-fechar-inv").addEventListener("click", () => { invAberto = false; ui.painelInv.classList.add("hidden"); document.body.requestPointerLock(); });
-        document.addEventListener("pointerlockchange", () => { mouseTravado = (document.pointerLockElement === document.body); ui.uiMouse.classList.toggle("hidden", mouseTravado); });
+        if(ui.uiMouse) ui.uiMouse.addEventListener("click", () => { if(!invAberto) document.body.requestPointerLock(); });
+        
+        const btnFecharInv = document.getElementById("btn-fechar-inv");
+        if(btnFecharInv) btnFecharInv.addEventListener("click", () => { invAberto = false; if(ui.painelInv) ui.painelInv.classList.add("hidden"); document.body.requestPointerLock(); });
+        
+        document.addEventListener("pointerlockchange", () => { mouseTravado = (document.pointerLockElement === document.body); if(ui.uiMouse) ui.uiMouse.classList.toggle("hidden", mouseTravado); });
 
         document.addEventListener("mousemove", e => {
             if (!mouseTravado || invAberto) return;
@@ -229,7 +247,7 @@
             cameraPivot.rotation.x = Math.max(-1.2, Math.min(1.2, cameraPivot.rotation.x));
         });
 
-        // Gerenciamento e Execução do Vetor de Ataque
+        // Combate
         window.addEventListener("mousedown", e => {
             if (!mouseTravado || invAberto) return;
             const arma = arsenal[playerState.armaEquipada];
@@ -237,7 +255,7 @@
                 if (arma.tipo === 'melee' && !playerState.atacando && playerState.stamina >= arma.custo) {
                     playerState.atacando = true; playerState.stamina -= arma.custo;
                     playerState.comboTimer > 0 ? playerState.combo++ : playerState.combo = 1;
-                    playerState.comboTimer = 1.2; ui.lblCombo.innerText = playerState.combo;
+                    playerState.comboTimer = 1.2; if(ui.lblCombo) ui.lblCombo.innerText = playerState.combo;
                     
                     let danoBase = Math.floor(arma.dano * (1 + (playerState.combo * 0.25)));
                     playerGroup.getWorldPosition(_vA); _fwd.set(0, 0, -1).applyQuaternion(playerGroup.quaternion);
@@ -285,11 +303,15 @@
         }
 
         function atualizarHUD() {
-            ui.hpBar.style.width = `${playerState.hp}%`; ui.stmBar.style.width = `${playerState.stamina}%`;
-            ui.lblPocoes.innerText = playerState.pocoes; ui.lblFlechas.innerText = playerState.flechas; ui.lblItens.innerText = itensInv.length;
+            if(ui.hpBar) ui.hpBar.style.width = `${playerState.hp}%`; 
+            if(ui.stmBar) ui.stmBar.style.width = `${playerState.stamina}%`;
+            if(ui.lblPocoes) ui.lblPocoes.innerText = playerState.pocoes; 
+            if(ui.lblFlechas) ui.lblFlechas.innerText = playerState.flechas; 
+            if(ui.lblItens) ui.lblItens.innerText = itensInv.length;
         }
 
         function atualizarUIInv() {
+            if(!ui.gridInv) return;
             ui.gridInv.innerHTML = ""; let cont = {}; itensInv.forEach(i => cont[i] = (cont[i] || 0) + 1);
             Object.entries(cont).forEach(([item, qtd]) => {
                 let div = document.createElement('div'); div.className = 'slot-item';
@@ -299,7 +321,7 @@
             atualizarHUD();
         }
 
-        function logMsg(msg) { ui.log.innerText = msg; }
+        function logMsg(msg) { if(ui.log) ui.log.innerText = msg; }
 
         function checkColisaoObstaculos(pos) {
             for(let i = 0; i < obstaculos.length; i++) {
@@ -309,7 +331,7 @@
             return false;
         }
 
-        // Loop de Renderização e Atualizações Gerais de Física
+        // Loop de Jogo
         function animate() {
             stats.begin();
             requestAnimationFrame(animate);
@@ -318,19 +340,16 @@
             if (invAberto) { renderer.render(scene, camera); stats.end(); return; }
 
             if (mouseTravado) {
-                // Modulação da Regeneração de Vigor
                 if (!playerState.atacando && !playerState.defendendo && !playerState.dashing) { playerState.stamina = Math.min(100, playerState.stamina + (25 * dt)); atualizarHUD(); }
-                if (playerState.comboTimer > 0) playerState.comboTimer -= dt; else if(playerState.combo > 0) { playerState.combo = 0; ui.lblCombo.innerText = "0"; }
+                if (playerState.comboTimer > 0) playerState.comboTimer -= dt; else if(playerState.combo > 0) { playerState.combo = 0; if(ui.lblCombo) ui.lblCombo.innerText = "0"; }
                 if (playerState.dashTimer > 0) playerState.dashTimer -= dt; else { playerState.dashing = false; playerState.invulneravel = false; }
                 
-                // Processamento de Vetor de Animação das Mãos de Combate
                 if (playerState.atacando) { 
                     weaponHand.rotation.x -= arsenal[playerState.armaEquipada].vel * dt;
                     weaponHand.rotation.z -= arsenal[playerState.armaEquipada].vel * dt * 0.5;
                     if (weaponHand.rotation.x < -1.8) { playerState.atacando = false; weaponHand.rotation.x = 0; weaponHand.rotation.z = 0; } 
                 }
 
-                // Vetor de Velocidade Balística (Projéteis)
                 for(let i = projeteis.length - 1; i >= 0; i--) {
                     let p = projeteis[i]; p.mesh.position.addScaledVector(p.dir, 80 * dt); p.life -= dt;
                     let hit = checkColisaoObstaculos(p.mesh.position) || (p.mesh.position.y <= obterAlturaTerreno(p.mesh.position.x, p.mesh.position.z));
@@ -346,13 +365,11 @@
                     if(p.life <= 0 || hit) { scene.remove(p.mesh); projeteis.splice(i, 1); }
                 }
 
-                // Leitura do Vetor de Input Direcional
                 _dir.set(0, 0, 0);
                 if (teclado['w']) _dir.z -= 1; if (teclado['s']) _dir.z += 1;
                 if (teclado['a']) _dir.x -= 1; if (teclado['d']) _dir.x += 1;
                 _dir.normalize();
 
-                // Aplicação de Movimentação Dinâmica no Jogador
                 let movendo = _dir.lengthSq() > 0;
                 if (movendo) {
                     const vel = (playerState.dashing ? 35 : (teclado['shift'] ? 18 : 10)) * dt;
@@ -364,7 +381,6 @@
                     }
                 }
 
-                // Cálculo Gravitacional Físico e Trava em Superfícies Irregulares
                 playerState.velocityY -= 30 * dt; 
                 playerGroup.position.y += playerState.velocityY * dt;
                 
@@ -375,7 +391,6 @@
                     playerState.isGrounded = true;
                 }
 
-                // Efeito Cinético Inercial de Head-Bobbing
                 if (movendo && playerState.isGrounded && !playerState.dashing) {
                     cameraPivot.position.y = 2.0 + Math.sin(clock.getElapsedTime() * 12) * 0.08;
                 } else {
@@ -384,7 +399,6 @@
 
                 playerGroup.getWorldPosition(_vA);
 
-                // Rotina de Captura e Coleta de Recursos Drops
                 for (let i = drops.length - 1; i >= 0; i--) {
                     let drop = drops[i]; drop.mesh.rotation.y += dt;
                     if (_vA.distanceToSquared(drop.mesh.position) < 6.0 && itensInv.length < 15) { 
@@ -393,7 +407,6 @@
                     }
                 }
 
-                // Inteligência Artificial Comportamental dos Inimigos (Steering & Separação)
                 for (let j = 0; j < inimigos.length; j++) {
                     let ini = inimigos[j];
                     if (!ini.vivo) continue;
@@ -407,7 +420,6 @@
                         const oldX = ini.mesh.position.x; const oldZ = ini.mesh.position.z;
                         ini.mesh.translateZ(7 * dt); 
                         
-                        // Algoritmo de Repulsão Mútua para Evitar Sobreposições Complexas
                         for (let k = 0; k < inimigos.length; k++) {
                             if (j !== k && inimigos[k].vivo) {
                                 let distOutro = ini.mesh.position.distanceToSquared(inimigos[k].mesh.position);
@@ -421,7 +433,6 @@
                         ini.mesh.position.y = obterAlturaTerreno(ini.mesh.position.x, ini.mesh.position.z);
                         if (checkColisaoObstaculos(ini.mesh.position)) { ini.mesh.position.x = oldX; ini.mesh.position.z = oldZ; }
                     } else {
-                        // Resposta Tática de Combate Próximo (Cooldown do Inimigo)
                         if (ini.cooldown > 0) ini.cooldown -= dt;
                         else {
                             ini.cooldown = 1.2;
