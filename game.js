@@ -19,10 +19,10 @@
                 iniciarEngine();
             });
         } else {
-            // Sistema de emergência: se não achar o HTML correto, cria um start genérico
+            // Nome alterado para ARASONY no sistema de boot de emergência
             const overrideUI = document.createElement("div");
-            overrideUI.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:#111;z-index:9999;display:flex;align-items:center;justify-content:center;color:#0f0;font-family:monospace;cursor:pointer;";
-            overrideUI.innerHTML = "<h2>> SISTEMA PRONTO. CLIQUE PARA INICIAR.</h2>";
+            overrideUI.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:#111;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#0f0;font-family:monospace;cursor:pointer;user-select:none;";
+            overrideUI.innerHTML = "<h1 style='margin-bottom:10px;letter-spacing:4px;'>ARASONY</h1><p style='animation:blink 1s infinite;'>[ CLIQUE PARA INICIAR ]</p><style>@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}</style>";
             document.body.appendChild(overrideUI);
             
             overrideUI.addEventListener("click", () => {
@@ -223,7 +223,6 @@
             meshArmas.forEach((m, i) => m.visible = (i === idx)); logMsg(`> ARMA: ${arsenal[idx].nome}`);
         }
 
-        // Garante que o clique na tela trave o mouse e comece o jogo real
         document.body.addEventListener("click", () => {
             if (!invAberto && document.body.requestPointerLock) document.body.requestPointerLock();
         });
