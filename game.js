@@ -5,22 +5,34 @@
     else { window.addEventListener('DOMContentLoaded', initBoot); }
 
     function initBoot() {
+        if (typeof THREE === 'undefined') {
+            document.body.innerHTML = "<h2 style='color:red; background:black; text-align:center; padding:20px;'>ERRO FATAL: Motor Three.js não carregado. Verifique a tag script no seu HTML.</h2>";
+            return;
+        }
+
         const domInicial = document.getElementById("tela-inicial");
         const btnIniciar = document.getElementById("btn-iniciar");
-        if(btnIniciar) {
+
+        if (btnIniciar && domInicial) {
             btnIniciar.addEventListener("click", () => {
-                if (typeof THREE === 'undefined') {
-                    alert("ERRO: Three.js não carregado. Verifique sua conexão.");
-                    return;
-                }
-                domInicial.style.opacity = "0";
-                setTimeout(() => { domInicial.classList.add("hidden"); iniciarEngine(); }, 400);
+                domInicial.style.display = "none";
+                iniciarEngine();
+            });
+        } else {
+            // Sistema de emergência: se não achar o HTML correto, cria um start genérico
+            const overrideUI = document.createElement("div");
+            overrideUI.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:#111;z-index:9999;display:flex;align-items:center;justify-content:center;color:#0f0;font-family:monospace;cursor:pointer;";
+            overrideUI.innerHTML = "<h2>> SISTEMA PRONTO. CLIQUE PARA INICIAR.</h2>";
+            document.body.appendChild(overrideUI);
+            
+            overrideUI.addEventListener("click", () => {
+                overrideUI.remove();
+                iniciarEngine();
             });
         }
     }
 
     function iniciarEngine() {
-        // Cache de UI otimizado
         const ui = {
             hud: document.getElementById("game-hud"), reticula: document.getElementById("reticula"),
             log: document.getElementById("combat-log"), uiMouse: document.getElementById("travar-mouse-ui"),
@@ -30,12 +42,8 @@
             lblCombo: document.getElementById("lbl-combo"), gridInv: document.getElementById("grid-inventario")
         };
 
-        // Mostrar UI principal
-        ['hud', 'reticula', 'log', 'uiMouse'].forEach(el => {
-            if(ui[el]) ui[el].classList.remove("hidden");
-        });
+        ['hud', 'reticula', 'log', 'uiMouse'].forEach(el => { if(ui[el]) ui[el].classList.remove("hidden"); });
 
-        // Configuração Base do Motor
         const scene = new THREE.Scene();
         const corCeu = 0x87CEEB; 
         scene.background = new THREE.Color(corCeu); 
@@ -45,7 +53,7 @@
         
         const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(1); // Otimização de dados de pixel
+        renderer.setPixelRatio(1);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFShadowMap;
         document.body.appendChild(renderer.domElement);
@@ -58,12 +66,10 @@
             document.body.appendChild(stats.dom);
         }
 
-        // Variáveis Globais de Memória (Reaproveitamento de instâncias)
         const clock = new THREE.Clock();
         const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _dir = new THREE.Vector3();
         const _fwd = new THREE.Vector3(), _quat = new THREE.Quaternion(), _up = new THREE.Vector3(0, 1, 0);
         
-        // Iluminação
         scene.add(new THREE.HemisphereLight(0xffffff, 0x334433, 1.0));
         const sunLight = new THREE.DirectionalLight(0xffffff, 1.5); 
         sunLight.position.set(100, 200, 50); 
@@ -74,7 +80,6 @@
         sunLight.shadow.camera.top = 150; sunLight.shadow.camera.bottom = -150;
         scene.add(sunLight);
 
-        // Algoritmo de Terreno
         function obterAlturaTerreno(x, z) {
             let elevacao = (Math.sin(x * 0.02) * Math.cos(z * 0.02) * 15) + (Math.sin(x * 0.05) * 2 + Math.cos(z * 0.05) * 2);
             let limiteMapa = Math.max(0, 1 - (Math.sqrt(x*x + z*z) / 250)); 
@@ -91,7 +96,6 @@
         floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true;
         scene.add(floor);
 
-        // Otimização: Geometrias e Materiais cacheados
         const matArma = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4 });
         const matInimigo = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 }); 
         const matDrop = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.5 });
@@ -99,7 +103,6 @@
         const geoProj = new THREE.CylinderGeometry(0.02, 0.02, 0.8, 4);
         const matProj = new THREE.MeshBasicMaterial({color: 0xaaaaaa});
 
-        // Floresta em Instâncias
         const qtdArvores = 400;
         const obstaculos = [];
         const arvoresTroncos = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.4, 0.6, 5, 4), new THREE.MeshStandardMaterial({ color: 0x3d2817 }), qtdArvores);
@@ -120,7 +123,6 @@
         }
         scene.add(arvoresTroncos); scene.add(arvoresFolhas);
         
-        // Jogador
         const playerGroup = new THREE.Group(); 
         playerGroup.position.set(0, obterAlturaTerreno(0, 0), 0);
         scene.add(playerGroup);
@@ -141,7 +143,6 @@
         weaponHand.add(mSword, mHammer, mBow);
         const meshArmas = [mSword, mHammer, mBow];
 
-        // OTIMIZAÇÃO DE DADOS: Inventário agora é numérico, evitando vazamento de memória em Arrays longos
         const playerState = { 
             hp: 100, stamina: 100, armaEquipada: 0, 
             pocoes: 3, flechas: 15, sucata: 0, maxEspaco: 15,
@@ -151,8 +152,8 @@
         };
         
         const arsenal = [
-            { tipo: 'melee', nome: "LÂMINA", dano: 35, alcanceSq: 20.25, custo: 15, vel: 18 }, // alcance 4.5 ao quadrado
-            { tipo: 'melee', nome: "BASTÃO", dano: 65, alcanceSq: 12.25, custo: 35, vel: 8 },  // alcance 3.5 ao quadrado
+            { tipo: 'melee', nome: "LÂMINA", dano: 35, alcanceSq: 20.25, custo: 15, vel: 18 },
+            { tipo: 'melee', nome: "BASTÃO", dano: 65, alcanceSq: 12.25, custo: 35, vel: 8 },
             { tipo: 'arco', nome: "ARCO", dano: 50, custo: 0 }
         ];
 
@@ -180,7 +181,6 @@
             inimigos.push({ mesh: hostil, hp: 120, vivo: true, cooldown: 0 });
         }
 
-        // Sistema de Crafting Otimizado
         const btnFlecha = document.getElementById("btn-craft-flecha");
         const btnPocao = document.getElementById("btn-craft-pocao");
         if(btnFlecha) btnFlecha.addEventListener("click", () => forjar('flecha', 2));
@@ -195,13 +195,12 @@
             } else logMsg("> SUCATA INSUFICIENTE.");
         }
 
-        // Controles
         window.addEventListener('keydown', e => {
             const key = e.key.toLowerCase(); teclado[key] = true;
             if (key === 'e') {
                 invAberto = !invAberto; if(ui.painelInv) ui.painelInv.classList.toggle("hidden", !invAberto);
                 if (invAberto) { if(mouseTravado) document.exitPointerLock(); atualizarUIInv(); } 
-                else document.body.requestPointerLock();
+                else if (document.body.requestPointerLock) document.body.requestPointerLock();
             }
             if (invAberto || !mouseTravado) return;
 
@@ -216,6 +215,7 @@
                 playerState.dashing = true; playerState.dashTimer = 0.25; playerState.stamina -= 25; playerState.invulneravel = true; logMsg("> AVANÇO.");
             }
         });
+        
         window.addEventListener('keyup', e => teclado[e.key.toLowerCase()] = false);
 
         function equiparArma(idx) {
@@ -223,9 +223,14 @@
             meshArmas.forEach((m, i) => m.visible = (i === idx)); logMsg(`> ARMA: ${arsenal[idx].nome}`);
         }
 
-        if(ui.uiMouse) ui.uiMouse.addEventListener("click", () => { if(!invAberto) document.body.requestPointerLock(); });
+        // Garante que o clique na tela trave o mouse e comece o jogo real
+        document.body.addEventListener("click", () => {
+            if (!invAberto && document.body.requestPointerLock) document.body.requestPointerLock();
+        });
+
         const btnFecharInv = document.getElementById("btn-fechar-inv");
-        if(btnFecharInv) btnFecharInv.addEventListener("click", () => { invAberto = false; if(ui.painelInv) ui.painelInv.classList.add("hidden"); document.body.requestPointerLock(); });
+        if(btnFecharInv) btnFecharInv.addEventListener("click", () => { invAberto = false; if(ui.painelInv) ui.painelInv.classList.add("hidden"); if (document.body.requestPointerLock) document.body.requestPointerLock(); });
+        
         document.addEventListener("pointerlockchange", () => { 
             mouseTravado = (document.pointerLockElement === document.body); 
             if(ui.uiMouse) ui.uiMouse.classList.toggle("hidden", mouseTravado); 
@@ -270,7 +275,7 @@
                 playerState.carregandoArco = false;
                 if (playerState.flechas > 0) {
                     playerState.flechas--; atualizarHUD();
-                    const proj = new THREE.Mesh(geoProj, matProj); // Otimizado: sem gerar geometria nova
+                    const proj = new THREE.Mesh(geoProj, matProj);
                     playerGroup.getWorldPosition(_vA); proj.position.copy(_vA).add(new THREE.Vector3(0, 1.6, 0));
                     cameraPivot.getWorldQuaternion(_quat);
                     const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(_quat);
@@ -302,11 +307,9 @@
         function atualizarUIInv() {
             if(!ui.gridInv) return;
             let htmlStr = "";
-            if (playerState.sucata > 0) {
-                htmlStr += `<div class="slot-item">⚙️<div class="item-qtd">x${playerState.sucata}</div></div>`;
-            }
+            if (playerState.sucata > 0) htmlStr += `<div class="slot-item" style="border:1px solid #555; padding:5px; margin:2px;">⚙️x${playerState.sucata}</div>`;
             const slotsVazios = playerState.maxEspaco - (playerState.sucata > 0 ? 1 : 0);
-            for(let i=0; i < slotsVazios; i++) { htmlStr += `<div class="slot-item"></div>`; }
+            for(let i=0; i < slotsVazios; i++) { htmlStr += `<div class="slot-item" style="border:1px solid #333; padding:5px; margin:2px;">-</div>`; }
             ui.gridInv.innerHTML = htmlStr;
             atualizarHUD();
         }
@@ -384,7 +387,6 @@
 
                 playerGroup.getWorldPosition(_vA);
 
-                // Otimização de Coleta
                 for (let i = drops.length - 1; i >= 0; i--) {
                     let drop = drops[i]; drop.mesh.rotation.y += dt;
                     if (_vA.distanceToSquared(drop.mesh.position) < 6.0 && playerState.sucata < playerState.maxEspaco) { 
@@ -393,7 +395,6 @@
                     }
                 }
 
-                // AI Loop
                 for (let j = 0; j < inimigos.length; j++) {
                     let ini = inimigos[j];
                     if (!ini.vivo) continue;
@@ -441,6 +442,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight); 
         });
         
+        atualizarHUD();
         animate();
     }
 })();
