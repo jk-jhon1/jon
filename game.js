@@ -9,9 +9,8 @@
         const btnIniciar = document.getElementById("btn-iniciar");
         if(btnIniciar) {
             btnIniciar.addEventListener("click", () => {
-                // Validação de Segurança Crítica: Three.js carregou?
                 if (typeof THREE === 'undefined') {
-                    alert("ERRO CRÍTICO: A biblioteca Three.js não pôde ser carregada. Verifique sua conexão com a internet ou os arquivos locais.");
+                    alert("ERRO: Three.js não carregado.");
                     return;
                 }
                 domInicial.style.opacity = "0";
@@ -21,7 +20,6 @@
     }
 
     function iniciarEngine() {
-        // Cache de Interface de Segurança
         const ui = {
             hud: document.getElementById("game-hud"), reticula: document.getElementById("reticula"),
             log: document.getElementById("combat-log"), uiMouse: document.getElementById("travar-mouse-ui"),
@@ -31,80 +29,77 @@
             lblCombo: document.getElementById("lbl-combo"), gridInv: document.getElementById("grid-inventario")
         };
 
-        // Garante que a UI não quebre se algum elemento falhar
         if(ui.hud) ui.hud.classList.remove("hidden"); 
         if(ui.reticula) ui.reticula.classList.remove("hidden"); 
         if(ui.log) ui.log.classList.remove("hidden"); 
         if(ui.uiMouse) ui.uiMouse.classList.remove("hidden");
 
-        // Motor Gráfico e Cena
         const scene = new THREE.Scene();
         const corCeu = 0x87CEEB; 
         scene.background = new THREE.Color(corCeu); 
-        scene.fog = new THREE.FogExp2(corCeu, 0.006);
+        scene.fog = new THREE.FogExp2(corCeu, 0.008); // Nevoeiro levemente mais denso para esconder pop-ins
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 800);
+        
+        // OTIMIZAÇÃO 1: Sem antialias, poder puro de processamento
+        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(1); // OTIMIZAÇÃO 2: Trava a resolução nativa para evitar lag em monitores 2K/4K
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
+        renderer.shadowMap.type = THREE.PCFShadowMap; // Sombra mais barata que a SoftShadowMap
         document.body.appendChild(renderer.domElement);
 
-        // Inicialização Segura do Monitor de FPS (Evita crash caso o script externo falhe)
         let stats;
         if (typeof Stats !== 'undefined') {
             stats = new Stats();
             stats.showPanel(0);
             stats.dom.style.position = 'absolute';
-            stats.dom.style.left = 'auto'; stats.dom.style.top = 'auto';
             stats.dom.style.right = '10px'; stats.dom.style.bottom = '10px';
-            stats.dom.style.zIndex = '1000';
             document.body.appendChild(stats.dom);
         } else {
-            // Objeto Dummy/Mock para ignorar chamadas sem quebrar o loop
             stats = { begin: function(){}, end: function(){} };
-            console.warn("Stats.js não pôde ser carregado. Executando modo de segurança sem contador de FPS.");
         }
 
         const clock = new THREE.Clock();
         const _vA = new THREE.Vector3(), _vB = new THREE.Vector3(), _dir = new THREE.Vector3();
         const _fwd = new THREE.Vector3(), _quat = new THREE.Quaternion(), _up = new THREE.Vector3(0, 1, 0);
         
-        // Iluminação
         scene.add(new THREE.HemisphereLight(0xffffff, 0x334433, 1.0));
-        const sunLight = new THREE.DirectionalLight(0xffffff, 1.6); 
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1.5); 
         sunLight.position.set(100, 200, 50); 
         sunLight.castShadow = true;
-        sunLight.shadow.mapSize.width = 2048; sunLight.shadow.mapSize.height = 2048;
-        sunLight.shadow.camera.near = 10; sunLight.shadow.camera.far = 500;
-        const dSide = 200;
+        // OTIMIZAÇÃO 3: Resolução de sombra cortada pela metade
+        sunLight.shadow.mapSize.width = 1024; 
+        sunLight.shadow.mapSize.height = 1024;
+        sunLight.shadow.camera.near = 10; sunLight.shadow.camera.far = 400;
+        const dSide = 150;
         sunLight.shadow.camera.left = -dSide; sunLight.shadow.camera.right = dSide;
         sunLight.shadow.camera.top = dSide; sunLight.shadow.camera.bottom = -dSide;
         scene.add(sunLight);
 
-        // Algoritmo de Terreno
         function obterAlturaTerreno(x, z) {
             let elevacao = (Math.sin(x * 0.02) * Math.cos(z * 0.02) * 15) + (Math.sin(x * 0.05) * 2 + Math.cos(z * 0.05) * 2);
             let limiteMapa = Math.max(0, 1 - (Math.sqrt(x*x + z*z) / 250)); 
             return elevacao * limiteMapa;
         }
 
-        const floorGeo = new THREE.PlaneGeometry(500, 500, 80, 80);
+        // OTIMIZAÇÃO 4: Malha do terreno simplificada (de 80x80 para 40x40 segmentos)
+        const floorGeo = new THREE.PlaneGeometry(500, 500, 40, 40);
         const vertices = floorGeo.attributes.position;
         for (let i = 0; i < vertices.count; i++) {
             vertices.setZ(i, obterAlturaTerreno(vertices.getX(i), vertices.getY(i))); 
         }
         floorGeo.computeVertexNormals();
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x2b4522, roughness: 0.85, metalness: 0.05 });
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x2b4522, roughness: 0.9, metalness: 0.0 });
         const floor = new THREE.Mesh(floorGeo, floorMat); 
         floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true;
         scene.add(floor);
 
-        // Floresta (Otimizada)
+        // OTIMIZAÇÃO 5: Árvores Low-Poly extremas (segmentos radiais reduzidos para 4)
         const qtdArvores = 400;
         const obstaculos = [];
-        const arvoresTroncos = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.4, 0.6, 5, 6), new THREE.MeshStandardMaterial({ color: 0x3d2817 }), qtdArvores);
-        const arvoresFolhas = new THREE.InstancedMesh(new THREE.ConeGeometry(2.5, 6, 6), new THREE.MeshStandardMaterial({ color: 0x1a3d1f }), qtdArvores);
+        const arvoresTroncos = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.4, 0.6, 5, 4), new THREE.MeshStandardMaterial({ color: 0x3d2817, roughness: 1 }), qtdArvores);
+        const arvoresFolhas = new THREE.InstancedMesh(new THREE.ConeGeometry(2.5, 6, 4), new THREE.MeshStandardMaterial({ color: 0x1a3d1f, roughness: 1 }), qtdArvores);
         arvoresTroncos.castShadow = true; arvoresTroncos.receiveShadow = true;
         arvoresFolhas.castShadow = true; arvoresFolhas.receiveShadow = true;
 
@@ -121,12 +116,10 @@
         }
         scene.add(arvoresTroncos); scene.add(arvoresFolhas);
 
-        // Materiais
-        const matArma = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2, metalness: 0.8 });
-        const matInimigo = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7 }); 
-        const matDrop = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 1.0, roughness: 0.2 });
+        const matArma = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4 });
+        const matInimigo = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 }); 
+        const matDrop = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.5 });
         
-        // Operador (Jogador)
         const playerGroup = new THREE.Group(); 
         playerGroup.position.set(0, obterAlturaTerreno(0, 0), 0);
         scene.add(playerGroup);
@@ -136,7 +129,6 @@
 
         const weaponHand = new THREE.Group(); weaponHand.position.set(0.4, -0.4, -0.7); cameraPivot.add(weaponHand);
         
-        // Arsenal
         const mSword = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.6, 0.1), matArma); 
         mSword.position.set(0, 0.6, -0.4); mSword.rotation.x = -Math.PI/6; mSword.castShadow = true;
         
@@ -144,7 +136,7 @@
         mHammer.position.set(0, 0, -0.6); mHammer.visible = false; mHammer.castShadow = true;
         
         const mBow = new THREE.Group();
-        const bowMain = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.4), matArma); bowMain.rotation.x = Math.PI/2;
+        const bowMain = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.4, 4), matArma); bowMain.rotation.x = Math.PI/2;
         mBow.add(bowMain); mBow.position.set(0, 0, -0.6); mBow.visible = false; mBow.castShadow = true;
 
         weaponHand.add(mSword, mHammer, mBow);
@@ -156,28 +148,25 @@
             dashing: false, dashTimer: 0, invulneravel: false, combo: 0, comboTimer: 0,
             velocityY: 0, isGrounded: true
         };
+        
         const arsenal = [
-            { tipo: 'melee', nome: "LÂMINA DE COMBATE", dano: 35, alcance: 4.5, custo: 15, vel: 18 },
-            { tipo: 'melee', nome: "BASTÃO TÁTICO", dano: 65, alcance: 3.5, custo: 35, vel: 8 },
-            { tipo: 'arco', nome: "ARCO COMPOSTO", dano: 50, custo: 0 }
+            { tipo: 'melee', nome: "LÂMINA", dano: 35, alcance: 4.5, custo: 15, vel: 18 },
+            { tipo: 'melee', nome: "BASTÃO", dano: 65, alcance: 3.5, custo: 35, vel: 8 },
+            { tipo: 'arco', nome: "ARCO", dano: 50, custo: 0 }
         ];
 
         let inimigos = [], drops = [], itensInv = [], projeteis = [];
         let mouseTravado = false, invAberto = false, teclado = {};
 
-        // Geração de Hostis
         function criarHostil() {
             const grupo = new THREE.Group();
             const criarParte = (w, h, d, x, y, z) => {
                 const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), matInimigo);
                 mesh.position.set(x, y, z); mesh.castShadow = true; grupo.add(mesh);
             };
-            criarParte(0.7, 0.9, 0.35, 0, 1.25, 0);    
-            criarParte(0.3, 0.35, 0.3, 0, 1.85, 0);    
-            criarParte(0.2, 0.7, 0.2, -0.45, 1.2, 0);  
-            criarParte(0.2, 0.7, 0.2, 0.45, 1.2, 0);   
-            criarParte(0.25, 0.8, 0.25, -0.18, 0.4, 0);
-            criarParte(0.25, 0.8, 0.25, 0.18, 0.4, 0); 
+            // Simplificado para menos partes no corpo
+            criarParte(0.7, 1.4, 0.4, 0, 1.0, 0); // Corpo central
+            criarParte(0.3, 0.4, 0.3, 0, 1.9, 0); // Cabeça
             return grupo;
         }
 
@@ -191,7 +180,6 @@
             inimigos.push({ mesh: hostil, hp: 120, vivo: true, cooldown: 0 });
         }
 
-        // Sistema de Controle e Forja
         const btnFlecha = document.getElementById("btn-craft-flecha");
         const btnPocao = document.getElementById("btn-craft-pocao");
         if(btnFlecha) btnFlecha.addEventListener("click", () => forjar('flecha', 2));
@@ -218,7 +206,6 @@
             if (key === ' ' && playerState.isGrounded && playerState.stamina >= 15) {
                 playerState.velocityY = 12; playerState.isGrounded = false; playerState.stamina -= 15;
             }
-            
             if (key === 'q' && playerState.pocoes > 0 && playerState.hp < 100) { 
                 playerState.pocoes--; playerState.hp = Math.min(100, playerState.hp + 50); atualizarHUD(); logMsg("> CURA APLICADA."); 
             }
@@ -231,14 +218,12 @@
 
         function equiparArma(idx) {
             playerState.armaEquipada = idx; playerState.carregandoArco = false; playerState.combo = 0; if(ui.lblCombo) ui.lblCombo.innerText = "0";
-            meshArmas.forEach((m, i) => m.visible = (i === idx)); logMsg(`> ARMAMENTO: ${arsenal[idx].nome}`);
+            meshArmas.forEach((m, i) => m.visible = (i === idx)); logMsg(`> ARMA: ${arsenal[idx].nome}`);
         }
 
         if(ui.uiMouse) ui.uiMouse.addEventListener("click", () => { if(!invAberto) document.body.requestPointerLock(); });
-        
         const btnFecharInv = document.getElementById("btn-fechar-inv");
         if(btnFecharInv) btnFecharInv.addEventListener("click", () => { invAberto = false; if(ui.painelInv) ui.painelInv.classList.add("hidden"); document.body.requestPointerLock(); });
-        
         document.addEventListener("pointerlockchange", () => { mouseTravado = (document.pointerLockElement === document.body); if(ui.uiMouse) ui.uiMouse.classList.toggle("hidden", mouseTravado); });
 
         document.addEventListener("mousemove", e => {
@@ -247,7 +232,6 @@
             cameraPivot.rotation.x = Math.max(-1.2, Math.min(1.2, cameraPivot.rotation.x));
         });
 
-        // Combate
         window.addEventListener("mousedown", e => {
             if (!mouseTravado || invAberto) return;
             const arma = arsenal[playerState.armaEquipada];
@@ -263,7 +247,7 @@
                     inimigos.forEach(ini => {
                         if (!ini.vivo) return;
                         ini.mesh.getWorldPosition(_vB);
-                        if (_vA.distanceTo(_vB) < arma.alcance) {
+                        if (_vA.distanceToSquared(_vB) < arma.alcance * arma.alcance) { // Otimização na matemática de distância
                             _dir.subVectors(_vB, _vA).normalize();
                             if (_fwd.dot(_dir) > 0.4) { 
                                 ini.hp -= danoBase; logMsg(`> ALVO ATINGIDO: ${danoBase} DMG`);
@@ -281,7 +265,7 @@
                 playerState.carregandoArco = false;
                 if (playerState.flechas > 0) {
                     playerState.flechas--; atualizarHUD();
-                    const proj = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.8), new THREE.MeshBasicMaterial({color: 0xaaaaaa}));
+                    const proj = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.8, 4), new THREE.MeshBasicMaterial({color: 0xaaaaaa}));
                     playerGroup.getWorldPosition(_vA); proj.position.copy(_vA).add(new THREE.Vector3(0, 1.6, 0));
                     cameraPivot.getWorldQuaternion(_quat);
                     const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(_quat);
@@ -293,9 +277,9 @@
 
         function abaterHostil(ini) {
             ini.vivo = false; scene.remove(ini.mesh); logMsg("> HOSTIL ABATIDO.");
-            let dropRate = Math.floor(Math.random() * 3) + 1;
+            let dropRate = Math.floor(Math.random() * 2) + 1;
             for(let i=0; i < dropRate; i++) {
-                const drop = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), matDrop);
+                const drop = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), matDrop);
                 let rx = ini.mesh.position.x + (Math.random()-0.5)*2; let rz = ini.mesh.position.z + (Math.random()-0.5)*2;
                 drop.position.set(rx, obterAlturaTerreno(rx, rz) + 0.2, rz);
                 scene.add(drop); drops.push({mesh: drop, tipo: 'sucata'});
@@ -331,7 +315,6 @@
             return false;
         }
 
-        // Loop de Jogo
         function animate() {
             stats.begin();
             requestAnimationFrame(animate);
@@ -357,7 +340,7 @@
                         for (let j = 0; j < inimigos.length; j++) {
                             let ini = inimigos[j];
                             if(ini.vivo && p.mesh.position.distanceToSquared(ini.mesh.position) < 4.5) {
-                                ini.hp -= arsenal[2].dano; logMsg(`> TIRO CONFIRMADO: ${arsenal[2].dano} DMG`);
+                                ini.hp -= arsenal[2].dano; logMsg(`> TIRO: ${arsenal[2].dano} DMG`);
                                 if(ini.hp <= 0) abaterHostil(ini); hit = true; break;
                             }
                         }
@@ -403,27 +386,30 @@
                     let drop = drops[i]; drop.mesh.rotation.y += dt;
                     if (_vA.distanceToSquared(drop.mesh.position) < 6.0 && itensInv.length < 15) { 
                         itensInv.push(drop.tipo); scene.remove(drop.mesh); drops.splice(i, 1); 
-                        logMsg("> SUCATA ADQUIRIDA."); atualizarHUD(); 
+                        logMsg("> SUCATA COLETADA."); atualizarHUD(); 
                     }
                 }
 
+                // AI loop simplificado (executa checagem de sobreposição com menos frequência)
                 for (let j = 0; j < inimigos.length; j++) {
                     let ini = inimigos[j];
                     if (!ini.vivo) continue;
                     
                     ini.mesh.getWorldPosition(_vB); 
-                    let distParaPlayer = _vA.distanceToSquared(_vB);
+                    let distSq = _vA.distanceToSquared(_vB);
                     
-                    if (distParaPlayer < 4000) ini.mesh.lookAt(playerGroup.position.x, ini.mesh.position.y, playerGroup.position.z);
+                    // Só calcula a rotação se estiver no campo visual ativo da IA
+                    if (distSq < 2500) ini.mesh.lookAt(playerGroup.position.x, ini.mesh.position.y, playerGroup.position.z);
                     
-                    if (distParaPlayer > 10.0) { 
+                    if (distSq > 10.0) { 
                         const oldX = ini.mesh.position.x; const oldZ = ini.mesh.position.z;
                         ini.mesh.translateZ(7 * dt); 
                         
+                        // Executa repulsão apenas se os inimigos estiverem muito colados
                         for (let k = 0; k < inimigos.length; k++) {
                             if (j !== k && inimigos[k].vivo) {
                                 let distOutro = ini.mesh.position.distanceToSquared(inimigos[k].mesh.position);
-                                if (distOutro < 4.0) {
+                                if (distOutro < 3.0) {
                                     ini.mesh.position.x += (ini.mesh.position.x - inimigos[k].mesh.position.x) * dt;
                                     ini.mesh.position.z += (ini.mesh.position.z - inimigos[k].mesh.position.z) * dt;
                                 }
@@ -436,11 +422,11 @@
                         if (ini.cooldown > 0) ini.cooldown -= dt;
                         else {
                             ini.cooldown = 1.2;
-                            if (playerState.invulneravel) logMsg("> ESQUIVA CONFIRMADA."); 
-                            else if (playerState.defendendo) { playerState.hp -= 8; playerState.stamina -= 20; logMsg("> DANO ABSORVIDO PELO BLOQUEIO."); } 
-                            else { playerState.hp -= 30; logMsg("> OPERADOR ATINGIDO."); }
+                            if (playerState.invulneravel) logMsg("> ESQUIVOU."); 
+                            else if (playerState.defendendo) { playerState.hp -= 8; playerState.stamina -= 20; logMsg("> BLOQUEIO."); } 
+                            else { playerState.hp -= 30; logMsg("> DANO SOFRIDO."); }
                             atualizarHUD();
-                            if (playerState.hp <= 0) { logMsg("> MISSÃO FALHA. REINICIANDO SISTEMA..."); setTimeout(()=>location.reload(), 2000); }
+                            if (playerState.hp <= 0) { logMsg("> MORTO. REINICIANDO..."); setTimeout(()=>location.reload(), 2000); }
                         }
                     }
                 }
@@ -449,7 +435,12 @@
             stats.end();
         }
 
-        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+        window.addEventListener('resize', () => { 
+            camera.aspect = window.innerWidth / window.innerHeight; 
+            camera.updateProjectionMatrix(); 
+            renderer.setSize(window.innerWidth, window.innerHeight); 
+        });
+        
         animate();
     }
 })();
