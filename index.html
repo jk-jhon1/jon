@@ -4,20 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Operação Floresta Tática 3D</title>
-    <!-- Vinculação do CSS Externo Otimizado -->
     <link rel="stylesheet" href="style.css">
-    <!-- Bibliotecas Gráficas de Performance -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stats.js@0.17.0/build/stats.min.js"></script>
 </head>
 <body>
-    <!-- Tela de Boot Inicial -->
     <div id="tela-inicial" class="tela">
         <h1 class="titulo">OPERAÇÃO: FLORESTA</h1>
         <button id="btn-iniciar" class="btn">INICIAR MISSÃO</button>
     </div>
 
-    <!-- Interface HUD Principal -->
     <div id="game-hud" class="hidden">
         <div class="hud-label">INTEGRIDADE (HP):</div>
         <div class="barra-container">
@@ -34,18 +30,14 @@
         <div class="contador-status status-alerta">MULTIPLICADOR: <span id="lbl-combo">0</span>x</div>
     </div>
 
-    <!-- Retícula Tática Central (Crosshair) -->
     <div id="reticula" class="hidden"></div>
     
-    <!-- Console de Logs de Combate -->
     <div id="combat-log" class="hidden">> STATUS: OPERACIONAL. AGUARDANDO CONTATO.</div>
 
-    <!-- Tela de Interrupção para Captura do Mouse -->
     <div id="travar-mouse-ui" class="tela hidden">
         <div class="prompt-foco">[ CLIQUE PARA RETOMAR O CONTROLE ]</div>
     </div>
 
-    <!-- Painel de Inventário e Forja (Crafting) -->
     <div id="painel-inventario" class="tela hidden">
         <h3 class="inv-titulo">INVENTÁRIO</h3>
         <div id="grid-inventario" class="grid-inv"></div>
@@ -64,7 +56,6 @@
         <button id="btn-fechar-inv" class="btn btn-largo">FECHAR INVENTÁRIO</button>
     </div>
 
-    <!-- Motor Lógico de Execução -->
     <script src="game.js"></script>
 </body>
 </html>
