@@ -16,10 +16,9 @@
         if (btnIniciar && domInicial) {
             btnIniciar.addEventListener("click", () => {
                 domInicial.style.display = "none";
-                iniciarEngine();
+                iniciarEngine(true); // O "true" força o jogo a travar o mouse automaticamente
             });
         } else {
-            // Nome alterado para ARASONY no sistema de boot de emergência
             const overrideUI = document.createElement("div");
             overrideUI.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:#111;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#0f0;font-family:monospace;cursor:pointer;user-select:none;";
             overrideUI.innerHTML = "<h1 style='margin-bottom:10px;letter-spacing:4px;'>ARASONY</h1><p style='animation:blink 1s infinite;'>[ CLIQUE PARA INICIAR ]</p><style>@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}</style>";
@@ -27,12 +26,12 @@
             
             overrideUI.addEventListener("click", () => {
                 overrideUI.remove();
-                iniciarEngine();
+                iniciarEngine(true);
             });
         }
     }
 
-    function iniciarEngine() {
+    function iniciarEngine(autoLock = false) {
         const ui = {
             hud: document.getElementById("game-hud"), reticula: document.getElementById("reticula"),
             log: document.getElementById("combat-log"), uiMouse: document.getElementById("travar-mouse-ui"),
@@ -56,7 +55,9 @@
         renderer.setPixelRatio(1);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFShadowMap;
-        document.body.appendChild(renderer.domElement);
+        
+        const canvas = renderer.domElement;
+        document.body.appendChild(canvas);
 
         let stats = (typeof Stats !== 'undefined') ? new Stats() : { begin: function(){}, end: function(){} };
         if (typeof Stats !== 'undefined') {
@@ -75,9 +76,6 @@
         sunLight.position.set(100, 200, 50); 
         sunLight.castShadow = true;
         sunLight.shadow.mapSize.width = 1024; sunLight.shadow.mapSize.height = 1024;
-        sunLight.shadow.camera.near = 10; sunLight.shadow.camera.far = 400;
-        sunLight.shadow.camera.left = -150; sunLight.shadow.camera.right = 150;
-        sunLight.shadow.camera.top = 150; sunLight.shadow.camera.bottom = -150;
         scene.add(sunLight);
 
         function obterAlturaTerreno(x, z) {
@@ -195,12 +193,37 @@
             } else logMsg("> SUCATA INSUFICIENTE.");
         }
 
+        // ==========================================
+        // SISTEMA DE TRAVA DE MOUSE BLINDADO
+        // ==========================================
+        const travarMouse = () => {
+            if (!invAberto && canvas.requestPointerLock) canvas.requestPointerLock();
+        };
+
+        if (autoLock && canvas.requestPointerLock) canvas.requestPointerLock();
+
+        canvas.addEventListener("click", travarMouse);
+        if (ui.uiMouse) ui.uiMouse.addEventListener("click", travarMouse);
+
+        document.addEventListener("pointerlockchange", () => { 
+            mouseTravado = (document.pointerLockElement === canvas); 
+            if(ui.uiMouse) ui.uiMouse.classList.toggle("hidden", mouseTravado); 
+        });
+
+        const btnFecharInv = document.getElementById("btn-fechar-inv");
+        if(btnFecharInv) btnFecharInv.addEventListener("click", () => { 
+            invAberto = false; 
+            if(ui.painelInv) ui.painelInv.classList.add("hidden"); 
+            travarMouse(); 
+        });
+        // ==========================================
+
         window.addEventListener('keydown', e => {
             const key = e.key.toLowerCase(); teclado[key] = true;
             if (key === 'e') {
                 invAberto = !invAberto; if(ui.painelInv) ui.painelInv.classList.toggle("hidden", !invAberto);
-                if (invAberto) { if(mouseTravado) document.exitPointerLock(); atualizarUIInv(); } 
-                else if (document.body.requestPointerLock) document.body.requestPointerLock();
+                if (invAberto) { if(mouseTravado && document.exitPointerLock) document.exitPointerLock(); atualizarUIInv(); } 
+                else travarMouse();
             }
             if (invAberto || !mouseTravado) return;
 
@@ -222,18 +245,6 @@
             playerState.armaEquipada = idx; playerState.carregandoArco = false; playerState.combo = 0; if(ui.lblCombo) ui.lblCombo.innerText = "0";
             meshArmas.forEach((m, i) => m.visible = (i === idx)); logMsg(`> ARMA: ${arsenal[idx].nome}`);
         }
-
-        document.body.addEventListener("click", () => {
-            if (!invAberto && document.body.requestPointerLock) document.body.requestPointerLock();
-        });
-
-        const btnFecharInv = document.getElementById("btn-fechar-inv");
-        if(btnFecharInv) btnFecharInv.addEventListener("click", () => { invAberto = false; if(ui.painelInv) ui.painelInv.classList.add("hidden"); if (document.body.requestPointerLock) document.body.requestPointerLock(); });
-        
-        document.addEventListener("pointerlockchange", () => { 
-            mouseTravado = (document.pointerLockElement === document.body); 
-            if(ui.uiMouse) ui.uiMouse.classList.toggle("hidden", mouseTravado); 
-        });
 
         document.addEventListener("mousemove", e => {
             if (!mouseTravado || invAberto) return;
