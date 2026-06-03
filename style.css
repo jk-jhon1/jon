@@ -1,263 +1,174 @@
-/* --- Resets Gerais e Otimização de Janela --- */
 * {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    user-select: none;
-    -webkit-user-select: none;
+    font-family: 'Courier New', Courier, monospace;
 }
 
 body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #101510;
-    font-family: 'Courier New', monospace;
+    background-color: #000;
 }
 
-/* --- Telas de Sobreposição (Modais) --- */
-.tela {
-    position: absolute;
+.hidden {
+    display: none !important;
+}
+
+/* Telas Sobrepostas (Menus) */
+#tela-inicial, #travar-mouse-ui {
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
-    z-index: 10;
-    transition: opacity 0.3s ease, background-color 0.2s ease;
+    justify-content: center;
+    z-index: 999;
 }
 
-#tela-inicial {
-    background: #0d110d;
-}
+#tela-inicial { background: #1a1a1a; }
+#travar-mouse-ui { background: rgba(0, 0, 0, 0.5); cursor: pointer; }
 
-#travar-mouse-ui {
-    background: rgba(0, 0, 0, 0.75);
-    z-index: 9;
-}
-
-#painel-inventario {
-    background: rgba(10, 18, 10, 0.98);
-    border: 2px solid #33ff33;
-    padding: 25px;
-    width: 360px;
-    height: auto;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
-    z-index: 15;
-    color: #33ff33;
-}
-
-/* --- Elementos de Tipografia e Botões --- */
-.titulo {
-    color: #33ff33;
-    font-size: 2.5rem;
-    letter-spacing: 5px;
-    margin-bottom: 25px;
-    text-transform: uppercase;
-    text-shadow: 0 0 10px rgba(51, 255, 51, 0.4);
-}
-
-.inv-titulo {
+.caixa-inicio {
+    background: #222;
+    padding: 40px;
+    border: 4px solid #555;
     text-align: center;
-    letter-spacing: 2px;
-    margin-bottom: 15px;
+    color: #fff;
+    max-width: 500px;
 }
 
-.prompt-foco {
-    color: #33ff33;
-    font-size: 1.3rem;
-    letter-spacing: 2px;
-    animation: pulsar 2s infinite ease-in-out;
-}
+.caixa-inicio h1 { color: #85ff6d; margin-bottom: 20px; letter-spacing: 2px; }
+.caixa-inicio p { font-size: 14px; margin-bottom: 15px; color: #ccc; line-height: 1.5; }
 
-.btn {
-    padding: 12px 30px;
-    background: transparent;
-    border: 2px solid #33ff33;
-    color: #33ff33;
-    font-size: 1.1rem;
-    cursor: pointer;
-    font-family: inherit;
+button {
+    background: #555;
+    border: 2px solid #aaa;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
     font-weight: bold;
-    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
-    text-transform: uppercase;
+    cursor: pointer;
+}
+button:hover { background: #777; border-color: #fff; }
+
+.aviso-mouse {
+    background: rgba(0,0,0,0.8);
+    color: #fff;
+    padding: 15px 30px;
+    border: 2px solid #555;
+    border-radius: 4px;
 }
 
-.btn:hover {
-    background: #33ff33;
-    color: #000;
-    box-shadow: 0 0 12px rgba(51, 255, 51, 0.6);
-}
-
-.btn-craft {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    border-width: 1px;
-}
-
-.btn-largo {
-    margin-top: 20px;
-    width: 100%;
-    padding: 8px;
-}
-
-/* --- HUD e Elementos de Jogo --- */
+/* HUD do Jogador */
 #game-hud {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    color: #33ff33;
-    z-index: 5;
-    pointer-events: none;
-}
-
-.hud-label {
-    font-size: 0.85rem;
-    margin-bottom: 3px;
-    letter-spacing: 1px;
-}
-
-.barra-container {
-    width: 260px;
-    height: 14px;
-    background: rgba(0, 15, 0, 0.6);
-    border: 1px solid #33ff33;
-    margin-bottom: 10px;
-    padding: 1px;
-}
-
-.barra {
-    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+    pointer-events: none; /* Deixa cliques passarem para a tela 3D */
+    z-index: 10;
 }
 
-#bar-player-hp { background-color: #ff3333; }
-#bar-player-stamina { background-color: #33ff33; }
-
-.contador-status {
-    font-size: 0.95rem;
-    margin-top: 6px;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 4px 8px;
-    border-left: 2px solid #33ff33;
-    width: max-content;
-}
-
-.status-alerta {
-    color: #ff3333;
-}
-
-/* --- Retícula (Crosshair) --- */
-#reticula {
+.reticula {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 6px;
-    height: 6px;
-    background: #33ff33;
     transform: translate(-50%, -50%);
-    z-index: 4;
-    pointer-events: none;
+    color: #fff;
+    font-size: 28px;
+    font-weight: 300;
 }
 
-#reticula::before, #reticula::after {
-    content: '';
-    position: absolute;
-    background: #33ff33;
-}
-
-#reticula::before {
-    top: -8px;
-    bottom: -8px;
-    left: 2px;
-    right: 2px;
-}
-
-#reticula::after {
-    left: -8px;
-    right: -8px;
-    top: 2px;
-    bottom: 2px;
-}
-
-/* --- Console de Combate --- */
-#combat-log {
+.barras-status {
     position: absolute;
     bottom: 20px;
     left: 20px;
-    color: #33ff33;
-    font-size: 0.9rem;
-    max-width: 450px;
-    background: rgba(0, 0, 0, 0.6);
-    padding: 8px 12px;
-    border-left: 3px solid #33ff33;
-    z-index: 5;
-    pointer-events: none;
 }
 
-/* --- Grid de Inventário --- */
-.grid-inv {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    margin: 15px 0;
+.barra-container {
+    margin-top: 8px;
 }
 
-.slot-item {
-    width: 58px;
-    height: 58px;
-    background: rgba(0, 0, 0, 0.7);
-    border: 1px solid #225522;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.4rem;
-    position: relative;
-}
-
-.item-qtd {
-    position: absolute;
-    bottom: 2px;
-    right: 5px;
-    font-size: 0.75rem;
-    color: #33ff33;
+.label-barra {
+    color: white;
+    font-size: 12px;
     font-weight: bold;
+    display: block;
+    margin-bottom: 2px;
+    text-shadow: 1px 1px 0 #000;
 }
 
-/* --- Seções de Crafting --- */
-.craft-secao {
-    border-top: 1px dashed #33ff33;
-    padding-top: 15px;
-    margin-top: 15px;
+.barra {
+    width: 200px;
+    height: 16px;
+    background: #333;
+    border: 2px solid #000;
 }
 
-.craft-secao h4 {
-    font-size: 0.9rem;
-    margin-bottom: 10px;
+.progresso { height: 100%; transition: width 0.1s ease; }
+.progresso.hp { background: #ff3b3b; }
+.progresso.stamina { background: #ffcc00; }
+
+.status-rapido {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.6);
+    padding: 15px;
+    border: 2px solid #444;
+    color: white;
+    font-size: 14px;
+}
+.status-rapido span { display: block; margin-bottom: 5px; }
+
+#combat-log {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: #85ff6d;
+    background: rgba(0,0,0,0.7);
+    padding: 10px 15px;
+    font-size: 14px;
+    max-width: 400px;
+}
+
+/* Painel do Inventário (Estilo Minecraft Clássico) */
+#painel-inventario {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(30, 30, 30, 0.95);
+    border: 4px solid #4a4a4a;
+    padding: 25px;
+    color: white;
+    z-index: 1000;
+    box-shadow: 0 0 30px rgba(0,0,0,0.9);
+    border-radius: 4px;
+    width: 320px;
+}
+
+#painel-inventario h2, #painel-inventario h3 {
     text-align: center;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    color: #ddd;
 }
 
-.craft-linha {
+#painel-inventario hr { border: 0; border-top: 2px solid #444; margin: 15px 0; }
+
+.botoes-craft {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    font-size: 0.8rem;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
 }
+.botoes-craft button { font-size: 12px; padding: 8px; text-align: left; }
 
-/* --- Utilitários Globais --- */
-.hidden {
-    display: none !important;
-}
-
-@keyframes pulsar {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; }
-}
+#btn-fechar-inv { width: 100%; background: #900; border-color: #f55; }
+#btn-fechar-inv:hover { background: #b00; }
