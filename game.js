@@ -16,7 +16,7 @@
         if (btnIniciar && domInicial) {
             btnIniciar.addEventListener("click", () => {
                 domInicial.style.display = "none";
-                iniciarEngine(true); // O "true" força o jogo a travar o mouse automaticamente
+                iniciarEngine(true); 
             });
         } else {
             const overrideUI = document.createElement("div");
@@ -117,7 +117,7 @@
             
             dummy.position.set(tx, ty + 2.5, tz); dummy.updateMatrix(); arvoresTroncos.setMatrixAt(i, dummy.matrix);
             dummy.position.set(tx, ty + 6.5, tz); dummy.updateMatrix(); arvoresFolhas.setMatrixAt(i, dummy.matrix);
-            obstaculos.push({ pos: new THREE.Vector3(tx, ty, tz), raioSq: 2.5 }); 
+            obstaculos.push({ pos: new THREE.Vector3(tx, ty, tz), raioSq: 2.5, cooldown: 0 }); // Adicionado cooldown p/ extração
         }
         scene.add(arvoresTroncos); scene.add(arvoresFolhas);
         
@@ -138,12 +138,20 @@
         const bowMain = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.4, 4), matArma); bowMain.rotation.x = Math.PI/2;
         mBow.add(bowMain); mBow.position.set(0, 0, -0.6); mBow.visible = false; mBow.castShadow = true;
 
-        weaponHand.add(mSword, mHammer, mBow);
-        const meshArmas = [mSword, mHammer, mBow];
+        // --- NOVO: Modelo 3D do Machado ---
+        const mAxe = new THREE.Group();
+        const caboMachado = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.0, 4), new THREE.MeshStandardMaterial({color: 0x5c4033}));
+        const laminaMachado = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.4), matArma);
+        laminaMachado.position.set(0, 0.3, 0.1);
+        mAxe.add(caboMachado, laminaMachado);
+        mAxe.position.set(0, 0, -0.4); mAxe.rotation.x = -Math.PI/6; mAxe.visible = false; mAxe.castShadow = true;
+
+        weaponHand.add(mSword, mHammer, mBow, mAxe);
+        const meshArmas = [mSword, mHammer, mBow, mAxe];
 
         const playerState = { 
             hp: 100, stamina: 100, armaEquipada: 0, 
-            pocoes: 3, flechas: 15, sucata: 0, maxEspaco: 15,
+            pocoes: 3, flechas: 15, sucata: 0, madeira: 0, maxEspaco: 15, // Adicionado 'madeira'
             defendendo: false, atacando: false, carregandoArco: false,
             dashing: false, dashTimer: 0, invulneravel: false, combo: 0, comboTimer: 0,
             velocityY: 0, isGrounded: true
@@ -152,7 +160,8 @@
         const arsenal = [
             { tipo: 'melee', nome: "LÂMINA", dano: 35, alcanceSq: 20.25, custo: 15, vel: 18 },
             { tipo: 'melee', nome: "BASTÃO", dano: 65, alcanceSq: 12.25, custo: 35, vel: 8 },
-            { tipo: 'arco', nome: "ARCO", dano: 50, custo: 0 }
+            { tipo: 'arco', nome: "ARCO", dano: 50, custo: 0 },
+            { tipo: 'melee', nome: "MACHADO", dano: 20, alcanceSq: 18.0, custo: 12, vel: 14 } // Arma 4
         ];
 
         let inimigos = [], drops = [], projeteis = [];
@@ -179,23 +188,32 @@
             inimigos.push({ mesh: hostil, hp: 120, vivo: true, cooldown: 0 });
         }
 
+        // Modificamos a receita das flechas para precisar de madeira
         const btnFlecha = document.getElementById("btn-craft-flecha");
         const btnPocao = document.getElementById("btn-craft-pocao");
-        if(btnFlecha) btnFlecha.addEventListener("click", () => forjar('flecha', 2));
-        if(btnPocao) btnPocao.addEventListener("click", () => forjar('pocao', 3));
+        if(btnFlecha) btnFlecha.addEventListener("click", () => forjar('flecha'));
+        if(btnPocao) btnPocao.addEventListener("click", () => forjar('pocao'));
 
-        function forjar(tipo, custo) {
-            if (playerState.sucata >= custo) {
-                playerState.sucata -= custo;
-                if(tipo === 'flecha') { playerState.flechas += 5; logMsg("> MUNIÇÃO REABASTECIDA."); }
-                else { playerState.pocoes++; logMsg("> KIT MÉDICO FABRICADO."); }
-                atualizarUIInv();
-            } else logMsg("> SUCATA INSUFICIENTE.");
+        function forjar(tipo) {
+            if(tipo === 'flecha') {
+                if (playerState.sucata >= 1 && playerState.madeira >= 1) {
+                    playerState.sucata -= 1;
+                    playerState.madeira -= 1;
+                    playerState.flechas += 5; 
+                    logMsg("> FLECHAS CRIADAS (1⚙️ + 1🪵)."); 
+                    atualizarUIInv();
+                } else logMsg("> FALTAM RECURSOS (1⚙️, 1🪵).");
+            }
+            else if(tipo === 'pocao') {
+                if (playerState.sucata >= 3) {
+                    playerState.sucata -= 3;
+                    playerState.pocoes++; 
+                    logMsg("> KIT MÉDICO FABRICADO."); 
+                    atualizarUIInv();
+                } else logMsg("> SUCATA INSUFICIENTE (3⚙️).");
+            }
         }
 
-        // ==========================================
-        // SISTEMA DE TRAVA DE MOUSE BLINDADO
-        // ==========================================
         const travarMouse = () => {
             if (!invAberto && canvas.requestPointerLock) canvas.requestPointerLock();
         };
@@ -216,7 +234,6 @@
             if(ui.painelInv) ui.painelInv.classList.add("hidden"); 
             travarMouse(); 
         });
-        // ==========================================
 
         window.addEventListener('keydown', e => {
             const key = e.key.toLowerCase(); teclado[key] = true;
@@ -233,7 +250,8 @@
             if (key === 'q' && playerState.pocoes > 0 && playerState.hp < 100) { 
                 playerState.pocoes--; playerState.hp = Math.min(100, playerState.hp + 50); atualizarHUD(); logMsg("> CURA APLICADA."); 
             }
-            if (key === '1') equiparArma(0); if (key === '2') equiparArma(1); if (key === '3') equiparArma(2);
+            // Seleção de armas, agora com o Machado (tecla 4)
+            if (key === '1') equiparArma(0); if (key === '2') equiparArma(1); if (key === '3') equiparArma(2); if (key === '4') equiparArma(3);
             if (key === 'shift' && !playerState.dashing && playerState.stamina >= 25 && playerState.isGrounded) { 
                 playerState.dashing = true; playerState.dashTimer = 0.25; playerState.stamina -= 25; playerState.invulneravel = true; logMsg("> AVANÇO.");
             }
@@ -264,6 +282,7 @@
                     let danoBase = Math.floor(arma.dano * (1 + (playerState.combo * 0.25)));
                     playerGroup.getWorldPosition(_vA); _fwd.set(0, 0, -1).applyQuaternion(playerGroup.quaternion);
 
+                    // Verifica acerto em inimigos
                     inimigos.forEach(ini => {
                         if (!ini.vivo) return;
                         ini.mesh.getWorldPosition(_vB);
@@ -275,6 +294,29 @@
                             }
                         }
                     });
+
+                    // Verifica se está tentando coletar madeira com o Machado
+                    if (arma.nome === "MACHADO") {
+                        for (let i = 0; i < obstaculos.length; i++) {
+                            let obs = obstaculos[i];
+                            if (obs.cooldown > 0) continue; // Impede spam
+                            if (_vA.distanceToSquared(obs.pos) < 25.0) { // Distância para a árvore
+                                _dir.subVectors(obs.pos, _vA).normalize();
+                                if (_fwd.dot(_dir) > 0.4) { // Olhando pra árvore
+                                    if ((playerState.sucata + playerState.madeira) < playerState.maxEspaco) {
+                                        playerState.madeira++;
+                                        logMsg("> 🪵 MADEIRA COLETADA.");
+                                        atualizarUIInv();
+                                        obs.cooldown = 1.5; // Árvore entra em cooldown para dar a próxima madeira
+                                    } else {
+                                        logMsg("> INVENTÁRIO CHEIO.");
+                                    }
+                                    break; // Coleta de 1 árvore por golpe
+                                }
+                            }
+                        }
+                    }
+
                 } else if (arma.tipo === 'arco' && playerState.flechas > 0) playerState.carregandoArco = true;
             } else if (e.button === 2 && playerState.stamina >= 10) { playerState.defendendo = true; weaponHand.rotation.z = Math.PI/2; weaponHand.position.x = 0; }
         });
@@ -311,14 +353,20 @@
             if(ui.stmBar) ui.stmBar.style.width = `${playerState.stamina}%`;
             if(ui.lblPocoes) ui.lblPocoes.innerText = playerState.pocoes; 
             if(ui.lblFlechas) ui.lblFlechas.innerText = playerState.flechas; 
-            if(ui.lblItens) ui.lblItens.innerText = playerState.sucata;
+            if(ui.lblItens) ui.lblItens.innerText = playerState.sucata + playerState.madeira; // Itens totais agora é sucata + madeira
         }
 
         function atualizarUIInv() {
             if(!ui.gridInv) return;
             let htmlStr = "";
+            // Mostra sucata
             if (playerState.sucata > 0) htmlStr += `<div class="slot-item" style="border:1px solid #555; padding:5px; margin:2px;">⚙️x${playerState.sucata}</div>`;
-            const slotsVazios = playerState.maxEspaco - (playerState.sucata > 0 ? 1 : 0);
+            // Mostra madeira
+            if (playerState.madeira > 0) htmlStr += `<div class="slot-item" style="border:1px solid #6b4423; background:#22150b; padding:5px; margin:2px;">🪵x${playerState.madeira}</div>`;
+            
+            const itensOcupados = (playerState.sucata > 0 ? 1 : 0) + (playerState.madeira > 0 ? 1 : 0);
+            const slotsVazios = playerState.maxEspaco - itensOcupados;
+            
             for(let i=0; i < slotsVazios; i++) { htmlStr += `<div class="slot-item" style="border:1px solid #333; padding:5px; margin:2px;">-</div>`; }
             ui.gridInv.innerHTML = htmlStr;
             atualizarHUD();
@@ -339,6 +387,11 @@
             requestAnimationFrame(animate);
             const dt = Math.min(clock.getDelta(), 0.1); 
             
+            // Diminui cooldown de coleta das árvores
+            for(let i = 0; i < obstaculos.length; i++) {
+                if(obstaculos[i].cooldown > 0) obstaculos[i].cooldown -= dt;
+            }
+
             if (invAberto) { renderer.render(scene, camera); stats.end(); return; }
 
             if (mouseTravado) {
@@ -399,9 +452,9 @@
 
                 for (let i = drops.length - 1; i >= 0; i--) {
                     let drop = drops[i]; drop.mesh.rotation.y += dt;
-                    if (_vA.distanceToSquared(drop.mesh.position) < 6.0 && playerState.sucata < playerState.maxEspaco) { 
+                    if (_vA.distanceToSquared(drop.mesh.position) < 6.0 && (playerState.sucata + playerState.madeira) < playerState.maxEspaco) { 
                         playerState.sucata++; scene.remove(drop.mesh); drops.splice(i, 1); 
-                        logMsg("> SUCATA COLETADA."); atualizarHUD(); 
+                        logMsg("> SUCATA COLETADA."); atualizarHUD(); atualizarUIInv();
                     }
                 }
 
@@ -452,7 +505,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight); 
         });
         
-        atualizarHUD();
+        atualizarUIInv(); // Força a atualização do inventário e HUD na inicialização
         animate();
     }
 })();
