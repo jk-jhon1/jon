@@ -1,61 +1,66 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Operação Floresta Tática 3D</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/stats.js@0.17.0/build/stats.min.js"></script>
+    <title>Minecraft Alpha Clone</title>
+    <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
-    <div id="tela-inicial" class="tela">
-        <h1 class="titulo">OPERAÇÃO: FLORESTA</h1>
-        <button id="btn-iniciar" class="btn">INICIAR MISSÃO</button>
+
+    <div id="tela-inicial">
+        <div class="caixa-inicio">
+            <h1>MINECRAFT 3D</h1>
+            <p>Controles: WASD (Andar) | Shift (Correr) | Espaço (Pular) | MOUSE (Olhar/Atacar)</p>
+            <p>Teclas: [1, 2, 3, 4] Equipar Armas | [Q] Usar Poção | [E] Abrir Inventário</p>
+            <button id="btn-iniciar">JOGAR</button>
+        </div>
     </div>
 
     <div id="game-hud" class="hidden">
-        <div class="hud-label">INTEGRIDADE (HP):</div>
-        <div class="barra-container">
-            <div id="bar-player-hp" class="barra"></div>
-        </div>
+        <div class="reticula" id="reticula">+</div>
         
-        <div class="hud-label">VIGOR (STAMINA):</div>
-        <div class="barra-container">
-            <div id="bar-player-stamina" class="barra"></div>
-        </div>
-        
-        <div class="contador-status">SERINGAS [Q]: <span id="lbl-pocoes">3</span> | MUNIÇÃO ARCO: <span id="lbl-flechas">15</span></div>
-        <div class="contador-status">CARGA [E]: <span id="lbl-total-itens">0</span>/15</div>
-        <div class="contador-status status-alerta">MULTIPLICADOR: <span id="lbl-combo">0</span>x</div>
-    </div>
-
-    <div id="reticula" class="hidden"></div>
-    
-    <div id="combat-log" class="hidden">> STATUS: OPERACIONAL. AGUARDANDO CONTATO.</div>
-
-    <div id="travar-mouse-ui" class="tela hidden">
-        <div class="prompt-foco">[ CLIQUE PARA RETOMAR O CONTROLE ]</div>
-    </div>
-
-    <div id="painel-inventario" class="tela hidden">
-        <h3 class="inv-titulo">INVENTÁRIO</h3>
-        <div id="grid-inventario" class="grid-inv"></div>
-        
-        <div class="craft-secao">
-            <h4>SINTETIZADOR DE MATERIAIS</h4>
-            <div class="craft-linha">
-                <span>Munição x5 (Custo: 2 Sucatas)</span>
-                <button id="btn-craft-flecha" class="btn btn-craft">FORJAR</button>
+        <div class="barras-status">
+            <div class="barra-container">
+                <span class="label-barra">VIDA</span>
+                <div class="barra"><div id="bar-player-hp" class="progresso hp" style="width: 100%;"></div></div>
             </div>
-            <div class="craft-linha">
-                <span>Seringa HP (Custo: 3 Sucatas)</span>
-                <button id="btn-craft-pocao" class="btn btn-craft">SINTETIZAR</button>
+            <div class="barra-container">
+                <span class="label-barra">STAMINA</span>
+                <div class="barra"><div id="bar-player-stamina" class="progresso stamina" style="width: 100%;"></div></div>
             </div>
         </div>
-        <button id="btn-fechar-inv" class="btn btn-largo">FECHAR INVENTÁRIO</button>
+
+        <div class="status-rapido">
+            <span>🧪 Poções (Q): <b id="lbl-pocoes">3</b></span>
+            <span>🏹 Flechas: <b id="lbl-flechas">15</b></span>
+            <span>🔥 Combo: <b id="lbl-combo">0</b></span>
+        </div>
+
+        <div id="combat-log">> MUNDO GERADO. CLIQUE COM O BOTÃO ESQUERDO PARA ATACAR.</div>
     </div>
 
-    <script src="game.js"></script>
+    <div id="travar-mouse-ui" class="hidden">
+        <div class="aviso-mouse">Clique na tela para controlar o personagem</div>
+    </div>
+
+    <div id="painel-inventario" class="hidden">
+        <h2>INVENTÁRIO</h2>
+        
+        <div id="grid-inventario"></div>
+
+        <hr>
+
+        <h3>CRAFTING (FABRICAÇÃO)</h3>
+        <div class="botoes-craft">
+            <button id="btn-craft-flecha">Criar Flechas x5 (1⚙️ + 1🪵)</button>
+            <button id="btn-craft-pocao">Criar Poção x1 (3⚙️)</button>
+        </div>
+
+        <button id="btn-fechar-inv">FECHAR [E]</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="js/game.js"></script>
 </body>
 </html>
