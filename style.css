@@ -38,11 +38,14 @@ body, html {
     border: 4px solid #555;
     text-align: center;
     color: #fff;
-    max-width: 500px;
+    max-width: 600px;
+    box-shadow: 0 0 50px rgba(133, 255, 109, 0.3);
 }
 
-.caixa-inicio h1 { color: #85ff6d; margin-bottom: 20px; letter-spacing: 2px; }
-.caixa-inicio p { font-size: 14px; margin-bottom: 15px; color: #ccc; line-height: 1.5; }
+.caixa-inicio h1 { color: #85ff6d; margin-bottom: 10px; letter-spacing: 3px; font-size: 32px; text-shadow: 0 0 10px #85ff6d; }
+.caixa-inicio h3 { letter-spacing: 2px; margin-bottom: 15px; }
+.caixa-inicio h4 { color: #85ff6d; margin-bottom: 8px; letter-spacing: 1px; }
+.caixa-inicio p { font-size: 13px; margin-bottom: 10px; color: #ccc; line-height: 1.6; }
 
 button {
     background: #555;
@@ -111,8 +114,8 @@ button:hover { background: #777; border-color: #fff; }
 }
 
 .progresso { height: 100%; transition: width 0.1s ease; }
-.progresso.hp { background: #ff3b3b; }
-.progresso.stamina { background: #ffcc00; }
+.progresso.hp { background: linear-gradient(90deg, #ff0000, #ff8800); }
+.progresso.stamina { background: linear-gradient(90deg, #ffcc00, #ffff00); }
 
 .status-rapido {
     position: absolute;
@@ -131,10 +134,20 @@ button:hover { background: #777; border-color: #fff; }
     top: 20px;
     left: 20px;
     color: #85ff6d;
-    background: rgba(0,0,0,0.7);
-    padding: 10px 15px;
-    font-size: 14px;
-    max-width: 400px;
+    background: rgba(0,0,0,0.8);
+    padding: 12px 18px;
+    font-size: 13px;
+    max-width: 450px;
+    border: 2px solid #85ff6d;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(133, 255, 109, 0.4);
+    animation: logPulse 0.3s ease;
+}
+
+@keyframes logPulse {
+    0% { text-shadow: 0 0 5px #85ff6d; }
+    50% { text-shadow: 0 0 15px #85ff6d; }
+    100% { text-shadow: 0 0 5px #85ff6d; }
 }
 
 /* Painel do Inventário (Estilo Minecraft Clássico) */

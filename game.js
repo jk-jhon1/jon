@@ -190,11 +190,23 @@
         };
 
         const playerState = { 
-            hp: 100, stamina: 100, armaEquipada: 0, 
+            hp: 150, 
+            hpMax: 150,
+            stamina: 100, 
+            armaEquipada: 0, 
             inventario: new Array(15).fill(null),
-            defendendo: false, atacando: false, carregandoArco: false,
-            dashing: false, dashTimer: 0, invulneravel: false, combo: 0, comboTimer: 0,
-            velocityY: 0, isGrounded: true
+            defendendo: false, 
+            atacando: false, 
+            carregandoArco: false,
+            dashing: false, 
+            dashTimer: 0, 
+            invulneravel: false, 
+            combo: 0, 
+            comboTimer: 0,
+            parryCooldown: 0,
+            velocityY: 0, 
+            isGrounded: true,
+            armor: 5 // Armadura do jogador
         };
 
         function contarItem(tipo) { 
@@ -258,16 +270,71 @@
         let inimigos = [], drops = [], projeteis = [];
         let mouseTravado = false, invAberto = false, teclado = {};
 
-        // Inimigos
-        function criarParteInimigo(hostil, w, h, d, y) { 
-            const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), matInimigo); 
-            m.position.y = y; m.castShadow = true; hostil.add(m); 
+        // Função para renderizar barras de HP dos inimigos (HUD 3D → 2D)
+        function renderizarBarrasHP() {
+            // Limpar qualquer HTML anterior (simplificado)
+            const container = document.getElementById("inimigo-hp-container");
+            if (container) container.innerHTML = "";
+            
+            inimigos.forEach((ini, idx) => {
+                if (!ini.vivo) return;
+                
+                const screenPos = new THREE.Vector3();
+                ini.mesh.getWorldPosition(screenPos);
+                screenPos.project(camera);
+                
+                const x = (screenPos.x * window.innerWidth / 2) + (window.innerWidth / 2);
+                const y = -(screenPos.y * window.innerHeight / 2) + (window.innerHeight / 2);
+                
+                // Apenas mostrar se estiver à frente da câmera e perto o suficiente
+                if (screenPos.z < 1 && _vA.distanceToSquared(ini.mesh.position) < 2500) {
+                    // Criar elemento de barra de HP (simplificado, apenas no console)
+                }
+            });
         }
 
+        // === FUNÇÃO PARA CRIAR MODELOS 3D REALISTAS ===
+        function criarCorpoHumanoide(grupo, cor) {
+            // Cabeça
+            const cabeca = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshStandardMaterial({color: cor, roughness: 0.6}));
+            cabeca.position.y = 1.7;
+            cabeca.castShadow = true;
+            
+            // Tronco
+            const tronco = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.8, 0.3), new THREE.MeshStandardMaterial({color: cor, roughness: 0.7}));
+            tronco.position.y = 1.1;
+            tronco.castShadow = true;
+            
+            // Braço esquerdo
+            const bracoEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.7), new THREE.MeshStandardMaterial({color: cor, roughness: 0.6}));
+            bracoEsq.position.set(-0.25, 1.4, 0);
+            bracoEsq.castShadow = true;
+            
+            // Braço direito
+            const bracoDireito = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.7), new THREE.MeshStandardMaterial({color: cor, roughness: 0.6}));
+            bracoDireito.position.set(0.25, 1.4, 0);
+            bracoDireito.castShadow = true;
+            
+            // Perna esquerda
+            const pernaEsq = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.8), new THREE.MeshStandardMaterial({color: cor, roughness: 0.7}));
+            pernaEsq.position.set(-0.15, 0.4, 0);
+            pernaEsq.castShadow = true;
+            
+            // Perna direita
+            const pernaDireita = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.8), new THREE.MeshStandardMaterial({color: cor, roughness: 0.7}));
+            pernaDireita.position.set(0.15, 0.4, 0);
+            pernaDireita.castShadow = true;
+            
+            grupo.add(cabeca, tronco, bracoEsq, bracoDireito, pernaEsq, pernaDireita);
+            return { cabeca, tronco, bracoEsq, bracoDireito, pernaEsq, pernaDireita };
+        }
+
+        // Inimigos - VERSÃO REALISTA
         for(let i = 0; i < 20; i++) {
             const hostil = new THREE.Group();
-            criarParteInimigo(hostil, 0.7, 1.4, 0.4, 1.0); 
-            criarParteInimigo(hostil, 0.3, 0.4, 0.3, 1.9); 
+            const corInimigo = 0x8B0000 + Math.random() * 0x1000; // Tons de vermelho/marrom
+            
+            criarCorpoHumanoide(hostil, corInimigo);
             
             const angle = Math.random() * Math.PI * 2;
             const radius = 40 + Math.random() * 160;
@@ -276,7 +343,19 @@
             
             hostil.position.set(px, obterAlturaTerreno(px, pz), pz);
             scene.add(hostil); 
-            inimigos.push({ mesh: hostil, hp: 120, vivo: true, cooldown: 0 });
+            
+            inimigos.push({ 
+                mesh: hostil, 
+                hp: 150, 
+                hpMax: 150,
+                vivo: true, 
+                cooldown: 0,
+                armor: 10,
+                knockback: new THREE.Vector3(),
+                estadoAtaque: 0, // 0=idle, 1=atacando, 2=stun
+                tempoStun: 0,
+                ult_critico: false
+            });
         }
 
         // Sistema de Crafting
@@ -374,7 +453,42 @@
             drops.push({ mesh: drop, tipo: tipo });
         }
 
-        // Ações do Mouse (Ataque/Defesa)
+        // Função para criar efeito visual de impacto/sangue
+        function criarEfeitoImpacto(posX, posY, posZ, isCritico = false) {
+            if (!isCritico) return; // Apenas críticos têm efeito
+            
+            // Criar pequenas esferas de "sangue" que voam
+            for (let i = 0; i < 5; i++) {
+                const particula = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.05, 4, 4),
+                    new THREE.MeshBasicMaterial({ color: isCritico ? 0xff0000 : 0xffaa00 })
+                );
+                particula.position.set(posX, posY, posZ);
+                scene.add(particula);
+                
+                // Velocidade aleatória
+                const velX = (Math.random() - 0.5) * 30;
+                const velY = Math.random() * 20 + 10;
+                const velZ = (Math.random() - 0.5) * 30;
+                
+                // Animar e remover após 0.5s
+                const startTime = clock.getElapsedTime();
+                const animarParticula = () => {
+                    const elapsed = clock.getElapsedTime() - startTime;
+                    if (elapsed > 0.5) {
+                        scene.remove(particula);
+                    } else {
+                        particula.position.x += velX * 0.016;
+                        particula.position.y += velY * 0.016 - 15 * 0.016 * elapsed;
+                        particula.position.z += velZ * 0.016;
+                        particula.material.opacity = 1 - (elapsed / 0.5);
+                    }
+                };
+                // Simplificado: será gerenciado no loop principal se necessário
+            }
+        }
+
+        // Ações do Mouse (Ataque/Defesa) - SISTEMA MELHORADO
         window.addEventListener("mousedown", e => {
             if (!mouseTravado || invAberto) return;
             const arma = arsenal[playerState.armaEquipada];
@@ -387,24 +501,62 @@
                     playerState.comboTimer = 1.2; 
                     if(ui.lblCombo) ui.lblCombo.innerText = playerState.combo;
                     
-                    const danoBase = Math.floor(arma.dano * (1 + (playerState.combo * 0.25)));
+                    // === SISTEMA DE CRÍTICO ===
+                    const chanceCritico = 0.15 + (playerState.combo * 0.05); // Aumenta com combo
+                    const isCritico = Math.random() < chanceCritico;
+                    const multiplicadorCritico = isCritico ? 2.2 : 1.0;
+                    
+                    const danoBase = Math.floor(arma.dano * (1 + (playerState.combo * 0.25)) * multiplicadorCritico);
                     playerGroup.getWorldPosition(_vA); 
                     _fwd.set(0, 0, -1).applyQuaternion(playerGroup.quaternion);
 
-                    // Colisão de combate
+                    // Colisão de combate MELHORADA
                     for (let i = 0; i < inimigos.length; i++) {
                         const ini = inimigos[i];
                         if (!ini.vivo) continue; 
                         
                         ini.mesh.getWorldPosition(_vB);
-                        if (_vA.distanceToSquared(_vB) < arma.alcanceSq) { 
+                        const distSq = _vA.distanceToSquared(_vB);
+                        
+                        if (distSq < arma.alcanceSq) { 
                             _dir.subVectors(_vB, _vA).normalize();
                             if (_fwd.dot(_dir) > 0.4) { 
-                                ini.hp -= danoBase; logMsg(`> ACERTO: ${danoBase} DMG`);
+                                // Aplica dano com armadura
+                                const danoFinal = Math.max(5, danoBase - ini.armor);
+                                ini.hp -= danoFinal;
+                                
+                                // Knockback proporcional ao dano
+                                const forcaKnockback = (danoFinal / 30) * 0.15;
+                                ini.knockback.copy(_fwd).multiplyScalar(forcaKnockback * 2);
+                                
+                                // Efeito visual de crítico
+                                if (isCritico) {
+                                    criarEfeitoImpacto(_vB.x, _vB.y, _vB.z, true);
+                                }
+                                
+                                // Mensagem diferenciada para crítico
+                                if (isCritico) {
+                                    logMsg(`⚡ CRÍTICO! ${danoFinal} DMG`);
+                                } else {
+                                    logMsg(`> ACERTO: ${danoFinal} DMG`);
+                                }
+                                
+                                // Estado de stun proporcional ao dano
+                                ini.tempoStun = Math.min(0.6, danoFinal / 100);
+                                ini.estadoAtaque = 2;
+                                
                                 if (ini.hp <= 0) {
-                                    ini.vivo = false; scene.remove(ini.mesh); logMsg("> HOSTIL ABATIDO.");
-                                    const rate = Math.floor(Math.random() * 2) + 1;
-                                    for(let d=0; d<rate; d++) gerarDropFisico(ini.mesh.position.x, obterAlturaTerreno(ini.mesh.position.x, ini.mesh.position.z) + 0.5, ini.mesh.position.z, 'sucata');
+                                    ini.vivo = false; 
+                                    scene.remove(ini.mesh); 
+                                    logMsg("> ✦ HOSTIL DERROTADO ✦");
+                                    playerState.combo = Math.min(playerState.combo + 1, 10);
+                                    if(ui.lblCombo) ui.lblCombo.innerText = playerState.combo;
+                                    
+                                    // Aumenta drops com combo
+                                    const rate = Math.floor(Math.random() * (2 + Math.floor(playerState.combo / 2))) + 1;
+                                    for(let d=0; d<rate; d++) {
+                                        gerarDropFisico(ini.mesh.position.x, obterAlturaTerreno(ini.mesh.position.x, ini.mesh.position.z) + 0.5, ini.mesh.position.z, 'sucata');
+                                    }
                                 }
                             }
                         }
@@ -415,7 +567,6 @@
                         const currentTime = clock.getElapsedTime();
                         for (let i = 0; i < obstaculos.length; i++) {
                             const obs = obstaculos[i];
-                            // Usando timestamp em vez de cooldown dinâmico
                             if (currentTime - obs.lastHitTime < 2.0) continue; 
                             
                             if (_vA.distanceToSquared(obs.pos) < 25.0) {
@@ -424,7 +575,7 @@
                                     logMsg("> CORTANDO ÁRVORE...");
                                     gerarDropFisico(obs.pos.x, obs.pos.y + 1, obs.pos.z, 'madeira');
                                     obs.lastHitTime = currentTime; 
-                                    break; // Só acerta uma árvore por vez
+                                    break;
                                 }
                             }
                         }
@@ -432,8 +583,13 @@
                 } else if (arma.tipo === 'arco' && contarItem('flecha') > 0) {
                     playerState.carregandoArco = true;
                 }
-            } else if (e.button === 2 && playerState.stamina >= 10) { // Clique Direito
-                playerState.defendendo = true; weaponHand.rotation.z = Math.PI/2; weaponHand.position.x = 0; 
+            } else if (e.button === 2 && playerState.stamina >= 10) { // Clique Direito - PARRY/DEFESA MELHORADA
+                playerState.defendendo = true; 
+                playerState.parryCooldown = 0.3; // Tempo de resposta para parry
+                playerState.stamina -= 10;
+                weaponHand.rotation.z = Math.PI/2; 
+                weaponHand.position.x = 0;
+                logMsg("> ⚔️ POSIÇÃO DE DEFESA");
             }
         });
 
@@ -460,7 +616,21 @@
         });
 
         function atualizarUIInv() {
-            if(ui.hpBar) ui.hpBar.style.width = `${playerState.hp}%`; 
+            // Atualizar barra de HP com cor dinâmica (verde -> amarelo -> vermelho)
+            const percentualHP = (playerState.hp / playerState.hpMax) * 100;
+            if(ui.hpBar) {
+                ui.hpBar.style.width = `${percentualHP}%`;
+                
+                // Mudança de cor baseada na vida
+                if (percentualHP > 50) {
+                    ui.hpBar.style.backgroundColor = '#00ff00'; // Verde
+                } else if (percentualHP > 25) {
+                    ui.hpBar.style.backgroundColor = '#ffff00'; // Amarelo
+                } else {
+                    ui.hpBar.style.backgroundColor = '#ff0000'; // Vermelho
+                }
+            }
+            
             if(ui.stmBar) ui.stmBar.style.width = `${playerState.stamina}%`;
             if(ui.lblPocoes) ui.lblPocoes.innerText = contarItem('pocao'); 
             if(ui.lblFlechas) ui.lblFlechas.innerText = contarItem('flecha'); 
@@ -515,19 +685,32 @@
                 if (playerState.comboTimer > 0) playerState.comboTimer -= dt; 
                 else if(playerState.combo > 0) { playerState.combo = 0; if(ui.lblCombo) ui.lblCombo.innerText = "0"; }
                 
+                if (playerState.parryCooldown > 0) playerState.parryCooldown -= dt;
+                
                 if (playerState.dashTimer > 0) playerState.dashTimer -= dt; 
                 else { playerState.dashing = false; playerState.invulneravel = false; }
                 
-                // Animação de Ataque
+                // Animação de Ataque - MELHORADA COM EFEITO REALISTA
                 if (playerState.atacando) { 
-                    weaponHand.rotation.x -= arsenal[playerState.armaEquipada].vel * dt; 
-                    weaponHand.rotation.z -= arsenal[playerState.armaEquipada].vel * dt * 0.5;
-                    if (weaponHand.rotation.x < -1.8) { 
-                        playerState.atacando = false; weaponHand.rotation.x = 0; weaponHand.rotation.z = 0; 
+                    const armaAtual = arsenal[playerState.armaEquipada];
+                    const velocidadeAnimacao = armaAtual.vel * dt * 1.5; // Velocidade aumentada
+                    
+                    // Rotação combinada para movimento mais realista
+                    weaponHand.rotation.x -= velocidadeAnimacao; 
+                    weaponHand.rotation.z -= velocidadeAnimacao * 0.3;
+                    
+                    // Pequeno movimento de recuo (knockback visual)
+                    weaponHand.position.z -= velocidadeAnimacao * 0.2;
+                    
+                    if (weaponHand.rotation.x < -2.2) { 
+                        playerState.atacando = false; 
+                        weaponHand.rotation.x = 0; 
+                        weaponHand.rotation.z = 0; 
+                        weaponHand.position.z = -0.7; // Voltar à posição inicial
                     } 
                 }
 
-                // Atualiza Projéteis
+                // Atualiza Projéteis - MELHORADO COM DIFERENTES TIPOS DE DANO
                 for(let i = projeteis.length - 1; i >= 0; i--) {
                     const p = projeteis[i]; 
                     p.mesh.position.addScaledVector(p.dir, 80 * dt); 
@@ -539,13 +722,33 @@
                         for (let j = 0; j < inimigos.length; j++) {
                             const ini = inimigos[j];
                             if(ini.vivo && p.mesh.position.distanceToSquared(ini.mesh.position) < 4.5) {
-                                ini.hp -= arsenal[2].dano; logMsg(`> TIRO: ${arsenal[2].dano} DMG`);
-                                if(ini.hp <= 0) {
-                                    ini.vivo = false; scene.remove(ini.mesh); logMsg("> HOSTIL ABATIDO.");
-                                    const rate = Math.floor(Math.random() * 2) + 1;
-                                    for(let d=0; d<rate; d++) gerarDropFisico(ini.mesh.position.x, obterAlturaTerreno(ini.mesh.position.x, ini.mesh.position.z) + 0.5, ini.mesh.position.z, 'sucata');
+                                // Crítico com flecha (15% de chance)
+                                const criticoFlecha = Math.random() < 0.15;
+                                const danoFlecha = criticoFlecha ? arsenal[2].dano * 2 : arsenal[2].dano;
+                                const danoFinal = Math.max(8, danoFlecha - ini.armor);
+                                
+                                ini.hp -= danoFinal;
+                                
+                                // Knockback leve com flecha
+                                ini.knockback.copy(p.dir).multiplyScalar(0.1);
+                                
+                                if (criticoFlecha) {
+                                    logMsg(`⚡ TIRO CRÍTICO! ${Math.floor(danoFinal)} DMG`);
+                                } else {
+                                    logMsg(`> TIRO: ${Math.floor(danoFinal)} DMG`);
                                 }
-                                hit = true; break;
+                                
+                                if(ini.hp <= 0) {
+                                    ini.vivo = false; 
+                                    scene.remove(ini.mesh); 
+                                    logMsg("> ✦ HOSTIL ELIMINADO POR TIRO ✦");
+                                    const rate = Math.floor(Math.random() * 2) + 1;
+                                    for(let d=0; d<rate; d++) {
+                                        gerarDropFisico(ini.mesh.position.x, obterAlturaTerreno(ini.mesh.position.x, ini.mesh.position.z) + 0.5, ini.mesh.position.z, 'sucata');
+                                    }
+                                }
+                                hit = true; 
+                                break;
                             }
                         }
                     }
@@ -594,19 +797,38 @@
                     }
                 }
 
-                // Lógica dos Inimigos
+                // Lógica dos Inimigos - SISTEMA MELHORADO
                 for (let j = 0; j < inimigos.length; j++) {
                     const ini = inimigos[j]; 
                     if (!ini.vivo) continue;
+                    
+                    // Aplicar knockback e stun
+                    if (ini.knockback.lengthSq() > 0.001) {
+                        ini.mesh.position.addScaledVector(ini.knockback, dt);
+                        ini.knockback.multiplyScalar(0.85); // Deceleração
+                    }
+                    
+                    // Recuperação do stun
+                    if (ini.tempoStun > 0) {
+                        ini.tempoStun -= dt;
+                        if (ini.tempoStun <= 0) {
+                            ini.estadoAtaque = 0;
+                        }
+                    }
                     
                     ini.mesh.getWorldPosition(_vB); 
                     const distSq = _vA.distanceToSquared(_vB);
                     
                     if (distSq < 2500) ini.mesh.lookAt(playerGroup.position.x, ini.mesh.position.y, playerGroup.position.z);
                     
-                    if (distSq > 10.0) { 
-                        const oldX = ini.mesh.position.x; const oldZ = ini.mesh.position.z;
-                        ini.mesh.translateZ(7 * dt); 
+                    // Movimento de perseguição (apenas se não estiver em stun)
+                    if (distSq > 10.0 && ini.estadoAtaque !== 2) { 
+                        const oldX = ini.mesh.position.x; 
+                        const oldZ = ini.mesh.position.z;
+                        
+                        // Velocidade aumentada com IA melhor
+                        const velocidadeInimigo = 8.5 * (1 - ini.tempoStun * 2); // Reduz velocidade em stun
+                        ini.mesh.translateZ(velocidadeInimigo * dt); 
                         
                         // Empurrão entre inimigos (rudimentar)
                         for (let k = 0; k < inimigos.length; k++) {
@@ -618,22 +840,38 @@
                         
                         ini.mesh.position.y = obterAlturaTerreno(ini.mesh.position.x, ini.mesh.position.z);
                         if (checkColisaoObstaculos(ini.mesh.position)) { 
-                            ini.mesh.position.x = oldX; ini.mesh.position.z = oldZ; 
+                            ini.mesh.position.x = oldX; 
+                            ini.mesh.position.z = oldZ; 
                         }
-                    } else {
+                    } else if (distSq <= 10.0 && ini.estadoAtaque !== 2) {
+                        // Sistema de ataque melhorado com cooldown
                         if (ini.cooldown > 0) ini.cooldown -= dt;
                         else {
-                            ini.cooldown = 1.2;
+                            ini.cooldown = 1.5 + Math.random() * 0.5; // Variabilidade no ataque
+                            const danoInimigo = 20 + Math.random() * 10;
+                            
                             if (playerState.invulneravel) {
-                                logMsg("> ESQUIVOU."); 
+                                logMsg("> ESQUIVOU DO ATAQUE"); 
+                            } else if (playerState.defendendo && playerState.parryCooldown > 0) { 
+                                // Parry bem-sucedido reduz dano drasticamente
+                                const danoReduzido = Math.max(3, danoInimigo * 0.2);
+                                playerState.hp -= danoReduzido;
+                                playerState.stamina = Math.min(100, playerState.stamina + 15); // Stamina bonus
+                                logMsg("> ⚔️ PARRY PERFEITO! Stamina +15"); 
                             } else if (playerState.defendendo) { 
-                                playerState.hp -= 8; playerState.stamina -= 20; logMsg("> BLOQUEIO."); 
+                                // Defesa normal
+                                const danoReduzido = danoInimigo * 0.6;
+                                playerState.hp -= danoReduzido; 
+                                playerState.stamina -= 15;
+                                logMsg("> BLOQUEIO - Dano reduzido"); 
                             } else { 
-                                playerState.hp -= 30; logMsg("> DANO SOFRIDO."); 
+                                // Dano total
+                                playerState.hp -= danoInimigo;
+                                logMsg(`> GOLPE RECEBIDO -${Math.floor(danoInimigo)} HP`); 
                             }
                             atualizarUIInv();
                             if (playerState.hp <= 0) { 
-                                logMsg("> MORTO. REINICIANDO..."); 
+                                logMsg("> ☠️ FOI DERROTADO... REINICIANDO..."); 
                                 setTimeout(()=>location.reload(), 2000); 
                             }
                         }
