@@ -63,6 +63,24 @@
             ui.gridInv.style.padding = "10px";
         }
 
+        // ==========================================
+        // SISTEMA DE ÁUDIO DE FUNDO
+        // ==========================================
+        const audioFundo = new Audio();
+        audioFundo.src = "floresta.mp3";
+        audioFundo.loop = true;
+        audioFundo.volume = 0.3; // Volume em 30% para não abafar outros sons
+        
+        // Tenta reproduzir automaticamente (pode falhar por política do navegador)
+        audioFundo.play().catch(() => {
+            // Se falhar, será reproduzido no primeiro clique do usuário
+            const iniciarAudio = () => {
+                audioFundo.play();
+                document.removeEventListener("click", iniciarAudio);
+            };
+            document.addEventListener("click", iniciarAudio);
+        });
+
         // Configuração da Cena e Câmera
         const scene = new THREE.Scene();
         const corCeu = 0x87CEEB; 
