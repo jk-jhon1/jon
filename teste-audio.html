@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 Teste de Áudio - ARASON</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 40px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+        h1 {
+            color: #00ff00;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        .status {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .status p {
+            margin: 5px 0;
+        }
+        .status .success { color: #00ff00; }
+        .status .error { color: #ff0000; }
+        .status .info { color: #ffff00; }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #00cc00;
+            transform: scale(1.05);
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        .controls {
+            margin: 30px 0;
+        }
+        audio {
+            width: 100%;
+            margin: 20px 0;
+        }
+        .volume-control {
+            margin: 20px 0;
+        }
+        input[type="range"] {
+            width: 80%;
+            height: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 TESTE DE ÁUDIO - ARASON</h1>
+        
+        <div class="status" id="status">
+            <p class="info">🔄 Carregando áudio...</p>
+        </div>
+
+        <div class="controls">
+            <button onclick="tocarAudio()">▶ REPRODUZIR</button>
+            <button onclick="pausarAudio()">⏸ PAUSAR</button>
+            <button onclick="pararAudio()">⏹ PARAR</button>
+        </div>
+
+        <div class="volume-control">
+            <label for="volumeSlider">🔊 Volume:</label><br><br>
+            <input type="range" id="volumeSlider" min="0" max="100" value="40" onchange="mudarVolume()">
+            <span id="volumeValue">40%</span>
+        </div>
+
+        <audio id="audioElement">
+            <source src="floresta.mp3" type="audio/mpeg">
+            Seu navegador não suporta áudio HTML5.
+        </audio>
+
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #00ff00;">
+            <p style="font-size: 12px; color: #888;">
+                Se o áudio estiver funcionando, você deve escutar o som de floresta.
+            </p>
+            <a href="index.html" style="color: #00ff00; text-decoration: none; margin-top: 20px; display: inline-block;">
+                ← Voltar ao Jogo
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const audio = document.getElementById('audioElement');
+        const status = document.getElementById('status');
+
+        // Atualiza status
+        function atualizarStatus(mensagem, tipo = 'info') {
+            status.innerHTML = `<p class="${tipo}">${mensagem}</p>`;
+        }
+
+        // Evento de carregamento
+        audio.addEventListener('loadedmetadata', () => {
+            atualizarStatus('✅ Áudio carregado com sucesso!<br>Duração: ' + formatarTempo(audio.duration) + '<br>Codificação: MPEG Layer III, 320 kbps, 44.1 kHz', 'success');
+        });
+
+        // Evento de erro
+        audio.addEventListener('error', (e) => {
+            atualizarStatus('❌ Erro ao carregar áudio!<br>Certifique-se de que floresta.mp3 existe na pasta raiz.', 'error');
+            console.error('Erro de áudio:', e);
+        });
+
+        // Evento de reprodução
+        audio.addEventListener('play', () => {
+            atualizarStatus('▶ Reproduzindo... 🎵', 'success');
+        });
+
+        // Evento de pausa
+        audio.addEventListener('pause', () => {
+            atualizarStatus('⏸ Pausado', 'info');
+        });
+
+        // Evento de término
+        audio.addEventListener('ended', () => {
+            atualizarStatus('✅ Reprodução concluída', 'success');
+        });
+
+        // Funções de controle
+        function tocarAudio() {
+            audio.play().catch(err => {
+                atualizarStatus('❌ Erro ao reproduzir: ' + err.message, 'error');
+            });
+        }
+
+        function pausarAudio() {
+            audio.pause();
+        }
+
+        function pararAudio() {
+            audio.pause();
+            audio.currentTime = 0;
+            atualizarStatus('⏹ Parado', 'info');
+        }
+
+        function mudarVolume() {
+            const volume = document.getElementById('volumeSlider').value;
+            audio.volume = volume / 100;
+            document.getElementById('volumeValue').textContent = volume + '%';
+        }
+
+        function formatarTempo(segundos) {
+            const minutos = Math.floor(segundos / 60);
+            const secs = Math.floor(segundos % 60);
+            return minutos + ':' + (secs < 10 ? '0' : '') + secs;
+        }
+
+        // Inicia verificação
+        console.log('🎵 Página de teste de áudio carregada');
+        console.log('URL do áudio:', audio.src);
+    </script>
+</body>
+</html>

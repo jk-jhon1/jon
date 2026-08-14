@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚔️ ARASON - Setup Inicial</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a0033 50%, #0f0f1e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        h1 {
+            font-size: 48px;
+            color: #ff6b6b;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+        .subtitle {
+            font-size: 18px;
+            color: #85ff6d;
+            text-shadow: 0 0 10px rgba(133, 255, 109, 0.3);
+        }
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+        .card:hover {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+            transform: translateY(-5px);
+        }
+        .card h2 {
+            color: #85ff6d;
+            margin-bottom: 15px;
+            font-size: 24px;
+            text-shadow: 0 0 10px rgba(133, 255, 109, 0.3);
+        }
+        .card p {
+            color: #ddd;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .step-list {
+            list-style: none;
+        }
+        .step-list li {
+            color: #85ff6d;
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.6;
+        }
+        .step-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        .code-block {
+            background: rgba(0, 0, 0, 0.8);
+            border-left: 3px solid #00ff00;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            color: #85ff6d;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            color: #000;
+        }
+        .btn-secondary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+        .alert {
+            background: rgba(255, 107, 107, 0.2);
+            border: 2px solid #ff6b6b;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .alert h3 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        .alert p {
+            color: #ffc;
+            font-size: 14px;
+        }
+        .features {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #85ff6d;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        .features h2 {
+            color: #85ff6d;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(133, 255, 109, 0.3);
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .feature-item {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 5px;
+            border-left: 3px solid #ff6b6b;
+        }
+        .feature-item strong {
+            color: #ff6b6b;
+        }
+        .feature-item p {
+            color: #aaa;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            .buttons {
+                grid-template-columns: 1fr;
+            }
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 36px;
+            }
+        }
+        .status-box {
+            background: rgba(0, 255, 0, 0.1);
+            border: 2px solid #00ff00;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .status-box.success {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+        .status-box.warning {
+            border-color: #ffaa00;
+            color: #ffaa00;
+            background: rgba(255, 170, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚔️ ARASON ⚔️</h1>
+            <p class="subtitle">COMBATE SEMIREALISTA 3D - Setup Inicial</p>
+        </header>
+
+        <div class="alert">
+            <h3>🎵 Áudio de Fundo Integrado!</h3>
+            <p>Este jogo inclui som de floresta atmosférico que toca continuamente. Para que funcione corretamente, siga as instruções abaixo:</p>
+        </div>
+
+        <div class="features">
+            <h2>✨ Novidades do Jogo</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <strong>🎵 Áudio de Floresta</strong>
+                    <p>Som de ambiente contínuo durante toda a partida</p>
+                </div>
+                <div class="feature-item">
+                    <strong>🎮 Controles Melhorados</strong>
+                    <p>Sistema de áudio integrado com inventário</p>
+                </div>
+                <div class="feature-item">
+                    <strong>⚡ Performance Otimizada</strong>
+                    <p>Carregamento automático de áudio com fallback</p>
+                </div>
+                <div class="feature-item">
+                    <strong>🔊 Volume Balanceado</strong>
+                    <p>40% de volume para não abafar sons do jogo</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="card">
+                <h2>🚀 RÁPIDO (1 minuto)</h2>
+                <p>Se estiver no Windows com Python instalado:</p>
+                <ol class="step-list">
+                    <li>Localize <code>start-server.bat</code></li>
+                    <li>Clique duplo para abrir</li>
+                    <li>Acesse <code>http://localhost:8000</code></li>
+                    <li>Aproveite o jogo!</li>
+                </ol>
+                <div class="status-box success">
+                    ✅ Forma mais fácil para Windows
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>⚙️ MANUAL (2 minutos)</h2>
+                <p>Se preferir usar o terminal/prompt:</p>
+                <div class="code-block">
+python3 -m http.server 8000
+                </div>
+                <p>Depois abra no navegador:</p>
+                <div class="code-block">
+http://localhost:8000
+                </div>
+                <div class="status-box success">
+                    ✅ Funciona em qualquer sistema
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="grid-column: 1 / -1;">
+            <h2>🧪 Testar Áudio Antes de Jogar</h2>
+            <p>Para verificar se o áudio está funcionando corretamente:</p>
+            <ol class="step-list" style="margin-bottom: 20px;">
+                <li>Inicie o servidor (veja instruções acima)</li>
+                <li>Acesse: <a href="teste-audio.html" style="color: #ff6b6b; text-decoration: none; font-weight: bold;">http://localhost:8000/teste-audio.html</a></li>
+                <li>Clique em "REPRODUZIR" e escute o áudio</li>
+                <li>Se funcionou, está pronto para jogar!</li>
+            </ol>
+            <div class="status-box">
+                💡 Se o teste funcionar, o jogo também funcionará
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button class="btn-primary" onclick="abrirJogo()">
+                ▶ INICIAR JOGO
+            </button>
+            <button class="btn-secondary" onclick="abrirTeste()">
+                🧪 TESTAR ÁUDIO
+            </button>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; color: #888; font-size: 12px; border-top: 1px solid #333; padding-top: 20px;">
+            <p>Para mais informações, leia:</p>
+            <p>
+                <a href="README.md" style="color: #85ff6d; text-decoration: none; margin: 0 10px;">📖 README.md</a>
+                <a href="SETUP.md" style="color: #85ff6d; text-decoration: none; margin: 0 10px;">⚙️ SETUP.md</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Detecta se servidor está rodando
+        function verificarServidor() {
+            const protocolo = window.location.protocol;
+            if (protocolo === 'file:') {
+                document.body.style.opacity = '0.8';
+                const alerta = document.querySelector('.alert');
+                alerta.innerHTML = `
+                    <h3>⚠️ ERRO: Arquivo Local Detectado!</h3>
+                    <p>Você está acessando esta página como arquivo local (file://). 
+                    Para que o áudio funcione, MUST NEED acessar através de um servidor HTTP.</p>
+                    <p style="margin-top: 15px; color: #ffff00;">
+                        <strong>SOLUÇÃO:</strong><br>
+                        1. Abra um terminal na pasta do jogo<br>
+                        2. Execute: <code style="background: #000; padding: 5px; border-radius: 3px;">python3 -m http.server 8000</code><br>
+                        3. Acesse: <code style="background: #000; padding: 5px; border-radius: 3px;">http://localhost:8000</code>
+                    </p>
+                `;
+                alerta.classList.add('warning');
+                alerta.style.borderColor = '#ffaa00';
+            }
+        }
+
+        function abrirJogo() {
+            if (window.location.protocol === 'file:') {
+                alert('❌ Erro: Você precisa rodar o servidor HTTP primeiro!\n\nVeja as instruções na página.');
+                return;
+            }
+            window.location.href = 'index.html';
+        }
+
+        function abrirTeste() {
+            window.location.href = 'teste-audio.html';
+        }
+
+        // Executar verificação ao carregar
+        window.addEventListener('load', verificarServidor);
+    </script>
+</body>
+</html>

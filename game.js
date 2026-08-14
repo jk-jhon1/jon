@@ -67,19 +67,42 @@
         // SISTEMA DE ÁUDIO DE FUNDO
         // ==========================================
         const audioFundo = new Audio();
-        audioFundo.src = "floresta.mp3";
-        audioFundo.loop = true;
-        audioFundo.volume = 0.3; // Volume em 30% para não abafar outros sons
         
-        // Tenta reproduzir automaticamente (pode falhar por política do navegador)
-        audioFundo.play().catch(() => {
-            // Se falhar, será reproduzido no primeiro clique do usuário
-            const iniciarAudio = () => {
-                audioFundo.play();
-                document.removeEventListener("click", iniciarAudio);
-            };
-            document.addEventListener("click", iniciarAudio);
+        // Detecta a URL correta do servidor
+        let urlAudio = "./floresta.mp3";
+        if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            urlAudio = `http://${window.location.hostname}:8000/floresta.mp3`;
+        }
+        
+        audioFundo.src = urlAudio;
+        audioFundo.loop = true;
+        audioFundo.volume = 0.4;
+        audioFundo.preload = "auto";
+        
+        console.log("🎵 Carregando áudio de:", urlAudio);
+        
+        // Event listeners para melhor controle
+        audioFundo.addEventListener("error", (e) => {
+            console.warn("⚠️ Erro ao carregar áudio de:", urlAudio);
+            // Tenta caminho alternativo
+            audioFundo.src = "./floresta.mp3";
+            console.log("Tentando caminho relativo: ./floresta.mp3");
         });
+        
+        audioFundo.addEventListener("canplay", () => {
+            console.log("✅ Áudio carregado! Tentando reproduzir...");
+            audioFundo.play().catch(err => console.error("Erro ao reproduzir:", err));
+        });
+        
+        // Tenta reproduzir na primeira interação do usuário
+        const iniciarAudioGlobal = () => {
+            if (audioFundo.paused) {
+                audioFundo.play().catch(err => console.error("Erro ao reproduzir áudio:", err));
+                console.log("🎵 Áudio iniciado pelo usuário!");
+                document.removeEventListener("click", iniciarAudioGlobal);
+            }
+        };
+        document.addEventListener("click", iniciarAudioGlobal);
 
         // Configuração da Cena e Câmera
         const scene = new THREE.Scene();
@@ -417,6 +440,7 @@
         if(btnFecharInv) btnFecharInv.addEventListener("click", () => { 
             invAberto = false; 
             if(ui.painelInv) ui.painelInv.classList.add("hidden"); 
+            audioFundo.play().catch(err => console.error("Erro ao retomar áudio:", err));
             travarMouse(); 
         });
 
@@ -429,9 +453,13 @@
                 invAberto = !invAberto; 
                 if(ui.painelInv) ui.painelInv.classList.toggle("hidden", !invAberto);
                 if (invAberto) { 
+                    audioFundo.pause();
                     if(mouseTravado && document.exitPointerLock) document.exitPointerLock(); 
                     atualizarUIInv(); 
-                } else travarMouse();
+                } else {
+                    audioFundo.play().catch(err => console.error("Erro ao retomar áudio:", err));
+                    travarMouse();
+                }
             }
             if (invAberto || !mouseTravado) return;
 

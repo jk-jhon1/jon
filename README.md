@@ -11,6 +11,11 @@ Um jogo de ação 3D em primeira pessoa com **mecânicas de combate realistas**,
 - **400 árvores** renderizadas eficientemente com InstancedMesh
 - **Efeitos visuais** de impacto e crítico
 
+### 🎵 Áudio Ambiente
+- **Som de fundo de floresta** durante todo o jogo
+- **Controle automático** de pausa ao abrir/fechar inventário
+- **Volume balanceado** para não abafar outros sons
+
 ### ⚡ Mecânicas de Combate Realistas
 
 #### Sistema de Crítico
@@ -98,6 +103,7 @@ Um jogo de ação 3D em primeira pessoa com **mecânicas de combate realistas**,
 - ✅ Diferentes tipos de dano
 - ✅ Barra de HP dinâmica (cores)
 - ✅ UI melhorada na tela inicial
+- ✅ Áudio de fundo ambiente
 
 ## 🔧 Tecnologia
 
@@ -105,6 +111,7 @@ Um jogo de ação 3D em primeira pessoa com **mecânicas de combate realistas**,
 - **JavaScript vanilla** (sem frameworks)
 - **WebGL** com otimizações de performance
 - **Pointer Lock API** para controle de câmera
+- **Web Audio API** para áudio ambiente
 
 ## 🚀 Performance
 
@@ -116,112 +123,96 @@ Um jogo de ação 3D em primeira pessoa com **mecânicas de combate realistas**,
 
 ## 📝 Como Jogar
 
-1. Abra `index.html` em um navegador moderno
-2. Clique em "INICIAR JOGO"
-3. Clique na tela para trancar o mouse
-4. Use WASD para se mover
-5. Clique com o botão esquerdo para atacar
-6. Clique com o botão direito para se defender
-7. Colete recursos (⚙️ e 🪵) e craft itens
+### ⚠️ IMPORTANTE: Configurar o Servidor Local
+
+Para que o **áudio de fundo** funcione corretamente, você PRECISA rodar o jogo através de um servidor HTTP local:
+
+#### 🖥️ No Linux/Mac:
+```bash
+chmod +x start-server.sh
+./start-server.sh
+```
+
+#### 🖥️ No Windows:
+Clique duas vezes em `start-server.bat` ou abra o PowerShell no diretório e execute:
+```cmd
+start-server.bat
+```
+
+#### 🖥️ Manual (Qualquer Sistema):
+Abra o terminal/prompt de comando na pasta do jogo e execute:
+```bash
+python3 -m http.server 8000
+```
+
+Depois acesse: **http://localhost:8000**
+
+### ▶️ Jogando
+
+1. Inicie o servidor (veja acima)
+2. Abra **http://localhost:8000** no navegador
+3. Clique em "INICIAR JOGO"
+4. Clique na tela para trancar o mouse
+5. Use WASD para se mover
+6. Clique com o botão esquerdo para atacar
+7. Clique com o botão direito para se defender
+8. Colete recursos (⚙️ e 🪵) e craft itens
+
+## 🎵 Áudio
+
+O jogo inclui **som de floresta atmosférico** que toca continuamente durante o gameplay:
+
+- 🎧 Volume automático em 30% para não abafar sons de combate
+- ⏸️ Pausa automaticamente ao abrir o inventário
+- ▶️ Retoma quando fecha o inventário
+- 📁 Arquivo: `floresta.mp3`
 
 ## ⚙️ Requisitos
 
-- Navegador com suporte WebGL
-- Three.js (CDN)
+- Navegador moderno com suporte WebGL (Chrome, Firefox, Safari, Edge)
 - JavaScript habilitado
+- Python 3 (para rodar o servidor local)
+- Áudio do computador habilitado
+
+## 📂 Estrutura de Arquivos
+
+```
+├── index.html          # Página principal
+├── game.js             # Lógica do jogo (principal)
+├── style.css           # Estilos CSS
+├── floresta.mp3        # Áudio de fundo
+├── start-server.sh     # Script para Linux/Mac
+├── start-server.bat    # Script para Windows
+└── README.md          # Este arquivo
+```
+
+## 🐛 Solução de Problemas
+
+### ❌ O áudio não está tocando
+
+**Solução**: Certifique-se de que está rodando em um servidor HTTP (não diretamente como `file://`):
+
+1. Abra o console do navegador (F12)
+2. Procure por mensagens de erro sobre áudio
+3. Certifique-se de que `floresta.mp3` está na raiz do projeto
+4. Reinicie o servidor com `./start-server.sh` ou `start-server.bat`
+
+### ❌ Erro "Three.js não carregado"
+
+**Solução**: O arquivo não conseguiu carregar o Three.js do CDN:
+
+1. Verifique sua conexão com a internet
+2. Tente recarregar a página
+3. Verifique se há bloqueadores de conteúdo/ad-blockers
+
+### ❌ O jogo está muito lento
+
+**Solução**:
+
+1. Feche outras abas do navegador
+2. Reduza a resolução da janela
+3. Tente em outro navegador (Chrome geralmente é mais rápido)
 
 ---
 
 **Desenvolvido com ❤️ para combate em tempo real realista**
-        grade[2][3] = new Localizacao("Caverna Sombria", "Um lugar escuro. Você ouve rugidos lá de dentro.", "Goblin");
-        grade[0][4] = new Localizacao("Castelo Abandonado", "Ruínas antigas guardadas por magia negra.", "Esqueleto");
-    }
-
-    public Localizacao getLocalizacao(int x, int y) {
-        if (x >= 0 && x < largura && y >= 0 && y < altura) {
-            return grade[x][y];
-        }
-        return null;
-    }
-
-    public int getLargura() { return largura; }
-    public int getAltura() { return altura; }
-}
-package com.rpggame;
-
-import com.rpggame.modelo.Player;
-import com.rpggame.mundo.Localizacao;
-import com.rpggame.mundo.Mapa;
-import java.util.Scanner;
-
-public class Main {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        
-        System.out.println("--- BEM-VINDO AO RPG DE MUNDO ABERTO ---");
-        System.out.print("Digite o nome do seu herói: ");
-        String nome = scanner.nextLine();
-        
-        Player player = new Player(nome);
-        Mapa mapa = new Mapa(5, 5); // Mundo de tamanho 5x5
-        
-        boolean jogando = true;
-
-        while (jogando) {
-            Localizacao localAtual = mapa.getLocalizacao(player.getX(), player.getY());
-            
-            System.out.println("\n========================================");
-            System.out.printf("Jogador: %s [HP: %d] | Posição: (%d, %d)\n", player.getNome(), player.getHp(), player.getX(), player.getY());
-            System.out.println("Local: " + localAtual.getNome());
-            System.out.println("Descrição: " + localAtual.getDescricao());
-            
-            if (!localAtual.getInimigoTipo().equals("Nenhum")) {
-                System.out.println("⚠️ CUIDADO: Há um " + localAtual.getInimigoTipo() + " nesta área!");
-            }
-            System.out.println("========================================");
-            System.out.print("Controles: [W] Cima | [S] Baixo | [A] Esquerda | [D] Direita | [Q] Sair\nEscolha sua ação: ");
-            
-            String acao = scanner.nextLine().trim().toLowerCase();
-            
-            if (acao.equals("q")) {
-                jogando = false;
-                System.out.println("Obrigado por jogar! Seu progresso foi salvo na memória.");
-            } else if (acao.equals("w") || acao.equals("s") || acao.equals("a") || acao.equals("d")) {
-                player.mover(acao, mapa.getLargura(), mapa.getAltura());
-                
-                // Sistema simples de encontro aleatório ou evento ao mover
-                if (!mapa.getLocalizacao(player.getX(), player.getY()).getInimigoTipo().equals("Nenhum")) {
-                    System.out.println("\n⚔️ Você entrou em combate! (Inimigo causou 15 de dano)");
-                    player.receberDano(15);
-                    if (player.getHp() <= 0) {
-                        System.out.println("💀 Você morreu! Retornando à Vila Inicial...");
-                        player.curar();
-                        player.mover("s", mapa.getLargura(), mapa.getAltura()); // Move para longe por segurança
-                    }
-                }
-            } else {
-                System.out.println("Comando não reconhecido.");
-            }
-        }
-        scanner.close();
-    }
-}
-/bin/
-/.settings/
-/.idea/
-*.class
-.DS_Store
-# Java Open World RPG Engine
-
-   Um protótipo de RPG de mundo aberto baseado em texto e construído em Java pura. Este projeto foi estruturado utilizando conceitos de Programação Orientada a Objetos (POO) para ser facilmente expansível.
-
-   ## 🚀 Funcionalidades
-   - Sistema de coordenadas de mundo aberto ($X, Y$).
-   - Locais dinâmicos com descrições e perigos específicos.
-   - Sistema de movimentação cardinal (W, A, S, D).
-   - Mecânica básica de dano e combate.
-
-   ## 🛠️ Como Executar
-   1. Clone o repositório: `git clone https://github.com/SEU-USUARIO/NOME-DO-REPOSITORIO.git`
-   2. Abra o projeto na sua IDE de preferência (IntelliJ, Eclipse, VS Code).
-   3. Execute a classe `Main.java`.

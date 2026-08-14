@@ -1,0 +1,51 @@
+🎮 BEM-VINDO AO ARASON COM ÁUDIO! 🎵
+═══════════════════════════════════════════════════════════════════════════════
+
+OLÁ! Seu jogo ARASON foi atualizado com ÁUDIO DE FLORESTA!
+
+🎵 O QUE MUDOU:
+
+   ✓ Som contínuo de floresta durante o jogo
+   ✓ Pausa ao abrir inventário
+   ✓ Retomada ao fechar inventário
+   ✓ Volume balanceado (40%)
+   ✓ Servidor local configurado
+   ✓ Guia visual de setup
+   ✓ Página de teste de áudio
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 PRIMEIRA VEZ? COMECE AQUI:
+
+   1. Certifique-se de que o servidor está rodando
+   2. Abra: http://localhost:8000/setup.html
+   3. Siga as instruções visuais
+   4. Aproveite!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📂 ARQUIVOS IMPORTANTES:
+
+   setup.html .............. 👈 COMECE AQUI! (Guia visual)
+   teste-audio.html ........ Testar se o áudio está funcionando
+   SETUP.md ................ Documentação completa
+   README.md ............... Instruções do jogo
+   INSTALACAO.txt .......... Resumo das mudanças
+
+═══════════════════════════════════════════════════════════════════════════════
+
+⚡ INÍCIO RÁPIDO:
+
+   Terminal/Prompt:
+   $ python3 -m http.server 8000
+
+   Navegador:
+   → http://localhost:8000/setup.html
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✨ DESFRUTANDO! ✨
+
+Desenvolvido com ❤️ | Pronto para jogar com som!
+
+═══════════════════════════════════════════════════════════════════════════════
